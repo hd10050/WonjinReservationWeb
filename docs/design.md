@@ -69,7 +69,9 @@
 | D5 | **인플루언서 전환율은 어드민 전용 메뉴로 분리** | `/admin/referrals` — 병원관리자·실장에게 노출 금지 |
 | D6 | **고객 회원가입 없음 / 관리자 계정은 발급제** | `POST /api/auth/register` 엔드포인트 자체를 만들지 않는다. 계정 생성 경로는 어드민의 `POST /api/admin/users` 하나뿐 |
 | D7 | **동일 출처 API 프록시 채택** | 화면 깜빡임 금지 원칙을 SSR 프리로드로 이행하려면 SSR 요청에 인증 쿠키가 실려야 하기 때문. 13장 참고 |
-| D8 | **실장을 별도 테이블로 만들지 않음** | 실장은 `users` 테이블의 `role='Consultant'` 행. [실장 관리] 화면은 그 행들의 운영 컬럼(`team`, `is_assignable`)을 다루는 화면. 1:1 관계 테이블은 과설계 |
+| D8 | **🔴 실장은 `consultants` 독립 테이블 — 계정(`users`)과 1:1이 아니다** | [실장 관리]에서 CRUD하는 **마스터 데이터**이며 로그인 계정과 완전히 별개다. 계정 없는 실장이 존재할 수 있고(병원관리자가 대신 배정·입력), 계정이 있다고 실장인 것도 아니다. **두 테이블 사이에 FK 연결을 두지 않는다** — `users.role='Consultant'`는 "로그인 권한 등급"일 뿐 "이 사람이 그 실장"이라는 뜻이 아니다. (2026-08-25 정정: 초안에서 이 둘을 하나로 합쳤던 것은 오설계) |
+| D13 | **실장은 하드 삭제 불가 — `is_active=false` 비활성화만** | 삭제하면 그 실장이 담당했던 과거 예약의 담당자 정보와 KPI 이력이 통째로 사라진다. 비활성 실장은 **신규 배정 드롭다운·실장 KPI·예약 통계에서 제외**되지만, 이미 그 실장이 담당한 예약의 상세 화면과 처리 이력에는 이름이 그대로 남는다 |
+| D14 | **상담 기록은 덮어쓰기가 아니라 누적** | `reservation_notes` 테이블에 작성자·시각과 함께 여러 건을 쌓는다. 상담이 여러 차례 오가는 업무라 단일 컬럼 덮어쓰기는 이전 내용을 잃는다. 삭제는 불가, 수정은 작성자 본인과 어드민만 |
 | D9 | **시술명은 언어별 컬럼 4개** | `procedures` 테이블에 `name_zh_cn`/`name_zh_tw`/`name_en`/`name_ko`. 조인 없음 + DB 레벨 길이 제약(9장) 확보. 언어 추가 시 마이그레이션 필요(수용) |
 | D10 | **연락 희망 시간은 자유 텍스트가 아니라 4지선다** | 고객이 중국어로 자유 입력하면 한국인 실장이 해석 못 하는 실제 문제가 생김. `morning`/`afternoon`/`evening`/`anytime` 코드로 저장하고 실장 화면엔 실장 언어로 표시 |
 | D11 | **UI 컴포넌트 라이브러리 미도입** | Tailwind v4만 사용. 모달은 네이티브 `<dialog>`(포커스 트랩 내장), 날짜 입력은 `<input type="date">`, 예약 달력은 자체 월간 그리드. 필요해지면 그때 도입 |
@@ -361,6 +363,24 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 - AT 만료 전 백그라운드 자동 갱신을 12분 간격으로 돌린다.
 - 동시 401 발생 시 refresh가 중복 실행되지 않도록 모듈 레벨 싱글턴 Promise로 1회만 실행한다.
 
+> 🔴 **인증 초기화(`fetchMe()`)를 전 페이지에서 실행하지 말 것**(F5). 표준 Nuxt 인증 플러그인은 모든 라우트에서 `fetchMe()`를 호출하지만, **이 프로젝트는 공개 랜딩에 광고 트래픽이 몰리는 구조**라 그대로 두면 방문자 수만큼 `/api/auth/me` 401 요청이 백엔드로 간다(부하 + 로그 오염 + 랜딩 응답 지연). 인증 상태가 필요한 곳은 관리자 화면뿐이므로 경로로 게이팅한다.
+
+```ts
+// app/plugins/01.auth.ts
+export default defineNuxtPlugin(async (nuxtApp) => {
+  // 관리자 경로에서만 인증을 초기화한다. 공개 랜딩은 인증 상태를 알 필요가 없다.
+  const path = useRoute().path
+  if (!path.startsWith('/admin')) return
+
+  const { fetchMe, user } = useAuth()
+  if (import.meta.server) { await fetchMe(); return }
+  if (user.value === null) await fetchMe()
+})
+```
+> 관리자 화면은 `i18n: false`(5-4절)라 로케일 프리픽스가 붙지 않으므로 `startsWith('/admin')` 한 줄로 정확히 판별된다 — 공개 화면과 달리 `/ko/admin` 같은 변형이 생기지 않는다.
+>
+> 백엔드 방어선은 그대로다. 플러그인을 건너뛴다고 인증이 약해지지 않는다 — 관리자 API는 전부 `[Authorize]`로 잠겨 있고, 미들웨어(6-3절)가 `/admin` 진입 시 `user`를 확인한다.
+
 ---
 
 ## 8. DB 스키마
@@ -378,12 +398,14 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 | `role` | varchar(20) | NOT NULL, CHECK `IN ('Admin','HospitalManager','Consultant')` |
 | `name` | varchar(30) | NOT NULL |
 | `locale` | varchar(10) | NOT NULL DEFAULT `'ko'`, CHECK `IN ('zh-CN','zh-TW','en','ko')` |
-| `team` | varchar(20) | NULL — 실장 팀(참고 화면의 "A팀") |
-| `is_assignable` | boolean | NOT NULL DEFAULT true — 신규 예약 배정 대상 여부 |
 | `is_suspended` | boolean | NOT NULL DEFAULT false |
 | `created_at` / `updated_at` | timestamptz | NOT NULL |
 
-**인덱스**: `ux_users_email` (UNIQUE), `ix_users_role` — [실장 관리]·[계정 관리]가 `WHERE role = ?`로 필터하므로 필수.
+**인덱스**: `ux_users_email` (UNIQUE), `ix_users_role` — [계정 관리]가 `WHERE role = ?`로 필터한다.
+
+> 🔴 **이 테이블은 "로그인 계정"만 담는다. 실장 마스터 데이터는 `consultants`(8-4)에 따로 있고 두 테이블은 연결되지 않는다**(D8). `role='Consultant'`는 로그인 권한 등급일 뿐이며, 이 값으로 실장 목록을 만들려 하지 말 것.
+>
+> **계정은 하드 삭제하지 않고 `is_suspended=true`로만 막는다.** 삭제하면 `audit_logs`의 행위자 추적이 끊긴다(감사 로그는 `actor_email`을 별도 보존하지만, 계정을 지울 이유 자체가 없다).
 
 ### 8-2. `refresh_tokens`
 
@@ -413,7 +435,34 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 
 > ⚠️ 예약 상세 폼의 시술 체크박스는 **활성 시술만** 노출하되, 편집 화면은 그 예약에 이미 선택된 비활성 시술을 목록에 남겨야 한다 — 빼면 저장 시 조용히 값이 사라진다.
 
-### 8-4. `reservations` — 핵심 테이블
+### 8-4. `consultants` — 실장 마스터 (D8 · 계정과 무관한 독립 테이블)
+
+| 컬럼 | 타입 | 제약 |
+|---|---|---|
+| `id` | int | PK |
+| `name` | varchar(30) | NOT NULL — 실장 이름 |
+| `team` | varchar(20) | NULL — 소속 팀(참고 화면의 "A팀") |
+| `is_active` | boolean | NOT NULL DEFAULT true — **비활성화 = 소프트 삭제**(D13) |
+| `sort_order` | int | NOT NULL DEFAULT 0 — 배정 드롭다운 표시 순서 |
+| `created_at` / `updated_at` | timestamptz | NOT NULL |
+
+**인덱스**: `ix_consultants_is_active_sort_order` (`is_active`, `sort_order`) — 배정 드롭다운이 `WHERE is_active ORDER BY sort_order`로 조회한다.
+
+> 🔴 **`users`와 FK로 연결하지 않는다**(D8). 실장은 로그인 계정을 가질 수도, 안 가질 수도 있고 그 대응이 1:1이 아니다. 연결이 실제로 필요해지는 요구(예: "실장 본인이 로그인해 자기 예약만 본다")가 생기면 그때 `consultants.user_id`를 추가한다 — 지금은 만들지 않는다.
+>
+> 🔴 **DELETE 엔드포인트를 만들지 않는다**(D13). 비활성 실장의 노출 규칙은 다음과 같이 **정확히 구분**한다.
+>
+> | 위치 | 비활성 실장 |
+> |---|---|
+> | 예약 상세의 담당 실장 드롭다운(신규 배정) | **제외** |
+> | 실장 KPI · 예약 통계 | **제외** |
+> | 이미 그 실장이 담당한 예약의 상세 화면 표시 | **그대로 표시**(누가 담당했는지는 사실이므로) |
+> | 예약 처리 이력(`reservation_logs`) | **그대로 표시** |
+> | 대시보드 목록의 담당 실장 필터 | 기본 목록에서는 제외하되, 과거 예약 조회를 위해 "비활성 포함" 옵션 제공 |
+>
+> ⚠️ 담당 실장 **편집** 드롭다운은 활성 실장만 노출하되, 그 예약에 이미 배정된 비활성 실장은 목록에 남겨야 한다 — 빼면 다른 항목을 고르지 않고 저장했을 때 담당자가 조용히 바뀐다(8-3의 비활성 시술과 같은 함정).
+
+### 8-5. `reservations` — 핵심 테이블
 
 | 컬럼 | 타입 | 제약 · 비고 |
 |---|---|---|
@@ -426,10 +475,9 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 | `preferred_contact_time` | varchar(20) | NOT NULL, CHECK `IN ('morning','afternoon','evening','anytime')` (D10) |
 | `locale` | varchar(10) | NOT NULL — 고객이 신청한 언어. 실장이 응대 언어를 판단하는 근거 |
 | `status` | varchar(20) | NOT NULL DEFAULT `'New'`, CHECK `IN ('New','Consulting','Confirmed','Visited','Cancelled')` |
-| `consultant_id` | int | NULL, FK → `users.id` (ON DELETE SET NULL) |
-| `consult_note` | varchar(2000) | NULL — 상담 기록 |
-| `visit_date` | date | NULL |
-| `visit_time` | time | NULL |
+| `consultant_id` | int | NULL, FK → **`consultants.id`** `ON DELETE RESTRICT` (실장은 삭제하지 않으므로 RESTRICT가 안전 — 실수로 삭제를 시도해도 DB가 막는다) |
+| `visit_date` | date | NULL — **KST 기준**(9-2절) |
+| `visit_time` | time | NULL — **KST 기준**, 타임존 없는 벽시계 시각 |
 | `deposit_amount` | numeric(12,2) | NULL, CHECK `>= 0` |
 | `deposit_currency` | varchar(3) | NOT NULL DEFAULT `'CNY'`, CHECK `IN ('CNY','KRW')` (D12) |
 | `deposit_paid` | boolean | NOT NULL DEFAULT false |
@@ -445,15 +493,26 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 | 인덱스 | 커버하는 쿼리 |
 |---|---|
 | `ux_reservations_code` (UNIQUE) | 예약 코드 조회 |
-| `ix_reservations_status_created_at` (`status`, `created_at DESC`) | 대시보드 상태 필터 + 최신순 정렬, 상단 4개 카드 카운트 |
-| `ix_reservations_created_at` (`created_at DESC`) | 필터 없는 전체 목록 정렬, 기간별 통계 |
-| `ix_reservations_visit_date` (`visit_date`) WHERE `status = 'Confirmed'` | [예약 달력] 월간 조회 — 부분 인덱스로 크기 최소화 |
+| `ix_reservations_status_created_at` (`status`, `created_at DESC`) | 대시보드 상태 필터 + 최신순 정렬 |
+| `ix_reservations_created_at` (`created_at DESC`) | 필터 없는 전체 목록 정렬, 기간별 통계, **[유입 경로] 기간별 집계** |
+| `ix_reservations_visit_date` (`visit_date`) WHERE `status IN ('Confirmed','Visited')` | [예약 달력] 월간 조회 — 부분 인덱스로 크기 최소화 |
 | `ix_reservations_consultant_id_status` (`consultant_id`, `status`) | [실장 KPI] 실장별 집계 |
-| `ix_reservations_referral_code_created_at` (`referral_code`, `created_at`) | [유입 경로] 코드별 예약 건수 |
+
+> 🔴 **[유입 경로] 전용 인덱스를 `(referral_code, created_at)`으로 두지 말 것**(F10). 그 화면의 실제 쿼리는 "특정 코드 조회"가 아니라 **"기간 내 전체를 코드별로 그룹"**(`WHERE created_at BETWEEN ? AND ? GROUP BY referral_code, utm_*`)이다. 선행 컬럼이 `referral_code`면 기간 범위 스캔에 쓸 수 없어 인덱스가 놀고, `ix_reservations_created_at`가 이 쿼리를 이미 커버한다. **인덱스는 "이 컬럼을 쓰니까"가 아니라 "실제 쿼리의 WHERE·ORDER BY 순서"에서 역산할 것.**
+>
+> 🔴 **예약 코드(`code`) 생성은 "그날 최대값 + 1" 방식을 쓰지 말 것**(F4). 광고 유입으로 동시 제출이 겹치면 두 요청이 같은 번호를 읽어 UNIQUE 위반 500이 난다. **전용 시퀀스를 만들어 원자적으로 발급한다.**
+>
+> ```sql
+> -- 일별 리셋이 필요 없다면 전역 시퀀스 하나로 충분하다(가장 단순하고 경쟁 조건이 원천적으로 없음)
+> CREATE SEQUENCE wonjin.reservation_code_seq;
+> -- 코드 = 'WJ-' + yyMMdd + '-' + lpad(nextval::text, 4, '0')
+> ```
+>
+> 일별 리셋(`-001`부터 다시 시작)을 원한다면 시퀀스만으로는 안 되므로, `INSERT` 후 `ON CONFLICT (code) DO NOTHING` + 재시도 루프(최대 3회)를 쓴다. **어느 쪽이든 "읽고 나서 쓰는" 2단계 구현은 금지**(M3에서 형식 확정 시 함께 결정).
 
 > 🔴 **`dotnet ef migrations add` 결과 파일은 적용 전 반드시 직접 열어 확인할 것.** EF Core scaffolder가 새 복합/부분 인덱스를 기존 단일 컬럼 인덱스의 상위호환으로 오판해 **자동으로 `DropIndex`를 끼워 넣는 사고**가 있었다. 부분 인덱스는 필터 조건을 만족하지 않는 일반 조회를 커버하지 못하므로, 원치 않는 DropIndex가 보이면 모델에 단일 컬럼 인덱스를 명시적으로 재선언해 둘 다 유지시킬 것.
 
-### 8-5. `reservation_procedures` — 예약 ↔ 시술 (M:N)
+### 8-6. `reservation_procedures` — 예약 ↔ 시술 (M:N)
 
 | 컬럼 | 타입 |
 |---|---|
@@ -462,23 +521,41 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 
 **PK**: (`reservation_id`, `procedure_id`) 복합. **인덱스**: `ix_reservation_procedures_procedure_id` — [예약 통계]의 시술별 집계가 이 방향으로 조회한다(복합 PK의 선행 컬럼이 `reservation_id`라 역방향은 커버되지 않음).
 
-### 8-6. `reservation_logs` — 예약 처리 이력 (업무 타임라인)
+### 8-7. `reservation_notes` — 상담 기록 (누적, D14)
 
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
 | `id` | int | PK |
 | `reservation_id` | int | FK → `reservations.id` ON DELETE CASCADE |
-| `action` | varchar(40) | `received`/`assigned`/`status_changed`/`note_saved`/`deposit_confirmed`/`cancelled` |
-| `note` | varchar(300) | NULL |
+| `body` | varchar(2000) | NOT NULL — 상담 본문 |
+| `author_user_id` | int | NULL, FK → `users.id` ON DELETE SET NULL |
+| `author_name` | varchar(30) | NOT NULL — 작성 시점 이름 스냅샷(계정이 사라져도 이력 보존) |
+| `created_at` / `updated_at` | timestamptz | NOT NULL |
+
+**인덱스**: `ix_reservation_notes_reservation_id_created_at` (`reservation_id`, `created_at`).
+
+> 상담이 여러 차례 오가는 업무이므로 **한 예약에 여러 건이 쌓인다**(D14). 이전 내용을 덮어쓰지 않는다.
+> - **삭제 없음** — 잘못 쓴 기록도 남긴다(상담 이력은 분쟁 시 근거가 된다).
+> - **수정은 작성자 본인 + 어드민만**. 수정하면 `updated_at`이 갱신되고 화면에 "(수정됨)"을 표시한다.
+> - 목록 API에서는 이 테이블을 조회하지 않는다(본문이 커서 목록이 무거워진다). 상세 화면에서만 로드한다.
+
+### 8-8. `reservation_logs` — 예약 처리 이력 (업무 타임라인)
+
+| 컬럼 | 타입 | 비고 |
+|---|---|---|
+| `id` | int | PK |
+| `reservation_id` | int | FK → `reservations.id` ON DELETE CASCADE |
+| `action` | varchar(40) | `received`/`assigned`/`status_changed`/`note_added`/`deposit_confirmed`/`cancelled` |
+| `note` | varchar(300) | NULL — 짧은 요약만(상담 본문은 `reservation_notes`에 있다) |
 | `actor_user_id` | int | NULL — 시스템 접수는 NULL |
-| `actor_name` | varchar(30) | NOT NULL — `'SYSTEM'` 또는 실장 이름(계정 삭제 후에도 이력 보존) |
+| `actor_name` | varchar(30) | NOT NULL — `'SYSTEM'` 또는 조작한 계정 이름(계정이 사라져도 이력 보존) |
 | `created_at` | timestamptz | NOT NULL |
 
 **인덱스**: `ix_reservation_logs_reservation_id_created_at` (`reservation_id`, `created_at`).
 
 > **`audit_logs`와 중복이 아니다.** 이 테이블은 예약 상세 화면에 보이는 **업무 타임라인**(고객 폼 제출 등 관리자 행위가 아닌 이벤트 포함)이고, `audit_logs`는 관리자 행위 **감사**용이다. 목적·열람 권한·보존 기준이 달라 분리한다. 상태 변경은 양쪽에 모두 남는다(의도된 이중 기록).
 
-### 8-7. `audit_logs` — 관리자 감사 로그
+### 8-9. `audit_logs` — 관리자 감사 로그
 
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
@@ -496,7 +573,7 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 
 **인덱스**: `ix_audit_logs_created_at` (`created_at DESC`), `ix_audit_logs_actor_user_id_created_at`, `ix_audit_logs_entity_type_created_at`.
 
-### 8-8. `landing_daily_stats` — 유입 경로 일별 집계
+### 8-10. `landing_daily_stats` — 유입 경로 일별 집계
 
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
@@ -512,7 +589,9 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 
 ---
 
-## 9. 입력 필드 길이 제한 (절대 원칙 — 3곳 일치)
+## 9. 입력 값 규칙 (길이 제한 · 날짜/시간)
+
+### 9-1. 입력 필드 길이 제한 (절대 원칙 — 3곳 일치)
 
 **DB 컬럼 제약 / 백엔드 DTO validation / 프론트 `maxlength` 세 값이 항상 정확히 일치해야 한다.** 값을 바꿀 때는 반드시 세 곳을 세트로 수정하고, 수정 후 실제로 일치하는지 직접 대조 확인한다.
 
@@ -520,12 +599,13 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 |---|---|---|---|
 | 고객 이름 | `varchar(50)` | `[MaxLength(50)]` | `maxlength="50"` |
 | 위챗 ID | `varchar(50)` | `[MaxLength(50)]` | `maxlength="50"` |
-| 상담 기록 | `varchar(2000)` | `[MaxLength(2000)]` | `maxlength="2000"` |
+| 상담 기록 본문(`reservation_notes.body`) | `varchar(2000)` | `[MaxLength(2000)]` | `maxlength="2000"` |
 | 취소 사유 | `varchar(200)` | `[MaxLength(200)]` | `maxlength="200"` |
 | 계정 이메일 | `varchar(254)` | `[MaxLength(254)]` | `maxlength="254"` |
 | 계정 이름 | `varchar(30)` | `[MaxLength(30)]` | `maxlength="30"` |
 | 계정 비밀번호 | (해시 저장) | 8~64자 | `minlength="8" maxlength="64"` |
-| 실장 팀 | `varchar(20)` | `[MaxLength(20)]` | `maxlength="20"` |
+| 실장 이름(`consultants.name`) | `varchar(30)` | `[MaxLength(30)]` | `maxlength="30"` |
+| 실장 팀(`consultants.team`) | `varchar(20)` | `[MaxLength(20)]` | `maxlength="20"` |
 | 시술명(언어당) | `varchar(50)` | `[MaxLength(50)]` | `maxlength="50"` |
 | 시술 코드 | `varchar(30)` | `[MaxLength(30)]` | `maxlength="30"` |
 | 처리 이력 메모 | `varchar(300)` | `[MaxLength(300)]` | `maxlength="300"` |
@@ -535,6 +615,59 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 > **비밀번호 상한 64자는 BCrypt 72바이트 한계 이내이면서 긴 패스프레이즈를 허용하는 값이다.** 서버만 64로 올리고 HTML `maxlength`를 옛 값으로 남겨두면 브라우저가 입력 자체를 잘라버려 사용자가 원인을 알 수 없는 로그인 실패를 겪는다(실제 발생한 버그).
 >
 > **UTM·추천 코드만 "거부"가 아니라 "절단"인 이유**: 광고 플랫폼이 붙이는 파라미터 길이를 우리가 통제할 수 없는데, 길다고 예약 신청 자체를 실패시키면 고객을 잃는다. 추적 정확도보다 접수 성공이 우선이다.
+
+### 9-2. 🔴 날짜·시간(타임존) 처리 원칙
+
+> 고객은 중국·대만(UTC+9 대비 **1시간 느림**), 병원과 실장은 한국에 있다. 기준시를 정하지 않으면 "오후에 연락 달라"는 요청이 실제로 몇 시인지 아무도 확신할 수 없고, 실장이 1시간 어긋난 시각에 연락하게 된다.
+
+**모든 운영 시각은 KST(UTC+9) 고정으로 통일한다.** 사용자 브라우저 타임존을 따라가지 않는다.
+
+| 대상 | 저장 | 표시 |
+|---|---|---|
+| `created_at` 등 이벤트 시각 | `timestamptz`(UTC로 저장) | 관리자 화면에서 **항상 KST로 변환해 표시** |
+| `visit_date` / `visit_time` | `date` / `time` (타임존 없음) | **병원 현지(KST) 벽시계 시각 그대로**. 타임존 변환을 적용하지 않는다 |
+| `preferred_contact_time` | 코드(`morning` 등) | **KST 기준 시간대** — 아래 규칙 |
+
+**① 연락 희망 시간대는 KST 기준으로 정의하고, 폼에 실제 시각 범위를 병기한다.**
+
+선택지에 시간 범위를 함께 적으면 "오전"이 몇 시인지에 대한 해석 차이가 원천적으로 사라진다. 고객은 자기 시간대로 환산해 고르면 되고, 시스템은 변환 로직을 하나도 갖지 않아도 된다.
+
+| 코드 | 표기(예: 한국어) | 표기(예: 간체) |
+|---|---|---|
+| `morning` | 오전 (09:00–12:00 KST) | 上午 (09:00–12:00 韩国时间) |
+| `afternoon` | 오후 (12:00–18:00 KST) | 下午 (12:00–18:00 韩国时间) |
+| `evening` | 저녁 (18:00–21:00 KST) | 晚上 (18:00–21:00 韩国时间) |
+| `anytime` | 시간 무관 | 任何时间 |
+
+**② 🔴 관리자 화면의 시각 표시는 브라우저 타임존을 쓰지 말 것.**
+
+`new Date(x).toLocaleString()`처럼 브라우저 로컬 타임존에 의존하면, **SSR 서버(UTC)와 브라우저(KST 등)의 결과가 달라 하이드레이션 mismatch가 발생한다**(다른 프로젝트에서 실제로 겪어 전역 수정한 이슈). 서버·클라이언트가 같은 문자열을 만들도록 타임존을 명시적으로 고정한다.
+
+```ts
+// app/utils/datetime.ts — 서버·클라이언트 어디서 호출해도 동일한 결과를 낸다
+const KST = 'Asia/Seoul'
+
+export function formatKst(value: string | Date, withTime = true): string {
+  return new Intl.DateTimeFormat('ko-KR', {
+    timeZone: KST,                                  // ⚠️ 이 줄이 없으면 실행 환경 타임존을 따라가 mismatch가 난다
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    ...(withTime ? { hour: '2-digit', minute: '2-digit', hour12: false } : {}),
+  }).format(typeof value === 'string' ? new Date(value) : value)
+}
+```
+
+**③ "오늘"·"이번 달"의 경계도 KST로 계산한다.** 대시보드의 "이번 달 방문 완료" 같은 집계를 서버가 UTC 기준으로 자르면 매월 1일 오전 9시 이전에 숫자가 어긋난다. 백엔드에서 범위를 만들 때 KST 기준 월초를 UTC로 변환해 넘긴다.
+
+```csharp
+// 백엔드 — KST 기준 이번 달 시작 시각을 UTC로 환산
+private static readonly TimeZoneInfo Kst = TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul");
+
+var nowKst = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Kst);
+var monthStartKst = new DateTimeOffset(nowKst.Year, nowKst.Month, 1, 0, 0, 0, nowKst.Offset);
+var monthStartUtc = monthStartKst.UtcDateTime;   // 쿼리에는 이 값을 쓴다
+```
+
+> ⚠️ `TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul")`는 Linux 컨테이너의 tzdata에 의존한다. .NET 8부터 Windows/IANA ID를 양쪽에서 인식하지만, **컨테이너 이미지에 tzdata가 없으면 런타임 예외가 난다** — Phase 0에서 실제 배포 이미지로 한 번 확인할 것(확인 전까지 `[미확인]`).
 
 ---
 
@@ -591,39 +724,71 @@ public record PagedResult<T>(IEnumerable<T> Items, int Total, int Page, int Page
 | 메서드 | 경로 | 비고 |
 |---|---|---|
 | POST | `/api/reservations` | 예약 신청. rate limit(IP 분당 5회) + honeypot + 개인정보 동의 서버 재검증 |
-| POST | `/api/landing/visit` | 랜딩 진입 기록(일별 UPSERT). rate limit(IP 분당 30회), 봇 UA 제외 |
 | GET | `/api/procedures` | 활성 시술 목록(선택 UI용, 캐시 가능) |
+
+> 🔴 **랜딩 방문 기록(`/api/internal/landing-visit`)은 공개 엔드포인트로 두지 않는다**(F11). 익명 공개로 열면 누구나 스크립트로 특정 추천코드의 방문수를 부풀려 전환율 지표를 왜곡할 수 있고, rate limit으로는 막히지 않는다.
+>
+> **대신 프론트 서버(Nitro)만 호출할 수 있는 내부 전용 경로로 만든다.** 프록시가 백엔드로 전달할 때 쓰는 내부 공유 시크릿 헤더(`X-Internal-Secret`)를 함께 보내고, 백엔드는 그 헤더가 없거나 값이 다르면 **404**를 반환한다(401이 아니라 404 — 엔드포인트 존재 자체를 숨긴다). 브라우저는 이 경로를 호출할 방법이 없으므로 조작 경로가 원천적으로 닫힌다.
+>
+> 시크릿은 프론트에서 **`NUXT_PUBLIC_` 접두사가 없는 private 런타임 설정**으로만 둔다 — `public`에 두면 브라우저 번들에 그대로 노출되어 의미가 없어진다.
 
 ### 11-2. 예약 운영 (Consultant 이상)
 
 | 메서드 | 경로 | 권한 | 비고 |
 |---|---|---|---|
-| GET | `/api/admin/reservations` | 전 역할 | 필터: `status`, `consultantId`, `from`, `to`, `search` / 정렬: `created_at DESC` |
-| GET | `/api/admin/reservations/summary` | 전 역할 | 상단 4개 카드 — 단일 `GroupBy` 쿼리 1회로 4개 값 동시 산출 |
-| GET | `/api/admin/reservations/{id}` | 전 역할 | 상세 + 시술 + 처리 이력 |
-| PATCH | `/api/admin/reservations/{id}` | Consultant, Admin | 상담 기록·방문일시·담당실장·시술·예약금 저장 |
+| GET | `/api/admin/reservations` | 전 역할 | 필터: `status`, `consultantId`, `from`, `to`, `search`, `includeInactiveConsultants` / 정렬: `created_at DESC` |
+| GET | `/api/admin/reservations/summary` | 전 역할 | 상단 4개 카드 — 조건부 집계 1회(아래) |
+| GET | `/api/admin/reservations/{id}` | 전 역할 | 상세 + 시술 + 상담 기록 + 처리 이력 |
+| PATCH | `/api/admin/reservations/{id}` | Consultant, Admin | 방문일시·담당실장·시술·예약금 저장 (**상담 기록은 아래 별도 엔드포인트**) |
 | POST | `/api/admin/reservations/{id}/status` | Consultant, Admin | 상태 전이(10장 조건부 UPDATE) |
-| GET | `/api/admin/reservations/calendar` | 전 역할 | `year`·`month` 필수, **최대 1개월 범위 검증**(무제한 범위 조회 차단) |
+| POST | `/api/admin/reservations/{id}/notes` | Consultant, Admin | 상담 기록 **추가**(누적, D14) |
+| PATCH | `/api/admin/reservations/{id}/notes/{noteId}` | 작성자 본인, Admin | 상담 기록 수정. 삭제 엔드포인트는 만들지 않는다 |
+| GET | `/api/admin/reservations/calendar` | 전 역할 | `year`·`month` 필수, **최대 1개월 범위 검증**(무제한 범위 조회 차단). `status IN ('Confirmed','Visited')` |
+
+> **실장 간 예약 접근은 전면 허용한다**(F8, 2026-08-25 사용자 결정). 실장 A가 실장 B의 예약을 조회·수정하고 담당자를 변경할 수 있다. 단일 병원에서 휴가·교대 대체가 일상적이고, **누가 무엇을 바꿨는지는 처리 이력(`reservation_logs`)과 감사 로그에 전부 남으므로** 접근 제한 대신 추적으로 관리한다. 담당자 변경도 반드시 이력에 남긴다(`action='assigned'`, 이전 담당자 → 새 담당자를 `note`에 기록).
+
+**대시보드 4개 카드 — 조건부 집계 1회로 처리** (F2)
+
+4번째 카드만 `visited_at`에 대한 별도 기간 조건이 붙으므로 **`GROUP BY status` 하나로는 산출되지 않는다.** 조건부 집계로 단일 쿼리를 만든다.
+
+```csharp
+// GroupBy(_ => 1)로 전체를 한 그룹으로 묶고 조건부 Count를 나열하면 EF Core가 단일 SQL로 번역한다
+// (PostgreSQL의 COUNT(*) FILTER (WHERE ...)에 해당)
+var summary = await db.Reservations
+    .GroupBy(_ => 1)
+    .Select(g => new
+    {
+        New        = g.Count(r => r.Status == "New"),
+        Consulting = g.Count(r => r.Status == "Consulting"),
+        Confirmed  = g.Count(r => r.Status == "Confirmed"),
+        VisitedThisMonth = g.Count(r => r.Status == "Visited"
+                                     && r.VisitedAt != null
+                                     && r.VisitedAt >= monthStartUtc),   // 9-2절 ③ KST 기준 월초
+    })
+    .FirstOrDefaultAsync();
+
+// 행이 하나도 없으면 GroupBy 결과가 비어 null이 된다 — 0으로 채워 반환할 것
+```
 
 ### 11-3. 마스터 관리 (HospitalManager 이상)
 
 | 메서드 | 경로 | 비고 |
 |---|---|---|
-| GET / PATCH | `/api/admin/consultants`, `/api/admin/consultants/{id}` | `role='Consultant'` 필터. `team`·`is_assignable`만 수정(역할·정지는 계정 관리 소관) |
-| GET / POST / PUT / DELETE | `/api/admin/procedures[/{id}]` | 예약에서 참조 중인 시술은 **하드 삭제 금지 → `is_active=false`** |
+| GET / POST / PUT | `/api/admin/consultants[/{id}]` | 실장 마스터 CRUD(D8). **DELETE 없음** — 비활성화는 `PUT`의 `isActive=false`로 (D13). 목록은 `includeInactive` 쿼리로 비활성 포함 여부 선택 |
+| GET / POST / PUT | `/api/admin/procedures[/{id}]` | 시술 마스터. **DELETE 없음** — `isActive=false`로 비활성화 |
 
 ### 11-4. 통계 (HospitalManager 이상)
 
 | 메서드 | 경로 | 비고 |
 |---|---|---|
-| GET | `/api/admin/stats/consultants` | 실장 KPI — 배정 건수 / 확정 건수 / 방문 건수 / 확정 전환율 / 평균 최초응대 소요시간 |
-| GET | `/api/admin/stats/reservations` | 예약 통계 — 기간별 접수·확정·방문·취소 추이, 시술별 집계, 언어별 분포 |
+| GET | `/api/admin/stats/consultants` | 실장 KPI — 배정 건수 / 확정 건수 / 방문 건수 / 확정 전환율 / 평균 최초응대 소요시간. **비활성 실장은 제외**(D13) |
+| GET | `/api/admin/stats/reservations` | 예약 통계 — 기간별 접수·확정·방문·취소 추이, 시술별 집계, 언어별 분포. 담당 실장 축으로 나눌 때는 **비활성 실장 제외** |
 
 ### 11-5. 어드민 전용
 
 | 메서드 | 경로 | 비고 |
 |---|---|---|
-| GET / POST / PATCH | `/api/admin/users[/{id}]` | 계정 발급·역할 변경·정지. 자기 자신 조작 차단 + RT 전량 폐기 |
+| GET / POST / PATCH | `/api/admin/users[/{id}]` | 계정 발급·역할 변경·정지. 자기 자신 조작 차단 + RT 전량 폐기. **DELETE 없음** — 계정도 정지(`is_suspended`)로만 막는다(감사 로그 행위자 추적 유지) |
 | GET | `/api/admin/audit-logs` | 필터: `actorId`, `entityType`, `action`, `from`, `to`, `search` |
 | GET | `/api/admin/stats/referrals` | **어드민 전용(D5)** — 유입 경로별 방문수·예약수·전환율 |
 
@@ -633,8 +798,11 @@ public record PagedResult<T>(IEnumerable<T> Items, int Total, int Page, int Page
 
 ```csharp
 // 1단계 — DB에서 익명 타입으로 집계 (전체 로우를 메모리로 올리지 않음)
+// activeConsultantIds: 비활성 실장을 KPI에서 제외하기 위한 사전 조회(D13)
 var raw = await db.Reservations
-    .Where(r => r.CreatedAt >= from && r.CreatedAt < to)
+    .Where(r => r.CreatedAt >= from && r.CreatedAt < to
+             && r.ConsultantId != null
+             && activeConsultantIds.Contains(r.ConsultantId.Value))
     .GroupBy(r => r.ConsultantId)
     .Select(g => new
     {
@@ -718,9 +886,10 @@ var items = raw.Select(x => new ConsultantKpiDto(
 
 **하단**: 참고 화면의 좌우 분할(목록 + 인라인 상세) 방식은 **채택하지 않는다**(사용자 명시). 대신 필터·페이징이 있는 목록만 두고, 행을 선택하면 **별도 상세 페이지**(`/admin/reservations/[id]`)로 이동한다.
 
-- 필터: 상태 / 담당 실장 / 접수 기간 / 검색(이름·위챗ID·예약코드)
+- 필터: 상태 / 담당 실장(기본은 활성 실장만, "비활성 포함" 옵션 제공) / 접수 기간 / 검색(이름·위챗ID·예약코드)
 - 정렬: 접수일시 최신순 고정
 - 페이지 크기: 20
+- 모든 시각은 KST로 표시(9-2절 `formatKst`)
 
 > 🔴 **검색 입력값을 반응형 데이터 페칭 훅의 `query`에 직접 물리지 말 것** — 글자 입력마다 API가 재호출된다. 그렇다고 비반응형 스냅샷으로 고정하면 이번엔 검색 버튼을 눌러도 재조회가 안 되는 새 회귀가 생긴다(같은 라우트로의 이동은 페이지를 리마운트하지 않기 때문). **정답은 URL 쿼리를 `computed`로 감싸 그것에만 반응하게 하는 것**이다.
 
@@ -742,9 +911,9 @@ function submitSearch(value: string) {
 
 참고 화면의 상세 구성을 그대로 옮긴다.
 
-1. **고객 정보**(읽기 전용): 이름 / 생년월일(나이 계산 표시) / 성별 / 위챗 ID / 연락 희망 시간대 / 신청 언어 / 유입 경로 / 접수 시각 / 예약 코드
-2. **상담 기록**: textarea (2000자)
-3. **방문 예약**: 방문 날짜 / 방문 시각 / 담당 실장 select
+1. **고객 정보**(읽기 전용): 이름 / 생년월일(나이 계산 표시) / 성별 / 위챗 ID / 연락 희망 시간대(KST 범위 병기) / 신청 언어 / 유입 경로 / 접수 시각 / 예약 코드
+2. **상담 기록**(누적, D14): 기존 기록을 작성자·시각과 함께 **시간순으로 모두 나열**하고, 하단에 새 기록 추가용 textarea(2000자) + [기록 추가] 버튼. 기존 기록은 작성자 본인·어드민만 수정 가능하며 수정 시 "(수정됨)" 표시. **삭제 버튼은 두지 않는다**
+3. **방문 예약**: 방문 날짜 / 방문 시각(**KST 기준**) / 담당 실장 select(활성 실장만, 단 현재 배정된 비활성 실장은 목록에 유지 — 8-4 함정)
 4. **시술·수술 결정**: 활성 시술 다중 선택
 5. **예약금**: 통화 select(`CNY` 기본 / `KRW`) + 금액 + 입금 확인 체크박스 (D3·D12). 통화 select에도 보이는 label을 붙인다
 6. **처리 이력**: `reservation_logs` 타임라인
@@ -755,7 +924,8 @@ function submitSearch(value: string) {
 ### 12-6. 예약 달력 (`/admin/calendar`)
 
 - 첨부 스크린샷과 동일한 구성: 좌측 월간 그리드 + 우측 "선택한 날짜의 예약 목록".
-- 조회 기준은 **`visit_date`(방문 예정일)**이며 `status = 'Confirmed'`만 표시한다.
+- 조회 기준은 **`visit_date`(방문 예정일)**이며 **`status IN ('Confirmed','Visited')`**를 표시한다.
+  > 🔴 `Confirmed`만 조회하면 **고객이 실제로 내원해 `Visited`가 되는 순간 그 날짜가 달력에서 사라진다**(F1). 실장이 "지난주에 누가 왔었지"를 달력에서 확인할 수 없게 되므로, 확정과 방문완료를 함께 표시하고 배지 색으로 구분한다. 8-5의 부분 인덱스 조건도 이와 동일하게 맞춰야 한다(불일치 시 인덱스를 못 탄다).
 - 월 이동 시 `year`·`month` 쿼리로만 재조회하고, **서버에서 최대 1개월 범위를 검증**한다(클라이언트가 임의 범위를 보내 전체 스캔을 유발하지 못하게).
 - 날짜에 예약이 없으면 "이 날짜에는 예약이 없습니다"를 표시한다(데이터 없음 안내는 허용 — 13장 참고).
 - 라이브러리 없이 자체 월간 그리드로 구현한다(D11).
@@ -764,8 +934,8 @@ function submitSearch(value: string) {
 
 | 메뉴 | 핵심 구성 |
 |---|---|
-| 실장 관리 | `role='Consultant'` 목록 + 팀·배정가능 여부 수정 |
-| 시술·수술 관리 | 목록 + 4언어 탭 입력 폼(코드·정렬순서·활성) |
+| 실장 관리 | `consultants` 마스터 CRUD(D8) — 이름·팀·정렬순서 등록/수정 + **활성/비활성 토글**. 삭제 버튼 없음(D13). "비활성 포함 보기" 체크박스로 퇴사자 조회. **로그인 계정과 무관한 독립 데이터이므로 계정 관리 화면과 혼동하지 말 것** |
+| 시술·수술 관리 | 목록 + 4언어 탭 입력 폼(코드·정렬순서·활성). 삭제 버튼 없음 |
 | 실장 KPI | 기간 선택 + 실장별 배정/확정/방문/전환율/평균 응대시간 표 |
 | 예약 통계 | 기간별 추이 + 시술별 집계 + 언어별 분포 |
 | 계정 관리 | 계정 목록 + 발급 폼 + 역할 변경 + 정지 (어드민 전용) |
@@ -846,7 +1016,21 @@ var statusCode = executed.Exception is not null ? 500 : context.HttpContext.Resp
 ### 15-1. 수집
 
 1. 광고 링크: `https://도메인/?utm_source=xiaomei&utm_medium=wechat&utm_campaign=2026q3&ref=XIAOMEI01`
-2. 랜딩 SSR 시점에 서버가 `POST /api/landing/visit`을 1회 호출해 **일별 집계를 UPSERT**한다.
+2. 랜딩 SSR 시점에 **프론트 서버(Nitro)가** `POST /api/internal/landing-visit`을 내부 시크릿 헤더와 함께 호출해 **일별 집계를 UPSERT**한다.
+
+> 🔴 **이 호출을 `await`하지 말 것**(F6). 방문 기록은 화면 렌더에 아무 영향도 주지 않는데, 동기로 기다리면 랜딩 응답 시간이 백엔드 왕복만큼 그대로 늘어난다. **광고 랜딩은 응답 속도가 곧 이탈률**이므로 지표 수집이 사용자 경험을 늦춰서는 안 된다.
+
+```ts
+// server/plugins 또는 랜딩 SSR 경로 — fire-and-forget + 실패 무시
+// ⚠️ await 없음. 이 요청이 실패해도 랜딩은 정상 렌더되어야 한다(지표 < 접수).
+$fetch('/api/internal/landing-visit', {
+  baseURL: config.apiBaseInternal,
+  method: 'POST',
+  headers: { 'X-Internal-Secret': config.internalSecret },   // public 아님 — 브라우저에 노출 금지
+  body: { referralCode, utmSource, utmMedium, utmCampaign },
+  timeout: 2000,
+}).catch(() => {})
+```
 
 ```sql
 INSERT INTO wonjin.landing_daily_stats
@@ -860,10 +1044,13 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 
 **설계 근거**: 방문마다 1행을 남기면 광고 트래픽만큼 행이 폭증한다. `(날짜 × 캠페인 조합)`당 1행으로 묶으면 행 수가 구조적으로 제한되고, 전환율 계산에 필요한 것은 개별 방문이 아니라 **일별 합계**뿐이다.
 
-**한계(명시)**
-- 봇·크롤러 방문이 카운트에 섞인다 → User-Agent 봇 필터를 1차로 적용하되, 완전히 걸러지지는 않는다. 정밀한 광고 성과는 광고 플랫폼 자체 지표와 교차 확인해야 한다.
-- 같은 사람의 재방문이 중복 카운트된다(고유 방문자 수가 아니라 방문 수).
+**외부 조작 차단**(F11): 이 엔드포인트는 내부 시크릿 헤더가 있는 요청만 받고, 없으면 **404**를 반환한다(엔드포인트 존재 자체를 숨긴다). 브라우저에서는 호출 경로가 없으므로 스크립트로 방문수를 부풀릴 수 없다. 시크릿은 프론트의 **private 런타임 설정**(`NUXT_PUBLIC_` 접두사 없음)과 백엔드 환경변수에만 둔다.
+
+**남는 한계(명시)**
+- 봇·크롤러 방문이 카운트에 섞인다 → User-Agent 봇 필터를 1차로 적용하되 완전히 걸러지지는 않는다. 정밀한 광고 성과는 광고 플랫폼 자체 지표와 교차 확인해야 한다.
+- 같은 사람의 재방문이 중복 카운트된다(고유 방문자 수가 아니라 방문 수). 고유 방문자가 필요해지면 그때 IP 해시 기반 일별 중복 제거를 검토한다 — 지금은 만들지 않는다.
 - 5-3절 언어 감지 리다이렉트가 `location.search`를 보존하지 않으면 **UTM이 통째로 유실된다** — 반드시 함께 검증할 것.
+- 리다이렉트가 걸리는 경우(예: `/` → `/ko`) SSR이 두 번 실행되어 **같은 방문이 2회 집계될 수 있다** → 방문 기록은 **리다이렉트 대상이 아닌 최종 랜딩 렌더에서만** 호출할 것.
 
 ### 15-2. 노출 (D5 — 어드민 전용)
 
@@ -912,7 +1099,14 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 - [ ] 미들웨어 순서: `ForwardedHeaders` → 보안헤더 → CSRF Origin → CORS → Authentication → RateLimiter → Authorization
   - `UseAuthentication()` → `UseRateLimiter()` 순서를 지킬 것. 반대면 사용자 ID 기준 rate limit이 전부 IP 폴백된다.
 - [ ] 공개 예약 폼: rate limit + honeypot + 개인정보 동의 서버 재검증
+- [ ] **`/api/internal/landing-visit`이 내부 시크릿 헤더 없이는 404를 반환하는지**(F11) — 시크릿이 `NUXT_PUBLIC_`이 아닌 private 설정에 있는지 함께 확인
 - [ ] `.env`·`appsettings.Development.json`이 `.gitignore`에 포함됐는지
+
+### 데이터 보존
+- [ ] **실장·시술·계정에 DELETE 엔드포인트가 없는지**(D13) — 전부 비활성화/정지로만 처리
+- [ ] 비활성 실장이 **신규 배정 드롭다운·KPI·통계에서는 빠지고, 과거 예약 상세·이력에는 남는지**
+- [ ] 상담 기록에 삭제 엔드포인트가 없는지, 수정이 작성자 본인·어드민으로 제한되는지(D14)
+- [ ] 모든 시각 표시가 KST 고정인지, 브라우저 타임존에 의존하는 코드가 없는지(9-2절)
 
 ### 운영
 - [ ] 관리자 페이지 전체 `noindex`
@@ -933,16 +1127,18 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 |---|---|---|
 | 대시보드 목록 | `WHERE status=? ORDER BY created_at DESC LIMIT 20` | `ix_reservations_status_created_at` |
 | 상단 4개 카드 | `GROUP BY status` (+이번 달 `visited_at`) | `ix_reservations_status_created_at` |
-| 예약 달력 | `WHERE status='Confirmed' AND visit_date BETWEEN ? AND ?` | `ix_reservations_visit_date` (부분) |
+| 예약 달력 | `WHERE status IN ('Confirmed','Visited') AND visit_date BETWEEN ? AND ?` | `ix_reservations_visit_date` (부분 — **필터 조건이 쿼리와 정확히 일치해야 탄다**) |
 | 실장 KPI | `WHERE created_at >= ? GROUP BY consultant_id` | `ix_reservations_consultant_id_status` + `ix_reservations_created_at` |
-| 유입 경로 | `WHERE referral_code=? AND created_at BETWEEN ?` | `ix_reservations_referral_code_created_at` |
+| 유입 경로 | `WHERE created_at BETWEEN ? AND ? GROUP BY referral_code, utm_*` | `ix_reservations_created_at` (F10 — 코드 선행 인덱스는 이 쿼리를 못 탄다) |
 | 감사 로그 | `ORDER BY created_at DESC LIMIT 20` | `ix_audit_logs_created_at` |
 | 토큰 갱신 | `WHERE token_hash=?` | 🔴 `ix_refresh_tokens_token_hash` |
-| 실장/계정 관리 | `WHERE role=?` | `ix_users_role` |
+| 계정 관리 | `WHERE role=?` | `ix_users_role` |
+| 실장 배정 드롭다운 | `WHERE is_active ORDER BY sort_order` | `ix_consultants_is_active_sort_order` |
+| 상담 기록 조회 | `WHERE reservation_id=? ORDER BY created_at` | `ix_reservation_notes_reservation_id_created_at` |
 
 **명시적 한계**: 검색(`ILIKE '%키워드%'`)은 **B-tree 인덱스를 타지 않는다.** 예약이 수만 건을 넘어가면 검색이 느려지므로, 그 시점에 `pg_trgm` GIN 인덱스 도입을 검토한다. 지금 규모에서 미리 넣는 것은 과설계다.
 
-**목록 조회 시 컬럼 최소화**: 목록 API는 `consult_note`(2000자) 등 큰 텍스트 컬럼을 조회하지 않는다. `Select`로 목록에 실제로 표시하는 필드만 프로젝션한다.
+**목록 조회 시 컬럼·관계 최소화**: 목록 API는 `reservation_notes`(건당 2000자, 예약당 여러 건)를 **아예 조인하지 않는다**. 상담 기록은 상세 화면에서만 로드한다. `Select`로 목록에 실제로 표시하는 필드만 프로젝션할 것.
 
 **인덱스 마이그레이션**: 현재 규모(수백~수천 행)에서는 일반 `CREATE INDEX`로 충분하다. 부팅 시 `Database.Migrate()`가 트래픽을 받기 전에 끝나므로 자기 자신의 쓰기를 막지 않는다. 테이블이 수십만 행을 넘어가면 `CREATE INDEX CONCURRENTLY`로 전환한다.
 
@@ -961,11 +1157,11 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 
 | Phase | 내용 | 완료 기준 |
 |---|---|---|
-| 0 | 스캐폴딩(`api/` + `frontend/`), docker-compose, Tailwind v4, DB 마이그레이션(8장 전체) | 컨테이너 기동 + 마이그레이션 적용 + 인덱스 실제 생성 확인 |
-| 1 | 인증(로그인·갱신·로그아웃·me), `AccountStateFilter`, 어드민 시딩, 동일 출처 프록시 | 로그인~정지 차단까지 실제 브라우저 E2E |
-| 2 | 랜딩 4언어 + 예약 신청 폼 + 개인정보 처리방침 + 유입 경로 수집 | 4언어 폼 제출 → DB 적재 + UTM 보존 확인 |
-| 3 | 예약 대시보드(4카드 + 목록/필터/페이징) + 예약 상세 + 상태 머신 | 상태 전이 동시성(409) 실측 |
-| 4 | 실장 관리 / 시술·수술 관리 | 4언어 탭 CRUD |
+| 0 | 스캐폴딩(`api/` + `frontend/`), docker-compose, Tailwind v4, DB 마이그레이션(8장 전체) | 컨테이너 기동 + 마이그레이션 적용 + 인덱스 실제 생성 확인 + **컨테이너에서 `Asia/Seoul` 타임존 조회 성공**(9-2절 `[미확인]` 해소) |
+| 1 | 인증(로그인·갱신·로그아웃·me), `AccountStateFilter`, 어드민 시딩, 동일 출처 프록시 | 로그인~정지 차단까지 실제 브라우저 E2E. 랜딩에서 `/api/auth/me`가 호출되지 않는지 확인(F5) |
+| 2 | 랜딩 4언어 + 예약 신청 폼 + 개인정보 처리방침 + 유입 경로 수집 | 4언어 폼 제출 → DB 적재 + UTM 보존 확인. **내부 시크릿 없이 `landing-visit` 호출 시 404 실측**(F11) |
+| 3 | 예약 대시보드(4카드 + 목록/필터/페이징) + 예약 상세 + 상담 기록 누적 + 상태 머신 | 상태 전이 동시성(409) 실측 + **예약 코드 동시 생성 중복 없음 실측**(F4) |
+| 4 | 실장 관리(`consultants` CRUD + 비활성화) / 시술·수술 관리 | 4언어 탭 CRUD + **비활성 실장이 배정 드롭다운·KPI에서 빠지고 과거 예약엔 남는지 실측**(D13) |
 | 5 | 예약 달력 | 월 범위 검증 + 부분 인덱스 사용 확인 |
 | 6 | 실장 KPI / 예약 통계 | 빈 구간 0 채움 확인 |
 | 7 | 계정 관리 / 감사 로그 | 3역할 CRUD가 모두 기록되는지 확인 |
@@ -987,7 +1183,7 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 |---|---|---|
 | M2 | **도메인** — 실제 서비스 도메인 및 Cloudflare 계정 연결 | Phase 9 |
 | M3 | **예약 코드 일련번호** — `WJ-YYMMDD-NNN`을 일별 리셋할지 전역 증가로 둘지 (동시 생성 대책은 F4 참고) | Phase 3 |
-| M5 | **실장 자동 배정 규칙** — 신규 예약을 `is_assignable` 실장에게 자동 라운드로빈 배정할지, 수동 배정만 둘지 | Phase 3 |
+| M5 | **실장 자동 배정 규칙** — 신규 예약을 활성 실장(`consultants.is_active`)에게 자동 라운드로빈 배정할지, 수동 배정만 둘지 | Phase 3 |
 | M6 | **랜딩 디자인** — 히어로·소개 섹션의 실제 콘텐츠(사용자가 "추후 디자인" 명시) | Phase 2 이후 |
 | M7 | **개인정보 보유기간** — 예약 데이터·위챗ID의 파기 시점(처리방침에 기재할 값) | Phase 2 |
 
