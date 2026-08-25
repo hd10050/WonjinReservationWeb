@@ -64,19 +64,20 @@
 | D1 | **단일 병원 전용** | 전 테이블에 `hospital_id` 없음. 소유자 필터·IDOR 방어 부담이 구조적으로 사라짐. 병원이 늘어나면 마이그레이션 필요(트레이드오프 수용) |
 | D2 | **위챗 탑재 취소** | 랜딩엔 헤더·푸터·예약 폼만. 고객이 입력한 위챗ID로 실장이 자기 위챗 앱에서 먼저 연락한다 |
 | D3 | **예약금은 수동 입금 확인만** | `deposit_amount` + `deposit_currency` + `deposit_paid` 세 컬럼. PG·웹훅·환불 로직 없음 |
-| D12 | **예약금 통화는 CNY / KRW 선택, 기본값 CNY** | 실장이 실제로 받은 통화를 그대로 기록한다. **환율 환산은 하지 않는다** — 환산하려면 "언제 시점의 환율인가"를 정하고 환율 소스를 붙여야 하는데, 입금 시점과 조회 시점 환율이 달라 금액이 계속 변하는 지표가 되기 때문. 나중에 통계에 예약금 합계를 넣게 되면 **통화별로 분리 집계**하고 서로 다른 통화를 절대 합산하지 않는다 |
-| D4 | **유입 경로 자동 기록** | 랜딩 진입 시 UTM·추천코드를 일별 집계로 기록, 예약 레코드에도 스냅샷 저장 |
+| D4 | **유입 경로 자동 기록** | 랜딩 진입 시 UTM·추천코드를 일별 집계로 기록, 예약 레코드에도 스냅샷 저장. **집계 날짜(`stat_date`)는 KST 기준**(9-2절) |
 | D5 | **인플루언서 전환율은 어드민 전용 메뉴로 분리** | `/admin/referrals` — 병원관리자·실장에게 노출 금지 |
 | D6 | **고객 회원가입 없음 / 관리자 계정은 발급제** | `POST /api/auth/register` 엔드포인트 자체를 만들지 않는다. 계정 생성 경로는 어드민의 `POST /api/admin/users` 하나뿐 |
 | D7 | **동일 출처 API 프록시 채택** | 화면 깜빡임 금지 원칙을 SSR 프리로드로 이행하려면 SSR 요청에 인증 쿠키가 실려야 하기 때문. 13장 참고 |
 | D8 | **🔴 실장은 `consultants` 독립 테이블 — 계정(`users`)과 1:1이 아니다** | [실장 관리]에서 CRUD하는 **마스터 데이터**이며 로그인 계정과 완전히 별개다. 계정 없는 실장이 존재할 수 있고(병원관리자가 대신 배정·입력), 계정이 있다고 실장인 것도 아니다. **두 테이블 사이에 FK 연결을 두지 않는다** — `users.role='Consultant'`는 "로그인 권한 등급"일 뿐 "이 사람이 그 실장"이라는 뜻이 아니다. (2026-08-25 정정: 초안에서 이 둘을 하나로 합쳤던 것은 오설계) |
+| D9 | **시술명은 언어별 컬럼 4개** | `procedures` 테이블에 `name_zh_cn`/`name_zh_tw`/`name_en`/`name_ko`. 조인 없음 + DB 레벨 길이 제약(9장) 확보. 언어 추가 시 마이그레이션 필요(수용) |
+| D10 | **연락 희망 시간은 자유 텍스트가 아니라 4지선다** | 고객이 중국어로 자유 입력하면 한국인 실장이 해석 못 하는 실제 문제가 생김. `morning`/`afternoon`/`evening`/`anytime` 코드로 저장하고 실장 화면엔 실장 언어로 표시 |
+| D11 | **UI 컴포넌트 라이브러리 미도입** | Tailwind v4만 사용. 모달은 네이티브 `<dialog>`(포커스 트랩 내장), 날짜 입력은 `<input type="date">`, 예약 달력은 자체 월간 그리드. 필요해지면 그때 도입 |
+| D12 | **예약금 통화는 CNY / KRW 선택, 기본값 CNY** | 실장이 실제로 받은 통화를 그대로 기록한다. **환율 환산은 하지 않는다** — 환산하려면 "언제 시점의 환율인가"를 정하고 환율 소스를 붙여야 하는데, 입금 시점과 조회 시점 환율이 달라 금액이 계속 변하는 지표가 되기 때문. 나중에 통계에 예약금 합계를 넣게 되면 **통화별로 분리 집계**하고 서로 다른 통화를 절대 합산하지 않는다 |
 | D13 | **실장은 하드 삭제 불가 — `is_active=false` 비활성화만** | 삭제하면 그 실장이 담당했던 과거 예약의 담당자 정보와 KPI 이력이 통째로 사라진다. 비활성 실장은 **신규 배정 드롭다운·실장 KPI·예약 통계에서 제외**되지만, 이미 그 실장이 담당한 예약의 상세 화면과 처리 이력에는 이름이 그대로 남는다 |
 | D14 | **상담 기록은 덮어쓰기가 아니라 누적** | `reservation_notes` 테이블에 작성자·시각과 함께 여러 건을 쌓는다. 상담이 여러 차례 오가는 업무라 단일 컬럼 덮어쓰기는 이전 내용을 잃는다. 삭제는 불가, 수정은 작성자 본인과 어드민만 |
 | D15 | **중복 신청 허용 + 상담 기록 없는 예약은 실장이 소프트 삭제 가능** | 같은 위챗ID로 여러 번 신청해도 막지 않는다(광고 랜딩은 실수 중복 제출이 흔하고, 막으면 진짜 재문의까지 막힌다). 대신 **상담 기록이 0건인 예약은 실장이 직접 소프트 삭제**해 목록을 정리할 수 있다. 상담 기록이 하나라도 있으면 삭제 불가 — 업무 이력이 남은 건은 지워지면 안 되기 때문 |
 | D16 | **예약 통계 기간 단위는 주(일요일~토요일)** | KST 기준. PostgreSQL `date_trunc('week', …)`는 **월요일 시작**이므로 하루 밀어 계산해야 한다(11-4절) |
-| D9 | **시술명은 언어별 컬럼 4개** | `procedures` 테이블에 `name_zh_cn`/`name_zh_tw`/`name_en`/`name_ko`. 조인 없음 + DB 레벨 길이 제약(9장) 확보. 언어 추가 시 마이그레이션 필요(수용) |
-| D10 | **연락 희망 시간은 자유 텍스트가 아니라 4지선다** | 고객이 중국어로 자유 입력하면 한국인 실장이 해석 못 하는 실제 문제가 생김. `morning`/`afternoon`/`evening`/`anytime` 코드로 저장하고 실장 화면엔 실장 언어로 표시 |
-| D11 | **UI 컴포넌트 라이브러리 미도입** | Tailwind v4만 사용. 모달은 네이티브 `<dialog>`(포커스 트랩 내장), 날짜 입력은 `<input type="date">`, 예약 달력은 자체 월간 그리드. 필요해지면 그때 도입 |
+| D17 | **🔴 실장 배정은 수동이며, 미배정 예약에는 아무 작업도 할 수 없다** | 자동 라운드로빈 배정을 만들지 않는다(M5 해소). `consultant_id`가 NULL인 예약은 **담당 배정·소프트 삭제·조회만** 가능하고 상담 기록 추가·상태 전이·방문일시/시술/예약금 저장은 전부 차단된다 — "누가 책임지는지 정해지지 않은 건에 업무 기록이 쌓이는 상태"를 원천 차단하기 위함. **담당자 변경은 예외 없이 처리 이력에 남긴다**(이전 담당자 → 새 담당자) |
 
 ---
 
@@ -548,7 +549,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 | 컬럼 | 타입 | 제약 · 비고 |
 |---|---|---|
 | `id` | int | PK |
-| `code` | varchar(20) | **UNIQUE** — `WJ-260825-014` 형식 |
+| `code` | varchar(12) | **UNIQUE** — `YYYYMMDD` + 4자리 일련번호, 예: `202608260001` (M3 확정, KST 날짜 기준) |
 | `name` | varchar(50) | NOT NULL — 고객 이름 |
 | `birth_date` | date | NOT NULL — 나이는 저장하지 않고 계산 |
 | `gender` | varchar(10) | NOT NULL, CHECK `IN ('Female','Male','Other')` |
@@ -594,15 +595,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 > - ⚠️ 필터가 걸린 엔티티(`Reservation`)를 필터 없는 자식(`ReservationNote`·`ReservationLog` 등)에서 역참조하면 EF Core가 경고를 낸다. 자식 조회는 항상 부모를 거쳐 들어오도록 하거나, 자식에도 동일 조건을 명시할 것.
 > - 인덱스에 `WHERE deleted_at IS NULL` 부분 조건을 지금 넣지는 않는다 — 삭제 건이 소수일 것이므로 이득보다 복잡도가 크다. 삭제가 누적되면 그때 전환한다.
 >
-> 🔴 **예약 코드(`code`) 생성은 "그날 최대값 + 1" 방식을 쓰지 말 것**(F4). 광고 유입으로 동시 제출이 겹치면 두 요청이 같은 번호를 읽어 UNIQUE 위반 500이 난다. **전용 시퀀스를 만들어 원자적으로 발급한다.**
->
-> ```sql
-> -- 일별 리셋이 필요 없다면 전역 시퀀스 하나로 충분하다(가장 단순하고 경쟁 조건이 원천적으로 없음)
-> CREATE SEQUENCE wonjin.reservation_code_seq;
-> -- 코드 = 'WJ-' + yyMMdd + '-' + lpad(nextval::text, 4, '0')
-> ```
->
-> 일별 리셋(`-001`부터 다시 시작)을 원한다면 시퀀스만으로는 안 되므로, `INSERT` 후 `ON CONFLICT (code) DO NOTHING` + 재시도 루프(최대 3회)를 쓴다. **어느 쪽이든 "읽고 나서 쓰는" 2단계 구현은 금지**(M3에서 형식 확정 시 함께 결정).
+> 🔴 **예약 코드(`code`) 생성은 "그날 최대값 + 1" 방식을 쓰지 말 것**(F4). 광고 유입으로 동시 제출이 겹치면 두 요청이 같은 번호를 읽어 UNIQUE 위반 500이 난다. 발급 방식은 8-11절의 **일별 카운터 원자적 증가**를 쓴다.
 
 > 🔴 **`dotnet ef migrations add` 결과 파일은 적용 전 반드시 직접 열어 확인할 것.** EF Core scaffolder가 새 복합/부분 인덱스를 기존 단일 컬럼 인덱스의 상위호환으로 오판해 **자동으로 `DropIndex`를 끼워 넣는 사고**가 있었다. 부분 인덱스는 필터 조건을 만족하지 않는 일반 조회를 커버하지 못하므로, 원치 않는 DropIndex가 보이면 모델에 단일 컬럼 인덱스를 명시적으로 재선언해 둘 다 유지시킬 것.
 
@@ -639,7 +632,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 |---|---|---|
 | `id` | int | PK |
 | `reservation_id` | int | FK → `reservations.id` ON DELETE CASCADE |
-| `action` | varchar(40) | `received`/`assigned`/`status_changed`/`note_added`/`deposit_confirmed`/`cancelled` |
+| `action` | varchar(40) | `received`/`assigned`/`status_changed`/`note_added`/`deposit_confirmed`/`cancelled`/**`deleted`** |
 | `note` | varchar(300) | NULL — 짧은 요약만(상담 본문은 `reservation_notes`에 있다) |
 | `actor_user_id` | int | NULL — 시스템 접수는 NULL |
 | `actor_name` | varchar(30) | NOT NULL — `'SYSTEM'` 또는 조작한 계정 이름(계정이 사라져도 이력 보존) |
@@ -672,7 +665,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
 | `id` | int | PK |
-| `stat_date` | date | NOT NULL |
+| `stat_date` | date | NOT NULL — 🔴 **KST 기준 날짜**(9-2절). 아래 주의 |
 | `referral_code` | varchar(50) | NOT NULL DEFAULT `''` |
 | `utm_source` / `utm_medium` / `utm_campaign` | varchar(100) | NOT NULL DEFAULT `''` |
 | `visit_count` | int | NOT NULL DEFAULT 0 |
@@ -680,6 +673,43 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 **인덱스**: `ux_landing_daily_stats_key` UNIQUE (`stat_date`, `referral_code`, `utm_source`, `utm_medium`, `utm_campaign`), `ix_landing_daily_stats_stat_date`.
 
 > 🔴 **모든 키 컬럼을 `NOT NULL DEFAULT ''`로 둔다.** PostgreSQL의 UNIQUE 제약은 기본적으로 NULL을 서로 다른 값으로 취급(NULLS DISTINCT)하므로, NULL을 허용하면 같은 조합의 행이 무한히 중복 생성된다.
+>
+> 🔴 **`stat_date`는 반드시 KST 기준 날짜로 넣는다.** 서버가 `DateTime.UtcNow.Date`로 만들면 UTC 날짜가 저장되는데, 전환율(15-2절)은 이 값과 `reservations.created_at`(KST로 집계)을 **날짜로 대조**한다. 기준이 어긋나면 **매일 KST 00:00~09:00 사이의 방문과 예약이 서로 다른 날짜 칸에 들어가** 전환율이 조용히 틀어진다 — 어드민만 보는 지표라 아무도 오류를 눈치채지 못한다.
+>
+> ```csharp
+> // 9-2절 ③의 Kst 인스턴스를 그대로 재사용한다. UtcNow.Date 금지.
+> var statDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Kst).DateTime);
+> ```
+
+### 8-11. `reservation_code_counters` — 예약 코드 일별 카운터 (M3)
+
+| 컬럼 | 타입 | 제약 |
+|---|---|---|
+| `code_date` | date | **PK** — KST 기준 날짜(9-2절) |
+| `last_seq` | int | NOT NULL |
+
+**예약 코드 형식**: `YYYYMMDD` + 4자리 일련번호(0 패딩) — 예 `202608260001`. **일별로 0001부터 다시 시작**한다.
+
+발급은 아래 **한 문장**으로 끝낸다. `INSERT … ON CONFLICT … DO UPDATE … RETURNING`은 행 잠금 안에서 증가와 반환이 함께 일어나므로, 동시 요청이 몇 건이 몰려도 **같은 번호가 두 번 나올 수 없다.**
+
+```sql
+-- 오늘 카운터를 원자적으로 1 증가시키고 그 값을 받는다 (읽고 나서 쓰는 2단계가 아니다)
+INSERT INTO wonjin.reservation_code_counters (code_date, last_seq)
+VALUES (@kstDate, 1)
+ON CONFLICT (code_date)
+DO UPDATE SET last_seq = wonjin.reservation_code_counters.last_seq + 1
+RETURNING last_seq;
+```
+
+```csharp
+// @kstDate는 반드시 KST 기준 날짜 — UtcNow.Date를 쓰면 매일 00:00~09:00 접수가 전날 번호를 받는다
+var kstDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Kst).DateTime);
+// code = kstDate.ToString("yyyyMMdd") + seq.ToString("D4")
+```
+
+- **전역 시퀀스를 쓰지 않는 이유**: PostgreSQL 시퀀스는 일별 자동 리셋이 없어 별도 배치가 필요하고, 그 배치가 실패하면 번호가 조용히 어긋난다. 카운터 행 하나가 더 단순하고 실패 지점이 없다.
+- **`MAX(code)+1` 방식 금지**(F4) — 조회와 삽입 사이에 다른 요청이 끼어들면 UNIQUE 위반 500이 난다.
+- 하루 **9999건**까지 수용한다. 초과하면 자리수를 늘려야 하므로, 그 규모에 도달하면 형식을 재검토한다(현재 광고 규모에서는 도달하지 않는다).
 
 ---
 
@@ -779,26 +809,60 @@ var monthStartUtc = monthStartKst.UtcDateTime;   // 쿼리에는 이 값을 쓴�
 | 전이 | 조건 | 수행 주체 |
 |---|---|---|
 | → `New` | 폼 제출 | 고객(익명) |
-| `New` → `Consulting` | 실장 배정 또는 상담 기록 최초 저장 | Consultant |
+| `New` → `Consulting` | **상담 기록 최초 추가**(배정만으로는 전이하지 않는다) | Consultant |
 | `New`/`Consulting` → `Confirmed` | **`visit_date`가 있고 `deposit_paid = true`** 둘 다 충족 | Consultant |
 | `Confirmed` → `Visited` | 실제 내원 확인 | Consultant |
 | `New`/`Consulting`/`Confirmed` → `Cancelled` | 취소 사유 입력 필수 | Consultant |
 
+> **배정은 상태를 바꾸지 않는다.** "배정됨"과 "실제로 연락해서 상담이 시작됨"은 다른 사건이고, 대시보드의 "신규 접수" 카드는 **아직 고객에게 연락하지 않은 건**을 뜻해야 실장이 무엇부터 처리할지 알 수 있다. 배정만으로 `Consulting`이 되면 그 카드가 "연락 안 한 건"을 더 이상 나타내지 못한다.
+
+### 10-1. 🔴 미배정 예약 작업 차단 (D17)
+
+**모든 상태 전이와 업무 입력은 담당 실장이 배정된 뒤에만 가능하다.** `consultant_id`가 NULL인 예약에서 허용되는 것은 셋뿐이다.
+
+| 미배정 예약에서 | 가능 여부 |
+|---|---|
+| 조회(목록·상세) | ✅ |
+| **담당 실장 배정** | ✅ (이것부터 해야 나머지가 열린다) |
+| 소프트 삭제(상담 기록 0건, D15) | ✅ — 중복·장난 신청 정리가 목적이라 배정을 요구하면 정리 자체가 불가능해진다 |
+| 상담 기록 추가 | ❌ |
+| 상태 전이 | ❌ |
+| 방문일시·시술·예약금 저장 | ❌ |
+
+차단된 요청은 **400 `RESERVATION_NOT_ASSIGNED`**를 반환한다. 서버가 실제 방어선이며, 화면은 미배정 상태에서 해당 입력들을 `disabled` 처리하고 "담당 실장을 먼저 배정하세요" 안내를 띄운다(12-5절).
+
 **구현 규칙**
 - 상태 전이는 **조건부 원자적 UPDATE**로만 수행한다. "조회 → 판단 → 저장" 3단계로 나누면 실장 두 명이 동시에 저장할 때 경쟁 조건이 생긴다.
+- **배정 여부 검사도 같은 UPDATE의 WHERE에 넣는다.** 따로 조회해서 판단하면 그 사이 다른 실장이 배정을 해제한 경우를 놓친다.
 
 ```csharp
-// 현재 상태가 기대값일 때만 갱신 — 갱신 행 수가 0이면 다른 세션이 먼저 바꾼 것이므로 409 반환
+// ⚠️ SetProperty는 전이마다 다르다 — 아래는 Confirmed 전이 예시다.
+//    Consulting 전이면 ConsultingAt, Visited면 VisitedAt, Cancelled면 CancelledAt을 채운다.
+//    이 블록을 그대로 복사해 다른 전이에 쓰면 엉뚱한 컬럼이 채워진다.
 var affected = await db.Reservations
-    .Where(r => r.Id == id && r.Status == expectedStatus)
+    .Where(r => r.Id == id
+             && r.Status == expectedStatus
+             && r.ConsultantId != null)          // D17 — 미배정이면 전이 불가
     .ExecuteUpdateAsync(s => s
         .SetProperty(r => r.Status, nextStatus)
-        .SetProperty(r => r.ConfirmedAt, now)
+        .SetProperty(r => r.ConfirmedAt, now)    // ← 전이별로 교체할 것
         .SetProperty(r => r.UpdatedAt, now));
 
 if (affected == 0)
+{
+    // 0건인 이유가 셋이라 구분해서 응답해야 화면이 올바른 안내를 띄울 수 있다
+    var cur = await db.Reservations.AsNoTracking()
+        .Where(r => r.Id == id)
+        .Select(r => new { r.Status, r.ConsultantId })
+        .FirstOrDefaultAsync();
+
+    if (cur is null) return NotFound();
+    if (cur.ConsultantId is null) return BadRequest(new { code = "RESERVATION_NOT_ASSIGNED" });
     return Conflict(new { code = "RESERVATION_STATE_CHANGED" });
+}
 ```
+
+**담당자 변경은 예외 없이 처리 이력에 남긴다**(D17). 배정·재배정·해제 모두 `reservation_logs`에 `action='assigned'`로 기록하고, `note`에 **이전 담당자 → 새 담당자**를 적는다. 실장 간 예약 접근을 전면 허용했기 때문에(F8) 담당자가 조용히 바뀌는 것을 막을 유일한 수단이 이 기록이다.
 
 - `Visited`·`Cancelled`는 **종결 상태**다. 되돌리기가 필요하면 어드민만 가능하게 별도 액션으로 만들되, 요구되기 전까지는 만들지 않는다.
 - 취소·완료 등 되돌릴 수 없는 액션은 프론트에서 확인 UI를 거치게 하고, 목록 행이 아니라 **상세 화면 안에서만** 노출한다(실수 클릭 방지).
@@ -818,7 +882,8 @@ public record PagedResult<T>(IEnumerable<T> Items, int Total, int Page, int Page
 | 메서드 | 경로 | 비고 |
 |---|---|---|
 | POST | `/api/reservations` | 예약 신청. rate limit(IP 분당 5회) + honeypot + 개인정보 동의 서버 재검증 |
-| GET | `/api/procedures` | 활성 시술 목록(선택 UI용, 캐시 가능) |
+
+> **공개 API는 이 하나뿐이다.** 초안에 있던 `GET /api/procedures`(활성 시술 목록)는 **삭제했다** — 랜딩 폼에는 시술 선택 필드가 없고(12-1절, 요구사항 2번), 관리자 화면은 `/api/admin/procedures`를 쓰므로 **이 공개 API를 호출하는 화면이 하나도 없었다.** 아무 화면도 참조하지 않는 공개 엔드포인트는 그 자체로 불필요한 노출면이다. 랜딩에서 시술 목록이 필요해지면 그때 다시 만든다.
 
 > 🔴 **랜딩 방문 기록(`/api/internal/landing-visit`)은 공개 엔드포인트로 두지 않는다**(F11). 익명 공개로 열면 누구나 스크립트로 특정 추천코드의 방문수를 부풀려 전환율 지표를 왜곡할 수 있고, rate limit으로는 막히지 않는다.
 >
@@ -830,15 +895,22 @@ public record PagedResult<T>(IEnumerable<T> Items, int Total, int Page, int Page
 
 | 메서드 | 경로 | 권한 | 비고 |
 |---|---|---|---|
-| GET | `/api/admin/reservations` | 전 역할 | 필터: `status`, `consultantId`, `from`, `to`, `search`, `includeInactiveConsultants` / 정렬: `created_at DESC` |
+| 메서드 | 경로 | 권한 | 비고 |
+|---|---|---|---|
+| GET | `/api/admin/reservations` | 전 역할 | 필터: `status`, `consultantId`, `from`, `to`, `search`, `includeInactive` / 정렬: `created_at DESC` |
 | GET | `/api/admin/reservations/summary` | 전 역할 | 상단 4개 카드 — 조건부 집계 1회(아래) |
-| GET | `/api/admin/reservations/{id}` | 전 역할 | 상세 + 시술 + 상담 기록 + 처리 이력 |
-| PATCH | `/api/admin/reservations/{id}` | Consultant, Admin | 방문일시·담당실장·시술·예약금 저장 (**상담 기록은 아래 별도 엔드포인트**) |
-| POST | `/api/admin/reservations/{id}/status` | Consultant, Admin | 상태 전이(10장 조건부 UPDATE) |
-| POST | `/api/admin/reservations/{id}/notes` | Consultant, Admin | 상담 기록 **추가**(누적, D14) |
-| PATCH | `/api/admin/reservations/{id}/notes/{noteId}` | 작성자 본인, Admin | 상담 기록 수정. 삭제 엔드포인트는 만들지 않는다 |
-| DELETE | `/api/admin/reservations/{id}` | Consultant, Admin | **소프트 삭제**(D15) — 상담 기록 0건일 때만 |
 | GET | `/api/admin/reservations/calendar` | 전 역할 | `year`·`month` 필수, **최대 1개월 범위 검증**(무제한 범위 조회 차단). `status IN ('Confirmed','Visited')` |
+| GET | `/api/admin/reservations/{id:int}` | 전 역할 | 상세 + 시술 + 상담 기록 + 처리 이력 |
+| PATCH | `/api/admin/reservations/{id:int}` | Consultant, Admin | 방문일시·시술·예약금 저장. **미배정이면 400**(D17) |
+| PATCH | `/api/admin/reservations/{id:int}/consultant` | Consultant, Admin | **담당 실장 배정·변경 전용**. 처리 이력 필수 기록(D17) |
+| POST | `/api/admin/reservations/{id:int}/status` | Consultant, Admin | 상태 전이(10장). **미배정이면 400**(D17) |
+| POST | `/api/admin/reservations/{id:int}/notes` | Consultant, Admin | 상담 기록 **추가**(누적, D14). **미배정이면 400**(D17) |
+| PATCH | `/api/admin/reservations/{id:int}/notes/{noteId:int}` | 작성자 본인, Admin | 상담 기록 수정. 삭제 엔드포인트는 만들지 않는다 |
+| DELETE | `/api/admin/reservations/{id:int}` | Consultant, Admin | **소프트 삭제**(D15) — 상담 기록 0건일 때만. 미배정이어도 허용(D17) |
+
+> 🔴 **라우트 파라미터에 `{id:int}` 제약을 반드시 붙이고, 고정 경로(`summary`·`calendar`)를 `{id}` 라우트보다 먼저 선언한다.** 제약이 없으면 ASP.NET Core가 `/api/admin/reservations/summary`의 `"summary"`를 `{id}`로 매칭하려다 실패해 **대시보드 첫 화면이 뜨지 않는다.** 경로를 추가할 때마다 "이 고정 세그먼트가 `{id}`와 겹치지 않는가"를 확인할 것.
+>
+> **담당 실장 배정을 `PATCH /{id}`에 섞지 않고 전용 경로로 분리한 이유**(D17): 배정은 ①미배정 상태에서도 허용되는 **유일한 쓰기**이고 ②처리 이력 기록이 **필수**다. 일반 저장과 한 엔드포인트에 두면 "미배정이면 차단" 규칙과 "배정은 허용" 규칙이 같은 핸들러 안에서 충돌해, 조건문이 꼬이면서 차단이 뚫리기 쉽다.
 
 **소프트 삭제 — 조건 검사를 원자적으로** (D15)
 
@@ -859,7 +931,7 @@ if (affected == 0)
 
 - 삭제된 예약은 전역 쿼리 필터(8-5절)로 목록·상세·달력·통계·KPI·유입경로 전환율에서 **모두 자동 제외**된다.
 - 복구 화면은 만들지 않는다(요구되지 않음). DB에는 남아 있으므로 필요하면 직접 조회한다.
-- 감사 로그에 `action='soft_delete'`, `entity_type='reservation'`으로 기록한다.
+- **양쪽에 모두 기록한다**: `audit_logs`에 `action='soft_delete'`/`entity_type='reservation'`, **`reservation_logs`에 `action='deleted'`**(8-8절). 화면에서 조회되지 않더라도 "누가 언제 지웠는지"는 두 경로 모두에 남아야 한다 — 삭제는 되돌릴 수 없는 액션이므로 추적 근거를 한쪽에만 두지 않는다.
 
 > **실장 간 예약 접근은 전면 허용한다**(F8, 2026-08-25 사용자 결정). 실장 A가 실장 B의 예약을 조회·수정하고 담당자를 변경할 수 있다. 단일 병원에서 휴가·교대 대체가 일상적이고, **누가 무엇을 바꿨는지는 처리 이력(`reservation_logs`)과 감사 로그에 전부 남으므로** 접근 제한 대신 추적으로 관리한다. 담당자 변경도 반드시 이력에 남긴다(`action='assigned'`, 이전 담당자 → 새 담당자를 `note`에 기록).
 
@@ -977,7 +1049,7 @@ var items = raw.Select(x => new ConsultantKpiDto(
 |---|---|---|
 | `/`, `/zh-tw`, `/en`, `/ko` | 랜딩 | 헤더 + 히어로/소개 + **예약 신청 폼** + 푸터 |
 | `/privacy` (4언어) | 개인정보 처리방침 | 문안은 범위 외(20-1절) — 페이지 틀만 만든다 |
-| `error.vue` | 404 / 500 공통 에러 | 아래 |
+| (라우트 아님) | 404 / 500 공통 에러 — Nuxt `error.vue` | 아래 |
 
 **에러 화면**(U3): Nuxt `error.vue` **하나로 404와 500을 함께 처리**한다. 상태코드별로 문구만 바꾸고 화면을 나누지 않는다.
 - 4언어 지원, `noindex, nofollow` 메타 필수.
@@ -1006,7 +1078,7 @@ var items = raw.Select(x => new ConsultantKpiDto(
 
 완료 안내에 담을 것:
 1. 접수 완료 문구 + **실장이 위챗으로 연락한다는 안내**(고객이 다음에 뭘 기다려야 하는지 알려주는 게 핵심)
-2. **예약 코드**(`WJ-260826-014`) — 중복 신청을 허용하므로(D15) 고객이 자기 신청 건을 지칭할 수단이 필요하다. 생성된 값을 그대로 보여주는 것이라 추가 비용이 없다
+2. **예약 코드**(`202608260001` — M3 형식) — 중복 신청을 허용하므로(D15) 고객이 자기 신청 건을 지칭할 수단이 필요하다. 생성된 값을 그대로 보여주는 것이라 추가 비용이 없다
 3. 입력한 위챗 ID 재확인 — **오타가 나면 실장이 연락할 방법 자체가 사라진다.** 이 단계에서 눈으로 확인시키는 것이 유일한 방어선이다
 
 > 폼 상태만 바꾸므로 새로고침하면 빈 폼으로 돌아간다(재제출이 아니다). 중복 제출은 애초에 허용이므로(D15) 별도 방지 장치를 두지 않는다.
@@ -1074,6 +1146,10 @@ function submitSearch(value: string) {
 1. **고객 정보**(읽기 전용): 이름 / 생년월일(나이 계산 표시) / 성별 / 위챗 ID / 연락 희망 시간대(KST 범위 병기) / 신청 언어 / 유입 경로 / 접수 시각 / 예약 코드
 2. **상담 기록**(누적, D14): 기존 기록을 작성자·시각과 함께 **시간순으로 모두 나열**하고, 하단에 새 기록 추가용 textarea(2000자) + [기록 추가] 버튼. 기존 기록은 작성자 본인·어드민만 수정 가능하며 수정 시 "(수정됨)" 표시. **삭제 버튼은 두지 않는다**
 3. **방문 예약**: 방문 날짜 / 방문 시각(**KST 기준**) / 담당 실장 select(활성 실장만, 단 현재 배정된 비활성 실장은 목록에 유지 — 8-4 함정)
+
+> 🔴 **미배정(`consultant_id = null`) 예약은 담당 실장 select와 [배정] 버튼만 활성화하고 나머지 입력(상담 기록·방문일시·시술·예약금·상태 전이)은 전부 `disabled`로 둔다**(D17). 상단에 "담당 실장을 먼저 배정하세요" 안내를 띄운다. 화면 비활성화는 UX일 뿐이고 **실제 차단은 서버가 400 `RESERVATION_NOT_ASSIGNED`로 한다**(10-1절).
+>
+> 담당 실장을 바꾸면 **반드시 처리 이력에 남는다**(이전 담당자 → 새 담당자). 실장 간 예약 접근이 전면 허용돼 있어(F8) 이 기록이 담당자 변경을 추적할 유일한 수단이다.
 4. **시술·수술 결정**: 활성 시술 다중 선택
 5. **예약금**: 통화 select(`CNY` 기본 / `KRW`) + 금액 + 입금 확인 체크박스 (D3·D12). 통화 select에도 보이는 label을 붙인다
 6. **처리 이력**: `reservation_logs` 타임라인
@@ -1275,7 +1351,9 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 - [ ] 검색어 전부 `EscapeLike` 통과 (LIKE 인젝션)
 - [ ] `pageSize` 서버 클램프 (1~100)
 - [ ] JSON-LD `<` → `\u003c` 이스케이프
-- [ ] 원시 SQL 문자열 조합 금지 (LINQ만) — 15-1절 UPSERT는 파라미터 바인딩 사용
+- [ ] **원시 SQL은 아래 3곳으로만 한정**하고, 전부 파라미터 바인딩을 쓴다(문자열 조합 금지). 그 외는 LINQ만 사용
+  - 15-1절 유입 경로 UPSERT / 11-4절 주 단위 집계(D16) / 8-11절 예약 코드 카운터(M3)
+  - ⚠️ **raw SQL에는 전역 쿼리 필터가 적용되지 않는다** — 소프트 삭제 제외 조건(`deleted_at IS NULL`)을 직접 써야 한다(D15). 새 raw SQL을 추가할 때마다 이 조건이 필요한지 먼저 확인할 것
 - [ ] 공개 API 응답 DTO에 내부 식별자·민감 필드를 **아예 넣지 않음**(null로 감추는 방식은 회귀 재발함)
 
 ### 요청·전송
@@ -1384,11 +1462,9 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 | # | 항목 | 결정 필요 시점 |
 |---|---|---|
 | M2 | **도메인** — 실제 서비스 도메인 및 Cloudflare 계정 연결 | Phase 9 |
-| M3 | **예약 코드 일련번호** — `WJ-YYMMDD-NNN`을 일별 리셋할지 전역 증가로 둘지 (동시 생성 대책은 F4 참고) | Phase 3 |
-| M5 | **실장 자동 배정 규칙** — 신규 예약을 활성 실장(`consultants.is_active`)에게 자동 라운드로빈 배정할지, 수동 배정만 둘지 | Phase 3 |
 | M6 | **랜딩 디자인** — 히어로·소개 섹션의 실제 콘텐츠(사용자가 "추후 디자인" 명시) | Phase 2 이후 |
 
-> M1(배포 브랜치 = `main`)·M4(예약금 통화 = CNY/KRW, 기본 CNY)는 2026-08-25에 확정되어 각각 **4-4절**·D12로 이동했다. M7(개인정보 보유기간)은 20-1절 범위 외로 이동했다.
+> **확정되어 이동한 항목**: M1(배포 브랜치 = `main`) → 4-4절 / M4(예약금 통화 = CNY/KRW, 기본 CNY) → D12 / **M3(예약 코드 = `YYYYMMDD`+4자리, 일별 리셋) → 8-11절** / **M5(실장 배정 = 수동, 미배정 시 작업 차단) → D17·10-1절** / M7(개인정보 보유기간) → 20-1절 범위 외.
 >
 > 설계 공백 U1~U16은 2026-08-26에 전건 처리됐다 — 결정된 항목은 각 절에, 범위 외 항목은 20-1절에 있다.
 
