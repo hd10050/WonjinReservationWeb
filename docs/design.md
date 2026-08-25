@@ -33,7 +33,7 @@
 ① 광고 집행 (인플루언서 / 캠페인)
         ↓  UTM · 추천코드가 붙은 링크
 ② 랜딩페이지 도착 (zh-CN / zh-TW / EN / KO)
-        ↓  [이름 · 생년월일 · 성별 · 위챗ID · 연락 희망 시간대] 입력 + 개인정보 동의
+        ↓  [이름 · 생년월일 · 성별 · 위챗ID · 연락 희망 시각] 입력 + 개인정보 동의
 ③ 예약 신청 접수 (status = New, 유입 경로 자동 기록)
         ↓
 ④ 실장이 위챗으로 직접 연락 · 상담 (status = Consulting)
@@ -70,7 +70,7 @@
 | D7 | **동일 출처 API 프록시 채택** | 화면 깜빡임 금지 원칙을 SSR 프리로드로 이행하려면 SSR 요청에 인증 쿠키가 실려야 하기 때문. 13장 참고 |
 | D8 | **🔴 실장은 `consultants` 독립 테이블 — 계정(`users`)과 1:1이 아니다** | [실장 관리]에서 CRUD하는 **마스터 데이터**이며 로그인 계정과 완전히 별개다. 계정 없는 실장이 존재할 수 있고(병원관리자가 대신 배정·입력), 계정이 있다고 실장인 것도 아니다. **두 테이블 사이에 FK 연결을 두지 않는다** — `users.role='Consultant'`는 "로그인 권한 등급"일 뿐 "이 사람이 그 실장"이라는 뜻이 아니다. (2026-08-25 정정: 초안에서 이 둘을 하나로 합쳤던 것은 오설계) |
 | D9 | **시술명은 언어별 컬럼 4개** | `procedures` 테이블에 `name_zh_cn`/`name_zh_tw`/`name_en`/`name_ko`. 조인 없음 + DB 레벨 길이 제약(9장) 확보. 언어 추가 시 마이그레이션 필요(수용) |
-| D10 | **연락 희망 시간은 자유 텍스트가 아니라 4지선다** | 고객이 중국어로 자유 입력하면 한국인 실장이 해석 못 하는 실제 문제가 생김. `morning`/`afternoon`/`evening`/`anytime` 코드로 저장하고 실장 화면엔 실장 언어로 표시 |
+| D10 | **연락 희망 시각은 고객이 직접 입력한다** | 요구사항 2번이 "연락 받고자 하는 시간을 **입력**한다"이므로 `<input type="time">`으로 시각을 그대로 받는다(`time` 컬럼). 초안에서 오전/오후/저녁 4지선다로 바꿨던 것은 **요구되지 않은 임의 변경이라 2026-08-26 철회**했다. 자유 텍스트가 아니라 `time` 타입이므로 언어와 무관하게 해석이 명확하다 |
 | D11 | **UI 컴포넌트 라이브러리 미도입** | Tailwind v4만 사용. 모달은 네이티브 `<dialog>`(포커스 트랩 내장), 날짜 입력은 `<input type="date">`, 예약 달력은 자체 월간 그리드. 필요해지면 그때 도입 |
 | D12 | **예약금 통화는 CNY / KRW 선택, 기본값 CNY** | 실장이 실제로 받은 통화를 그대로 기록한다. **환율 환산은 하지 않는다** — 환산하려면 "언제 시점의 환율인가"를 정하고 환율 소스를 붙여야 하는데, 입금 시점과 조회 시점 환율이 달라 금액이 계속 변하는 지표가 되기 때문. 나중에 통계에 예약금 합계를 넣게 되면 **통화별로 분리 집계**하고 서로 다른 통화를 절대 합산하지 않는다 |
 | D13 | **실장은 하드 삭제 불가 — `is_active=false` 비활성화만** | 삭제하면 그 실장이 담당했던 과거 예약의 담당자 정보와 KPI 이력이 통째로 사라진다. 비활성 실장은 **신규 배정 드롭다운·실장 KPI·예약 통계에서 제외**되지만, 이미 그 실장이 담당한 예약의 상세 화면과 처리 이력에는 이름이 그대로 남는다 |
@@ -254,7 +254,7 @@ robots: {
 | 영역 | 예시 |
 |---|---|
 | `common` | `common.save`, `common.cancel`, `common.delete` — 두 화면 이상에서 쓰는 것만 |
-| `landing` | `landing.form.name`, `landing.form.contactTime.morning`, `landing.success.code` |
+| `landing` | `landing.form.name`, `landing.form.contactTime`, `landing.success.code` |
 | `admin` | `admin.reservations.title`, `admin.consultants.inactive`, `admin.stats.weekly` |
 | `status` | `status.New`, `status.Consulting` — **DB 값과 키를 1:1로 맞춘다**(매핑 테이블을 따로 두지 않기 위해) |
 | `errors` | `errors.INVALID_CREDENTIALS` — **백엔드 에러 코드와 키를 그대로 일치**시킨다 |
@@ -552,7 +552,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 | `birth_date` | date | NOT NULL — 나이는 저장하지 않고 계산 |
 | `gender` | varchar(10) | NOT NULL, CHECK `IN ('Female','Male','Other')` |
 | `wechat_id` | varchar(50) | NOT NULL |
-| `preferred_contact_time` | varchar(20) | NOT NULL, CHECK `IN ('morning','afternoon','evening','anytime')` (D10) |
+| `preferred_contact_time` | time | NOT NULL — 고객이 입력한 연락 희망 시각. **KST 기준**(9-2절), 타임존 없는 벽시계 시각 (D10) |
 | `locale` | varchar(10) | NOT NULL — 고객이 신청한 언어. 실장이 응대 언어를 판단하는 근거 |
 | `status` | varchar(20) | NOT NULL DEFAULT `'New'`, CHECK `IN ('New','Consulting','Confirmed','Visited','Cancelled')` |
 | `consultant_id` | int | NULL, FK → **`consultants.id`** `ON DELETE RESTRICT` (실장은 삭제하지 않으므로 RESTRICT가 안전 — 실수로 삭제를 시도해도 DB가 막는다) |
@@ -747,20 +747,14 @@ var kstDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcN
 |---|---|---|
 | `created_at` 등 이벤트 시각 | `timestamptz`(UTC로 저장) | 관리자 화면에서 **항상 KST로 변환해 표시** |
 | `visit_date` / `visit_time` | `date` / `time` (타임존 없음) | **병원 현지(KST) 벽시계 시각 그대로**. 타임존 변환을 적용하지 않는다 |
-| `preferred_contact_time` | 코드(`morning` 등) | **KST 기준 시간대** — 아래 규칙 |
+| `preferred_contact_time` | `time` (타임존 없음) | **KST 기준 벽시계 시각** — 아래 규칙 |
 
-**① 연락 희망 시간대는 한국 시간(KST) 기준임을 라벨에 명시한다.**
+**① 연락 희망 시각은 고객이 `<input type="time">`으로 직접 입력하고, 라벨에 한국 시간 기준임을 명시한다.**
 
-고객은 중국·대만에 있고 실장은 한국에 있으므로, 기준 시간대를 적지 않으면 "오전"이 누구 기준인지 어긋난다. **구체적 시각 범위(09:00~12:00 등)는 적지 않는다** — 병원 상담 운영시간이 바뀔 때마다 4개 언어 번역을 전부 고쳐야 하고, 실제 운영시간과 어긋나면 고객이 아무도 없는 시간대를 고르게 된다.
+고객은 중국·대만에 있고 실장은 한국에 있으므로, 기준 시간대를 적지 않으면 입력한 시각이 누구 기준인지 어긋난다. 폼 라벨에 **"연락 희망 시각 (한국 시간)" / "希望聯絡時間（韩国时间）"**처럼 병기한다.
 
-| 코드 | 한국어 | 간체 |
-|---|---|---|
-| `morning` | 오전 (한국 시간) | 上午（韩国时间） |
-| `afternoon` | 오후 (한국 시간) | 下午（韩国时间） |
-| `evening` | 저녁 (한국 시간) | 晚上（韩国时间） |
-| `anytime` | 시간 무관 | 任何时间 |
-
-**이 값의 유일한 용도는 실장이 "이 고객에게 언제 위챗을 보낼지" 판단하는 것**이다(12-5절 예약 상세에 표시). 필터·정렬·통계·자동화 어디에도 쓰지 않으므로, 시간대 구분이 더 세밀할 필요가 없다.
+- 저장은 `time`(타임존 없는 벽시계 시각). `visit_time`과 같은 취급이며 타임존 변환을 적용하지 않는다.
+- **이 값의 유일한 용도는 실장이 "이 고객에게 언제 위챗을 보낼지" 판단하는 것**이다(12-5절 예약 상세에 표시). 필터·정렬·통계·자동화 어디에도 쓰지 않는다.
 
 **② 🔴 관리자 화면의 시각 표시는 브라우저 타임존을 쓰지 말 것.**
 
@@ -1063,7 +1057,7 @@ var items = raw.Select(x => new ConsultantKpiDto(
 | 생년월일 | `<input type="date">` | ✅ |
 | 성별 | radio (여성/남성/기타) | ✅ |
 | 위챗 ID | text | ✅ |
-| 연락 희망 시간대 | select (오전/오후/저녁/무관) | ✅ |
+| 연락 희망 시각 | `<input type="time">` (라벨에 "한국 시간" 병기) | ✅ |
 | 개인정보 수집·이용 동의 | checkbox + 처리방침 링크 | ✅ |
 | (honeypot) | 숨김 필드 | — |
 
@@ -1142,7 +1136,7 @@ function submitSearch(value: string) {
 
 참고 화면의 상세 구성을 그대로 옮긴다.
 
-1. **고객 정보**(읽기 전용): 이름 / 생년월일(나이 계산 표시) / 성별 / 위챗 ID / 연락 희망 시간대(KST 범위 병기) / 신청 언어 / 유입 경로 / 접수 시각 / 예약 코드
+1. **고객 정보**(읽기 전용): 이름 / 생년월일(나이 계산 표시) / 성별 / 위챗 ID / 연락 희망 시각(한국 시간) / 신청 언어 / 유입 경로 / 접수 시각 / 예약 코드
 2. **상담 기록**(누적, D14): 기존 기록을 작성자·시각과 함께 **시간순으로 모두 나열**하고, 하단에 새 기록 추가용 textarea(2000자) + [기록 추가] 버튼. 기존 기록은 작성자 본인·어드민만 수정 가능하며 수정 시 "(수정됨)" 표시. **삭제 버튼은 두지 않는다**
 3. **방문 예약**: 방문 날짜 / 방문 시각(**KST 기준**) / 담당 실장 select(활성 실장만, 단 현재 배정된 비활성 실장은 목록에 유지 — 8-4 함정)
 
