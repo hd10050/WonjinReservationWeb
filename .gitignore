@@ -1,0 +1,25 @@
+# 시크릿 — 절대 커밋 금지
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+appsettings.Local.json
+docker-compose.override.yml
+
+# .NET
+bin/
+obj/
+*.user
+
+# Node / Nuxt
+node_modules/
+.nuxt/
+.output/
+dist/
+.wrangler/
+
+# OS / 편집기
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
