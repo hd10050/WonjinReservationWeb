@@ -125,7 +125,35 @@ Cloudflare Workers (Nuxt/Nitro)
 
 > ⚠️ Windows에서 포트 바인딩이 조용히 실패하면 `netsh interface ipv4 show excludedportrange protocol=tcp`로 Hyper-V 예약 범위부터 확인할 것. 겹치면 `docker-compose.override.yml`(gitignore 대상)에 `ports: !override`로 우회하고, 프론트 포트를 바꿨다면 백엔드 `Cors__AllowedOrigins`에도 그 포트를 추가해야 상태변경 요청이 CSRF Origin 검증에 막히지 않는다.
 
-### 4-3. 브랜치 정책
+### 4-3. 환경변수 목록 (U8)
+
+> Phase 0에서 `.env.example`(값 없이 키만)을 이 표 그대로 만든다. **실값은 절대 커밋하지 않는다.**
+
+**백엔드 (ASP.NET Core / Render)**
+
+| 키 | 시크릿 | 용도 |
+|---|:---:|---|
+| `ConnectionStrings__DefaultConnection` | 🔑 | PostgreSQL 접속 문자열 |
+| `Jwt__Secret` | 🔑 | JWT 서명 키 (최소 32자 랜덤) |
+| `Jwt__Issuer` / `Jwt__Audience` | | 토큰 발급자·대상 |
+| `Jwt__AccessTokenMinutes` | | AT 수명(기본 15) |
+| `Cors__AllowedOrigins__0` … | | 허용 오리진 화이트리스트 |
+| `InternalSecret` | 🔑 | 프론트 서버↔백엔드 공유 시크릿(랜딩 방문 기록 인증, 11-1절) |
+| `AdminSeed__Email` / `AdminSeed__Password` | 🔑 | 최초 어드민 계정 시딩(1회). 시딩 후 비밀번호를 바꿀 것 |
+| `ASPNETCORE_ENVIRONMENT` | | `Development` / `Production` |
+
+**프론트 (Nuxt / Cloudflare Workers)**
+
+| 키 | 시크릿 | 용도 |
+|---|:---:|---|
+| `NUXT_PUBLIC_API_BASE` | | **빈 문자열**(동일 출처 프록시). `??`로 폴백할 것 — `||`를 쓰면 무력화됨 |
+| `NUXT_PUBLIC_SITE_URL` | | 정식 도메인(sitemap·hreflang·canonical) |
+| `NUXT_API_BASE_INTERNAL` | | SSR→백엔드 직접 주소(Render 절대 URL) |
+| `NUXT_INTERNAL_SECRET` | 🔑 | 백엔드 `InternalSecret`과 같은 값. **`NUXT_PUBLIC_` 접두사 금지**(브라우저 번들에 노출됨) |
+
+> 🔑 표시된 값은 `.env`(로컬)·Render 환경변수·`wrangler secret`(Cloudflare)으로만 관리한다. `wrangler.toml`의 `vars`는 번들에 포함되므로 시크릿을 넣지 않는다.
+
+### 4-4. 브랜치 정책
 
 - **자동배포 감시 브랜치는 `main`으로 확정**(2026-08-25 사용자 결정). 배포 구조를 바꿀 일이 생기면 사용자가 직접 변경한다.
 - Claude는 **`main`에만 push**한다.
@@ -220,6 +248,20 @@ robots: {
 - 번역 시 숫자·고유명사·HTML/Vue 태그·변수 플레이스홀더(`{name}` 등)는 원형 그대로 유지한다.
 - 🔴 **로케일 JSON 값에 순수 `@` 문자를 넣지 말 것** — vue-i18n이 linked message(`@:key`) 트리거로 오인해 해당 로케일 컴파일 자체가 깨진다(`Invalid linked format`). SSR은 멀쩡한데 클라이언트 라우팅에서만 화면 전체가 raw key로 표시되는 형태로 나타나 원인 파악이 어렵다. 이메일 예시 등이 필요하면 다른 표현으로 대체할 것(작은따옴표 이스케이프는 이 컴파일러에서 동작하지 않음).
 - 백엔드 에러 메시지는 한국어 문자열이 아니라 **에러 코드**(`{ code: "INVALID_CREDENTIALS" }`)로 반환하고, 프론트가 `t('errors.' + code)`로 번역한다.
+
+**키 네이밍 규칙**(U11) — `<영역>.<화면·구성요소>.<항목>`, **최대 3단계**
+
+| 영역 | 예시 |
+|---|---|
+| `common` | `common.save`, `common.cancel`, `common.delete` — 두 화면 이상에서 쓰는 것만 |
+| `landing` | `landing.form.name`, `landing.form.contactTime.morning`, `landing.success.code` |
+| `admin` | `admin.reservations.title`, `admin.consultants.inactive`, `admin.stats.weekly` |
+| `status` | `status.New`, `status.Consulting` — **DB 값과 키를 1:1로 맞춘다**(매핑 테이블을 따로 두지 않기 위해) |
+| `errors` | `errors.INVALID_CREDENTIALS` — **백엔드 에러 코드와 키를 그대로 일치**시킨다 |
+
+- 3단계를 넘기지 않는다. 더 깊어지면 화면을 잘못 나눈 신호다.
+- 한 화면에서만 쓰는 문구를 `common`에 넣지 않는다 — `common`이 잡동사니가 되면 어느 화면이 쓰는지 추적할 수 없어 삭제도 못 하게 된다.
+- `status`·`errors`는 **코드값을 키로 그대로 쓴다.** 별도 매핑 함수를 만들면 값이 추가될 때 한쪽만 갱신되는 사고가 난다.
 
 ---
 
@@ -383,6 +425,22 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 - 인증이 필요한 모든 호출은 **예외 없이** `useApi`(GET, useFetch 기반) 또는 `authFetch`(POST/PUT/PATCH/DELETE)로만 한다. raw `$fetch`를 직접 쓰면 401 자동 복구가 안 되어 "화면 이동은 되는데 데이터가 조용히 안 바뀌는" 버그가 된다(실제 사고 사례: 어드민 페이지 8개 전부가 raw `$fetch`였음).
 - AT 만료 전 백그라운드 자동 갱신을 12분 간격으로 돌린다.
 - 동시 401 발생 시 refresh가 중복 실행되지 않도록 모듈 레벨 싱글턴 Promise로 1회만 실행한다.
+
+### 7-5. Rate limit 정책 통합표 (U13)
+
+| 정책명 | 적용 대상 | 파티션 키 | 한도 |
+|---|---|---|---|
+| `auth` | `POST /api/auth/login` | **이메일 + IP** (7-2절 주의) | 분당 20 |
+| `refresh` | `POST /api/auth/refresh` | 사용자 ID | 분당 10 |
+| `reservation-create` | `POST /api/reservations` (공개 폼) | IP | 분당 5 |
+| `admin-write` | 관리자 쓰기 전체(POST/PUT/PATCH/DELETE) | 사용자 ID | 분당 60 |
+| — | 관리자 읽기(GET) | 없음 | 인증으로 보호 |
+| — | `POST /api/internal/landing-visit` | 없음 | 내부 시크릿 헤더로 보호(11-1절) |
+
+**정책을 새로 만들 때 지킬 것**
+- **기존 정책을 습관적으로 재사용하지 말 것.** 호출 빈도·트리거가 다른 엔드포인트가 같은 정책을 공유하면, 한쪽의 정상 호출이 다른 쪽 한도를 소진시켜 세션이 통째로 튕긴다(`refresh`가 `auth`를 재사용하면 안 되는 이유와 같다).
+- 파티션 키로 쓰는 IP는 Cloudflare가 설정하는 위조 불가 헤더(`CF-Connecting-IP`)에서 얻는다. 브라우저가 보낸 `X-Forwarded-For`를 그대로 신뢰하지 않는다.
+- `UseAuthentication()` → `UseRateLimiter()` 순서를 반드시 지킨다. 반대면 사용자 ID 파티션이 전부 IP로 폴백된다.
 
 > 🔴 **인증 초기화(`fetchMe()`)를 전 페이지에서 실행하지 말 것**(F5). 표준 Nuxt 인증 플러그인은 모든 라우트에서 `fetchMe()`를 호출하지만, **이 프로젝트는 공개 랜딩에 광고 트래픽이 몰리는 구조**라 그대로 두면 방문자 수만큼 `/api/auth/me` 401 요청이 백엔드로 간다(부하 + 로그 오염 + 랜딩 응답 지연). 인증 상태가 필요한 곳은 관리자 화면뿐이므로 경로로 게이팅한다.
 
@@ -918,7 +976,13 @@ var items = raw.Select(x => new ConsultantKpiDto(
 | 경로 | 화면 | 비고 |
 |---|---|---|
 | `/`, `/zh-tw`, `/en`, `/ko` | 랜딩 | 헤더 + 히어로/소개 + **예약 신청 폼** + 푸터 |
-| `/privacy` (4언어) | 개인정보 처리방침 | 폼에서 수집하는 항목·보유기간·이용목적 명시 |
+| `/privacy` (4언어) | 개인정보 처리방침 | 문안은 범위 외(20-1절) — 페이지 틀만 만든다 |
+| `error.vue` | 404 / 500 공통 에러 | 아래 |
+
+**에러 화면**(U3): Nuxt `error.vue` **하나로 404와 500을 함께 처리**한다. 상태코드별로 문구만 바꾸고 화면을 나누지 않는다.
+- 4언어 지원, `noindex, nofollow` 메타 필수.
+- 홈으로 돌아가는 링크 하나만 둔다(현재 로케일 유지).
+- 관리자 경로에서 난 에러도 이 화면을 쓴다 — 별도 관리자용 에러 페이지를 만들지 않는다.
 
 **랜딩 예약 신청 폼 필드**
 
@@ -935,6 +999,17 @@ var items = raw.Select(x => new ConsultantKpiDto(
 > 🔴 **디자인 원칙 (절대 원칙)**: 위 모든 입력 요소에 **보이는 `<label>`**을 붙인다. placeholder로 label을 대신하지 않는다 — placeholder는 입력을 시작하는 순간 사라져 사용자가 무엇을 입력하던 필드인지 잊게 만드는 실제 UX 결함이다. 이 원칙은 랜딩 폼뿐 아니라 **관리자 화면의 모든 input/textarea/select, 목록의 검색창까지 예외 없이** 적용한다.
 >
 > honeypot 필드만 유일한 예외다(봇 탐지용이라 사람에게 보이면 기능이 성립하지 않음). 스크린리더가 읽지 않도록 `aria-hidden="true"` + `tabindex="-1"`을 함께 준다.
+
+**제출 성공 후 처리**(U2)
+
+**별도 완료 페이지를 만들지 않고, 같은 화면에서 폼 자리를 완료 안내로 교체한다.** 라우트를 늘리면 그 페이지에도 4언어 라우팅·noindex 처리가 따라붙는데, 얻는 게 없다.
+
+완료 안내에 담을 것:
+1. 접수 완료 문구 + **실장이 위챗으로 연락한다는 안내**(고객이 다음에 뭘 기다려야 하는지 알려주는 게 핵심)
+2. **예약 코드**(`WJ-260826-014`) — 중복 신청을 허용하므로(D15) 고객이 자기 신청 건을 지칭할 수단이 필요하다. 생성된 값을 그대로 보여주는 것이라 추가 비용이 없다
+3. 입력한 위챗 ID 재확인 — **오타가 나면 실장이 연락할 방법 자체가 사라진다.** 이 단계에서 눈으로 확인시키는 것이 유일한 방어선이다
+
+> 폼 상태만 바꾸므로 새로고침하면 빈 폼으로 돌아간다(재제출이 아니다). 중복 제출은 애초에 허용이므로(D15) 별도 방지 장치를 두지 않는다.
 
 ### 12-2. 관리자 로그인 진입점 숨김
 
@@ -1098,6 +1173,28 @@ var statusCode = executed.Exception is not null ? 500 : context.HttpContext.Resp
 - 감사 로그 저장 실패가 본 작업을 실패시키지 않도록 try/catch로 격리한다.
 - 클라이언트 IP는 Cloudflare가 직접 설정하는 위조 불가 헤더(`CF-Connecting-IP`)를 우선 읽고, 없을 때만 폴백한다. 브라우저가 보낸 `X-Forwarded-For`를 그대로 신뢰하지 않는다.
 
+### 14-1. RouteMap 초기 매핑표 (U10)
+
+이 프로젝트의 **쓰기 엔드포인트 전부**다. 새 관리자 API를 추가할 때마다 여기에 한 줄을 함께 등록한다.
+
+| 세그먼트(AND 매칭) | 메서드 | action | entity_type |
+|---|---|---|---|
+| `/api/admin/reservations` + `/notes` | POST | `note_add` | `reservation_note` |
+| `/api/admin/reservations` + `/notes` | PATCH | `note_update` | `reservation_note` |
+| `/api/admin/reservations` + `/status` | POST | `status_change` | `reservation` |
+| `/api/admin/reservations` | PATCH | `update` | `reservation` |
+| `/api/admin/reservations` | DELETE | `soft_delete` | `reservation` |
+| `/api/admin/consultants` | POST | `create` | `consultant` |
+| `/api/admin/consultants` | PUT | `update` | `consultant` |
+| `/api/admin/procedures` | POST | `create` | `procedure` |
+| `/api/admin/procedures` | PUT | `update` | `procedure` |
+| `/api/admin/users` | POST | `create` | `user` |
+| `/api/admin/users` | PATCH | `update` | `user` |
+
+> 🔴 **`/notes`·`/status`가 붙은 항목은 세그먼트가 2개**라 `/api/admin/reservations` 단독 규칙과 **동시에 매치된다.** 구체성(세그먼트 개수) 내림차순 정렬이 없으면 배열 순서에 따라 상담 기록 추가가 "예약 수정"으로 오분류된다 — 14장의 정렬 규칙이 이 표에서 실제로 필요한 이유다.
+>
+> `PATCH /api/admin/users`는 역할 변경·정지·해제가 한 경로를 공유하므로, 컨트롤러가 `HttpContext.Items["AuditSummary"]`에 구체적 문구(`"회원 #5 권한 변경: Consultant → Admin"`)를 채워 구분한다.
+
 ---
 
 ## 15. 유입 경로 추적 설계 (D4 · D5)
@@ -1259,6 +1356,20 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 | 8 | 유입 경로 분석(어드민 전용) | 비어드민 계정 접근 차단 실측 |
 | 9 | SEO(hreflang·sitemap·JSON-LD) + 16장 전 항목 보안 감사 + 배포 | 라이브 curl 검증 |
 
+### 19-1. 테스트 전략 (U16)
+
+**자동화 테스트 프레임워크를 도입하지 않는다.** 화면 대부분이 CRUD와 표시 로직이라 프레임워크를 얹는 비용이 얻는 것보다 크고, 각 Phase의 완료 기준이 이미 실측 검증으로 정의돼 있다.
+
+**다만 아래 3개는 "눈으로 보면 정상인데 실제로는 깨지는" 종류라, 구현할 때 재현 스크립트를 남기고 그 결과를 세션 로그에 기록한다.**
+
+| 대상 | 재현 방법 | 무엇이 깨지는가 |
+|---|---|---|
+| 예약 코드 동시 생성(F4) | 동일 시각 동시 POST 20건 | UNIQUE 위반 500 — 한 명씩 테스트하면 절대 안 나온다 |
+| 소프트 삭제 조건(D15) | 삭제 요청과 상담 기록 추가를 동시 실행 | 방금 쓴 상담 내용째로 예약이 사라진다 |
+| 상태 전이 동시성(10장) | 같은 예약에 서로 다른 상태 전이 2건 동시 요청 | 나중 요청이 앞 요청을 덮어써 상태가 뒤집힌다 |
+
+이 3개는 **동시성 결함**이라 수동 클릭으로는 재현되지 않고, 운영에서 드물게 터지면 원인 추적이 거의 불가능하다. 스크립트는 `curl`·`xargs -P` 수준이면 충분하며 프레임워크가 필요 없다.
+
 **코딩 규칙 (절대 원칙)**
 - 코드 중간 잘림 금지 — `// 나머지 동일`, `...` 생략 표현을 쓰지 않는다.
 - 파일 수정 전 반드시 그 파일 전체를 읽고 시작한다.
@@ -1277,7 +1388,9 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 | M5 | **실장 자동 배정 규칙** — 신규 예약을 활성 실장(`consultants.is_active`)에게 자동 라운드로빈 배정할지, 수동 배정만 둘지 | Phase 3 |
 | M6 | **랜딩 디자인** — 히어로·소개 섹션의 실제 콘텐츠(사용자가 "추후 디자인" 명시) | Phase 2 이후 |
 
-> M1(배포 브랜치 = `main`)·M4(예약금 통화 = CNY/KRW, 기본 CNY)는 2026-08-25에 확정되어 각각 4-3절·D12로 이동했다.
+> M1(배포 브랜치 = `main`)·M4(예약금 통화 = CNY/KRW, 기본 CNY)는 2026-08-25에 확정되어 각각 **4-4절**·D12로 이동했다. M7(개인정보 보유기간)은 20-1절 범위 외로 이동했다.
+>
+> 설계 공백 U1~U16은 2026-08-26에 전건 처리됐다 — 결정된 항목은 각 절에, 범위 외 항목은 20-1절에 있다.
 
 ### 20-1. 🔴 범위 외로 확정된 항목 (재론 금지)
 
