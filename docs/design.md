@@ -140,7 +140,6 @@ Cloudflare Workers (Nuxt/Nitro)
 | `Jwt__AccessTokenMinutes` | | AT 수명(기본 15) |
 | `Cors__AllowedOrigins__0` … | | 허용 오리진 화이트리스트 |
 | `InternalSecret` | 🔑 | 프론트 서버↔백엔드 공유 시크릿(랜딩 방문 기록 인증, 11-1절) |
-| `AdminSeed__Email` / `AdminSeed__Password` | 🔑 | 최초 어드민 계정 시딩(1회). 시딩 후 비밀번호를 바꿀 것 |
 | `ASPNETCORE_ENVIRONMENT` | | `Development` / `Production` |
 
 **프론트 (Nuxt / Cloudflare Workers)**
@@ -369,7 +368,7 @@ export default defineNuxtRouteMiddleware((to) => {
 >
 > 이메일을 파티션 키에 쓰려면 요청 본문을 읽어야 하므로, ASP.NET Core rate limiter에서는 본문 버퍼링이 필요하다 — 구현 시 실제 동작을 확인할 것(확인 전까지 `[미확인]`). 어렵다면 IP 단독으로 두되 한도를 분당 30회 이상으로 올려 공유 IP 환경을 감안한다.
 
-> **회원가입 엔드포인트는 존재하지 않는다**(D6). 계정 생성 경로는 `POST /api/admin/users` 하나뿐이며 `[Authorize(Roles="Admin")]`으로 잠긴다. 최초 어드민 계정은 부팅 시 환경변수 기반 시딩으로 1회 생성한다.
+> **회원가입 엔드포인트는 존재하지 않는다**(D6). 계정 생성 경로는 `POST /api/admin/users` 하나뿐이며 `[Authorize(Roles="Admin")]`으로 잠긴다. **최초 어드민 계정은 사용자가 DB에 직접 삽입한다**(2026-08-26 지시) — 시딩 코드를 만들지 않는다.
 
 ### 7-3. 정지·강등 즉시 반영 — 전역 필터
 
@@ -523,7 +522,6 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 |---|---|---|
 | `id` | int | PK |
 | `name` | varchar(30) | NOT NULL — 실장 이름 |
-| `team` | varchar(20) | NULL — 소속 팀(참고 화면의 "A팀") |
 | `is_active` | boolean | NOT NULL DEFAULT true — **비활성화 = 소프트 삭제**(D13) |
 | `sort_order` | int | NOT NULL DEFAULT 0 — 배정 드롭다운 표시 순서 |
 | `created_at` / `updated_at` | timestamptz | NOT NULL |
@@ -729,7 +727,6 @@ var kstDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcN
 | 계정 이름 | `varchar(30)` | `[MaxLength(30)]` | `maxlength="30"` |
 | 계정 비밀번호 | (해시 저장) | 8~64자 | `minlength="8" maxlength="64"` |
 | 실장 이름(`consultants.name`) | `varchar(30)` | `[MaxLength(30)]` | `maxlength="30"` |
-| 실장 팀(`consultants.team`) | `varchar(20)` | `[MaxLength(20)]` | `maxlength="20"` |
 | 시술명(언어당) | `varchar(50)` | `[MaxLength(50)]` | `maxlength="50"` |
 | 시술 코드 | `varchar(30)` | `[MaxLength(30)]` | `maxlength="30"` |
 | 처리 이력 메모 | `varchar(300)` | `[MaxLength(300)]` | `maxlength="300"` |
@@ -752,16 +749,18 @@ var kstDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcN
 | `visit_date` / `visit_time` | `date` / `time` (타임존 없음) | **병원 현지(KST) 벽시계 시각 그대로**. 타임존 변환을 적용하지 않는다 |
 | `preferred_contact_time` | 코드(`morning` 등) | **KST 기준 시간대** — 아래 규칙 |
 
-**① 연락 희망 시간대는 KST 기준으로 정의하고, 폼에 실제 시각 범위를 병기한다.**
+**① 연락 희망 시간대는 한국 시간(KST) 기준임을 라벨에 명시한다.**
 
-선택지에 시간 범위를 함께 적으면 "오전"이 몇 시인지에 대한 해석 차이가 원천적으로 사라진다. 고객은 자기 시간대로 환산해 고르면 되고, 시스템은 변환 로직을 하나도 갖지 않아도 된다.
+고객은 중국·대만에 있고 실장은 한국에 있으므로, 기준 시간대를 적지 않으면 "오전"이 누구 기준인지 어긋난다. **구체적 시각 범위(09:00~12:00 등)는 적지 않는다** — 병원 상담 운영시간이 바뀔 때마다 4개 언어 번역을 전부 고쳐야 하고, 실제 운영시간과 어긋나면 고객이 아무도 없는 시간대를 고르게 된다.
 
-| 코드 | 표기(예: 한국어) | 표기(예: 간체) |
+| 코드 | 한국어 | 간체 |
 |---|---|---|
-| `morning` | 오전 (09:00–12:00 KST) | 上午 (09:00–12:00 韩国时间) |
-| `afternoon` | 오후 (12:00–18:00 KST) | 下午 (12:00–18:00 韩国时间) |
-| `evening` | 저녁 (18:00–21:00 KST) | 晚上 (18:00–21:00 韩国时间) |
+| `morning` | 오전 (한국 시간) | 上午（韩国时间） |
+| `afternoon` | 오후 (한국 시간) | 下午（韩国时间） |
+| `evening` | 저녁 (한국 시간) | 晚上（韩国时间） |
 | `anytime` | 시간 무관 | 任何时间 |
+
+**이 값의 유일한 용도는 실장이 "이 고객에게 언제 위챗을 보낼지" 판단하는 것**이다(12-5절 예약 상세에 표시). 필터·정렬·통계·자동화 어디에도 쓰지 않으므로, 시간대 구분이 더 세밀할 필요가 없다.
 
 **② 🔴 관리자 화면의 시각 표시는 브라우저 타임존을 쓰지 말 것.**
 
@@ -1174,7 +1173,7 @@ function submitSearch(value: string) {
 
 | 메뉴 | 핵심 구성 |
 |---|---|
-| 실장 관리 | `consultants` 마스터 CRUD(D8) — 이름·팀·정렬순서 등록/수정 + **활성/비활성 토글**. 삭제 버튼 없음(D13). "비활성 포함 보기" 체크박스로 퇴사자 조회. **로그인 계정과 무관한 독립 데이터이므로 계정 관리 화면과 혼동하지 말 것** |
+| 실장 관리 | `consultants` 마스터 CRUD(D8) — 이름·정렬순서 등록/수정 + **활성/비활성 토글**. 삭제 버튼 없음(D13). "비활성 포함 보기" 체크박스로 퇴사자 조회. **로그인 계정과 무관한 독립 데이터이므로 계정 관리 화면과 혼동하지 말 것** |
 | 시술·수술 관리 | 목록 + 4언어 탭 입력 폼(코드·정렬순서·활성). 삭제 버튼 없음 |
 | 실장 KPI | 기간 선택 + 실장별 배정/확정/방문/확정전환율 표 (평균 응대시간 없음 — U6) |
 | 예약 통계 | **주(일~토) 단위** 추이 + 시술별 집계 + 언어별 분포 |
@@ -1424,7 +1423,7 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 | Phase | 내용 | 완료 기준 |
 |---|---|---|
 | 0 | 스캐폴딩(`api/` + `frontend/`), docker-compose, Tailwind v4, DB 마이그레이션(8장 전체) | 컨테이너 기동 + 마이그레이션 적용 + 인덱스 실제 생성 확인 + **컨테이너에서 `Asia/Seoul` 타임존 조회 성공**(9-2절 `[미확인]` 해소) |
-| 1 | 인증(로그인·갱신·로그아웃·me), `AccountStateFilter`, 어드민 시딩, 동일 출처 프록시 | 로그인~정지 차단까지 실제 브라우저 E2E. 랜딩에서 `/api/auth/me`가 호출되지 않는지 확인(F5) |
+| 1 | 인증(로그인·갱신·로그아웃·me), `AccountStateFilter`, 동일 출처 프록시 | 로그인~정지 차단까지 실제 브라우저 E2E. 랜딩에서 `/api/auth/me`가 호출되지 않는지 확인(F5) |
 | 2 | 랜딩 4언어 + 예약 신청 폼 + 개인정보 처리방침 + 유입 경로 수집 | 4언어 폼 제출 → DB 적재 + UTM 보존 확인. **내부 시크릿 없이 `landing-visit` 호출 시 404 실측**(F11) |
 | 3 | 예약 대시보드(4카드 + 목록/필터/페이징) + 예약 상세 + 상담 기록 누적 + 상태 머신 + 소프트 삭제 | 상태 전이 동시성(409) 실측 + **예약 코드 동시 생성 중복 없음 실측**(F4) + **상담 기록 있는 예약 삭제 시도 시 409 실측**(D15) |
 | 4 | 실장 관리(`consultants` CRUD + 비활성화) / 시술·수술 관리 | 4언어 탭 CRUD + **비활성 실장이 배정 드롭다운·KPI에서 빠지고 과거 예약엔 남는지 실측**(D13) |
@@ -1459,10 +1458,13 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 
 ## 20. 미결정 사항
 
-| # | 항목 | 결정 필요 시점 |
+| # | 항목 | 필요 시점 |
 |---|---|---|
-| M2 | **도메인** — 실제 서비스 도메인 및 Cloudflare 계정 연결 | Phase 9 |
-| M6 | **랜딩 디자인** — 히어로·소개 섹션의 실제 콘텐츠(사용자가 "추후 디자인" 명시) | Phase 2 이후 |
+| M2 | **도메인 · Cloudflare 계정** — 실제 서비스 도메인과 배포 계정 | Phase 9 |
+| M6 | **랜딩 콘텐츠** — 히어로·소개 섹션 문구와 이미지(4개 언어). 사용자가 "추후 디자인" 명시 | Phase 2 이후 |
+| M8 | **병원 정식 정보** — 상호(사업자등록상 명칭)·주소·대표전화·사업자번호. 랜딩 푸터와 JSON-LD(`MedicalClinic`/`Organization`)에 들어간다 | Phase 2 |
+| M9 | **중화권 브랜드 표기** — 중국어권 고객이 검색할 이름. `<title>` 접미사·`og:site_name`·JSON-LD `name`에 **같은 토큰으로** 들어가야 검색 노출이 잡힌다 | Phase 2 |
+| M10 | **로고 이미지 파일** — favicon / 관리자 사이드바 / OG 공유 이미지 3곳에 사용. OG를 별도 제작할지 로고를 그대로 쓸지 포함 | Phase 2 |
 
 > **확정되어 이동한 항목**: M1(배포 브랜치 = `main`) → 4-4절 / M4(예약금 통화 = CNY/KRW, 기본 CNY) → D12 / **M3(예약 코드 = `YYYYMMDD`+4자리, 일별 리셋) → 8-11절** / **M5(실장 배정 = 수동, 미배정 시 작업 차단) → D17·10-1절** / M7(개인정보 보유기간) → 20-1절 범위 외.
 >
