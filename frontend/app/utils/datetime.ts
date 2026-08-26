@@ -20,6 +20,11 @@ export function getKstToday(): { year: number, month: number, day: number } {
   return { year: Number(map.year), month: Number(map.month), day: Number(map.day) }
 }
 
+// [실장 KPI]·[예약 통계] 기간 기본값(오늘, KST 기준 YYYY-MM-DD) — en-CA 로케일 포맷이 그대로 이 형식을 낸다.
+export function todayKst(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: KST }).format(new Date())
+}
+
 // birthDate는 date(타임존 없음) 컬럼이라 KST 변환이 필요 없다 — 달력 나이 계산만 한다.
 export function calculateAge(birthDate: string): number {
   const [y, m, d] = birthDate.split('-').map(Number)

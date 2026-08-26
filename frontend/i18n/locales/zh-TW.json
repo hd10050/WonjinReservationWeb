@@ -132,6 +132,38 @@
       "formNameLabel": "療程名稱",
       "formSortOrderLabel": "排序",
       "formActiveLabel": "啟用狀態"
+    },
+    "kpi": {
+      "title": "顧問KPI",
+      "filterFrom": "起始日期",
+      "filterTo": "結束日期",
+      "filterApply": "查詢",
+      "colConsultant": "顧問",
+      "colAssigned": "分配數",
+      "colConfirmed": "已確認",
+      "colVisited": "已到店",
+      "colConversionRate": "確認轉換率",
+      "empty": "暫無資料。"
+    },
+    "stats": {
+      "title": "預約統計",
+      "filterFrom": "起始日期",
+      "filterTo": "結束日期",
+      "filterApply": "查詢",
+      "sectionWeekly": "每週趨勢",
+      "colWeekStart": "週起始日",
+      "colReceived": "接收",
+      "colConfirmed": "已確認",
+      "colVisited": "已到店",
+      "colCancelled": "已取消",
+      "sectionProcedures": "項目分布",
+      "colProcedure": "項目",
+      "colCount": "數量",
+      "sectionLocales": "語言分布",
+      "colLocale": "語言",
+      "sectionConsultants": "按負責顧問統計",
+      "colConsultant": "顧問",
+      "empty": "暫無資料。"
     }
   },
   "landing": {

@@ -132,6 +132,38 @@
       "formNameLabel": "시술명",
       "formSortOrderLabel": "정렬순서",
       "formActiveLabel": "활성 상태"
+    },
+    "kpi": {
+      "title": "실장 KPI",
+      "filterFrom": "시작일",
+      "filterTo": "종료일",
+      "filterApply": "조회",
+      "colConsultant": "실장",
+      "colAssigned": "배정",
+      "colConfirmed": "확정",
+      "colVisited": "방문",
+      "colConversionRate": "확정전환율",
+      "empty": "데이터가 없습니다."
+    },
+    "stats": {
+      "title": "예약 통계",
+      "filterFrom": "시작일",
+      "filterTo": "종료일",
+      "filterApply": "조회",
+      "sectionWeekly": "주간 추이",
+      "colWeekStart": "주 시작일",
+      "colReceived": "접수",
+      "colConfirmed": "확정",
+      "colVisited": "방문",
+      "colCancelled": "취소",
+      "sectionProcedures": "시술별 집계",
+      "colProcedure": "시술",
+      "colCount": "건수",
+      "sectionLocales": "언어별 분포",
+      "colLocale": "언어",
+      "sectionConsultants": "담당 실장별 집계",
+      "colConsultant": "실장",
+      "empty": "데이터가 없습니다."
     }
   },
   "landing": {

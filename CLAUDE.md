@@ -5,7 +5,7 @@
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원
 - 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~5 구현 완료·main 병합 완료**(2026-08-26). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제)·Phase 4(실장·시술 관리 CRUD, Phase 3 미해결 이슈 2건도 함께 해소)·Phase 5(예약 달력)까지 진행. **사이드바 네비게이션(12-3절)은 각 Phase가 개별 구현하지 않고 병합 시점에 한 번에 정리하기로 사용자 결정**(2026-08-26) — 그 전까지 `/admin/consultants`·`/admin/procedures`·`/admin/calendar`는 URL 직접 접근으로만 확인 가능. Phase 6은 별도 워크트리 세션에서 진행 중, Phase 7부터는 사용자 지시 대기
+- 현재 상태: **Phase 1~6 전부 main 병합 완료**(2026-08-26). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제)·Phase 4(실장·시술 관리 CRUD, Phase 3 미해결 이슈 2건도 함께 해소)·Phase 5(예약 달력)·Phase 6(실장 KPI·예약 통계, 표+차트 D21, 담당 실장 축 포함)까지 진행. **사이드바 네비게이션(12-3절)은 각 Phase가 개별 구현하지 않고 병합 시점에 한 번에 정리하기로 사용자 결정**(2026-08-26) — 그 전까지 `/admin/consultants`·`/admin/procedures`·`/admin/calendar`·`/admin/kpi`·`/admin/stats`는 URL 직접 접근으로만 확인 가능. Phase 7부터는 사용자 지시 대기
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -16,6 +16,7 @@
 | 인증 | 자체 JWT(AT 15분, 쿠키 `wj_at`) + RT(7일, SHA-256, 쿠키 `wj_rt`) — **소셜 로그인·회원가입 없음** |
 | UI | **shadcn-vue**(`shadcn-nuxt`, style `new-york`) + `reka-ui` 프리미티브 + `class-variance-authority`(D19, 구 D11 대체) |
 | 팔레트 | **Olive Garden Feast**(D20) — `#606C38`올리브(primary)·`#283618`짙은산림녹(foreground)·`#FEFAE0`크림(background)·`#DDA15E`탄(secondary)·`#BC6C25`번트오렌지(destructive), OKLCH 변환 후 shadcn CSS 변수에 적용 |
+| 시각화 | **vue-chartjs**(`^5.3.x`) + **chart.js**(`^4.5.x`)(D21) — 실장 KPI·예약 통계 표+차트 병행. Canvas 기반이라 SSR 불가, `<ClientOnly>` 필수. Chart.js 요소 등록은 `plugins/chartjs.client.ts` 한 곳에 집중 |
 | 언어 버전 고정 | **TypeScript 5.9.3 고정**(devDependency) — 7.x(네이티브 재작성판)는 `@vue/compiler-sfc`의 `ts.sys` 타입 해석과 비호환이라 reka-ui 기반 shadcn 컴포넌트 컴파일이 깨짐(11-7절) |
 | 배포 | 프론트 Cloudflare Workers / 백엔드·DB Render |
 | 로컬 | `docker compose up` — frontend:3700 / api:5200 / postgres:5435 |
@@ -41,6 +42,7 @@
 - **UI 라이브러리 = shadcn-vue**(D19, 2026-08-26) — 구 D11(라이브러리 미도입) 대체, Context7로 최신 설치 문서 확인 후 도입. `components.json`은 CLI 자동생성 대신 수동 작성(11-7절)
 - **팔레트 = Olive Garden Feast**(D20, 2026-08-26) — 참고 화면(`reservation-desk_1.html`)의 청록색 팔레트를 대체. coolors.co/palettes/trending을 playwright-cli로 실측 검증해 이름·좋아요 수 확인된 팔레트만 채택(발명 절대 금지 — 실제 발생했던 사고)
 - **병원 정식 정보 확정**(M8, 2026-08-26) — 상호 `원진성형외과의원`·사업자번호 `824-67-00414`·주소는 화면 푸터에 원문 그대로 표기(고유명사 번역 안 함). 🔴 **대표전화는 화면에 노출하지 않고 JSON-LD에만 포함**(예약 폼 유도 우선, 사용자 결정) — 상세는 design.md 12-1-1절
+- **실장 KPI·예약 통계 = 표+차트 병행**(D21, 2026-08-26) — 차트는 `vue-chartjs`+`chart.js`, 색상은 새로 만들지 않고 D20 팔레트 재사용. Canvas는 SSR 불가라 `<ClientOnly>`로 감싸고(화면 깜빡임 금지 원칙은 데이터 프리로드 대상이라 위반 아님), 레이아웃 시프트 방지로 고정 높이 컨테이너 사용
 
 ## 역할 · 메뉴 권한
 | 메뉴 | Admin | HospitalManager | Consultant |
@@ -50,7 +52,7 @@
 | 계정 관리 · 로그(감사) · 유입 경로 분석 | ✅ | ❌ | ❌ |
 
 ## 🔴 이 프로젝트에서 특히 주의할 것
-- 🔴🔴 **`middleware/admin.ts`의 `to.path.startsWith(p + '/')` 접두사 매칭에서 `/admin`(대시보드 루트) 자신은 반드시 제외할 것** — 제외 안 하면 `/admin/`로 시작하는 **모든** 하위 경로가 전부 매치돼(예: `/admin/kpi`도 `/admin/`로 시작하므로) 역할별 화이트리스트가 통째로 무력화된다. **2026-08-26 실측으로 main에서 직접 발견·수정**(Phase 1·3부터 있던 기존 결함) — 수정 전 Consultant가 이미 병합돼 있던 `/admin/consultants`·`/admin/procedures`에 실제로 200 접근 가능했다. 백엔드 `[Authorize]`는 정상 작동해 데이터 유출은 없었음(`p !== '/admin' &&` 조건 추가로 수정, design.md 6-3절 예제도 갱신). **신규 관리자 페이지를 추가할 때마다 이 조건이 유지되는지 반드시 확인할 것**
+- 🔴🔴 **`middleware/admin.ts`의 `to.path.startsWith(p + '/')` 접두사 매칭에서 `/admin`(대시보드 루트) 자신은 반드시 제외할 것** — 제외 안 하면 `/admin/`로 시작하는 **모든** 하위 경로가 전부 매치돼(예: `/admin/kpi`도 `/admin/`로 시작하므로) 역할별 화이트리스트가 통째로 무력화된다. **Phase 1·3부터 있던 기존 결함**(2026-08-26 Phase 6 워크트리 실측으로 발견 — Consultant가 `/admin/kpi`·`/admin/stats`에 실제로 200 접근됨) → 워크트리에서 수정 후, **같은 결함이 main에도 그대로 남아있는 걸 확인해 main 체크아웃에서 직접도 수정**(당시 main에 이미 병합돼 있던 `/admin/consultants`·`/admin/procedures`로 재현·재검증, Consultant 302 차단 확인). `p !== '/admin' &&` 조건 추가, 6-3절 예제 코드도 갱신. **백엔드 `[Authorize]`는 정상 작동해 데이터 유출은 없었지만, 신규 관리자 페이지를 추가할 때마다 이 조건이 유지되는지 반드시 확인할 것**
 - **🔴 실장 ≠ 계정** — [실장 관리]는 `consultants` 마스터 CRUD이고 [계정 관리]는 `users` CRUD. `role='Consultant'`로 실장 목록을 만들려 하지 말 것(초안에서 실제로 저지른 오설계)
 - **비활성 실장 노출 규칙** — 신규 배정 드롭다운·KPI·통계에서는 제외, 과거 예약 상세·처리 이력에는 그대로 표시. 편집 드롭다운은 현재 배정된 비활성 실장을 목록에 남길 것(빼면 저장 시 담당자가 조용히 바뀜)
 - **감사 로그 대상은 3역할 전부** — 일반 가이드는 `role=="Admin"`만 감사하지만, 사용자 요구는 실장·병원관리자 CRUD까지 전부 감사하는 것. Admin으로 좁히면 실장 행위 전체가 로그에서 빠짐
@@ -87,6 +89,8 @@
 - **`useOpsLocale()`은 `locale.value = code` 직접 대입 금지, 반드시 `await setLocale(code)`** — 직접 대입은 lazy 로케일 메시지 로드를 트리거 안 해 `t()`가 raw key를 반환함. 호출부(로그인 페이지·admin 레이아웃)도 `await useOpsLocale()`로 SSR 완료를 기다릴 것(5-4절)
 - **`refresh` rate limit 파티션은 사용자 ID가 아니라 RT 쿠키 해시로 구현**(설계 원문과 의도적 편차, 7-2절) — DB 조회 없이 동기 콜백에서 즉시 얻을 수 있어 세션 단위로 더 세밀하게 격리됨
 - 🔴 **`db.Database.SqlQuery<T>(...)`에 바로 `.SingleAsync()`를 걸지 말 것** — `INSERT...RETURNING`처럼 non-composable SQL을 서브쿼리로 감싸려다 `InvalidOperationException`을 던진다(실측 확인, 8-11절 코드카운터). `.ToListAsync()`로 먼저 그대로 구체화한 뒤 메모리에서 `.Single()`을 적용할 것
+- 🔴 **`db.Database.SqlQuery<T>(...)`의 다중 컬럼 매핑은 `UseSnakeCaseNamingConvention()`의 영향을 그대로 받는다** — 결과 타입 프로퍼티가 `WeekStart`면 SQL 별칭도 `week_start`(스네이크케이스)여야 매칭된다. PascalCase 따옴표 별칭(`AS "WeekStart"`)을 쓰면 "required column 'week_start' was not present" 예외(실측 확인, 11-4절 주간 통계). 8-11절의 `SqlQuery<int>` 스칼라 예시는 컬럼명 매칭이 아니라서 이 규칙이 안 보였을 뿐, 다중 컬럼 raw SQL엔 항상 적용됨
+- 🔴 **`[FromQuery] DateOnly` 등 비-nullable 값 타입은 파라미터 누락 시 400이 아니라 `default`(예: `0001-01-01`)로 조용히 바인딩된다**(`[ApiController]`의 자동 400은 문자열류에만 해당, 실측 확인 — 문서만으로 400을 단정하지 말 것). 필수 쿼리 파라미터는 컨트롤러에서 `== default` 명시적으로 검사해 400을 직접 반환할 것
 - **Vue 템플릿에서 `{{ prefix }}<A>{{ link }}</A>{{ suffix }}` 사이에 줄바꿈을 넣으면 공백이 하나씩 끼어든다** — 한국어처럼 조사가 바로 붙어야 하는 언어에서 실제로 어색해짐(실측 확인). 4언어 문구를 한 태그에 이어붙일 땐 줄바꿈 없이 한 줄로 쓰고, 필요한 공백은 번역 문자열 자체에 포함시킬 것
 - **`@nuxtjs/i18n`의 `locales[].code`가 대문자를 포함하면(`zh-TW`) URL prefix도 그 대소문자 그대로 생성된다**(`/zh-TW`) — 대소문자 URL 둘 다 정상 라우팅되어 기능 문제는 없으나, `code`를 DB `locale` 값과 일치시켜야 하므로 지금은 그대로 둠. SEO 정규화 필요해지면(Phase 9) 재검토
 - **honeypot 필드가 채워진 요청은 400이 아니라 200으로 조용히 흘려보내고 DB에 저장하지 않을 것** — 실패 응답을 주면 봇이 실패 패턴을 학습해 우회를 시도할 여지를 준다(11-1절)
@@ -115,7 +119,7 @@
 | 3 | ✅ 예약 대시보드·상세·상담기록 누적·상태머신·소프트삭제(2026-08-26 완료, main 병합 완료) | 상태전이 동시성409 + 코드동시생성 중복없음(F4) + 삭제조건409(D15) + **미배정 400 차단**(D17). 동시성 재현 스크립트 3종(`scripts/phase3-concurrency/`) 전건 통과. **설계서 대비 최종 감사 완료, 미해결 2건은 위 TODO 참고** |
 | 4 | ✅ 실장(`consultants`)·시술 관리 CRUD(2026-08-26 완료, main 병합 완료) | 4언어 탭 CRUD(시술) + 3역할 권한 매트릭스 실측(Admin·HospitalManager 200 / Consultant 403 / 익명 401) + 비활성 토글·`includeInactive` 필터 브라우저 실측(한중일 텍스트 입력 포함) + 시술 코드 UNIQUE 위반 검증(생성·수정 시 본인 제외) curl 실측. 비활성실장 배정 드롭다운 제외·과거예약 유지(D13)는 Phase 3 로직 그대로(Phase 4에서 변경 없음). **사이드바 미구현 — 병합 시점 일괄 정리 예정** |
 | 5 | ✅ 예약 달력(2026-08-26 구현+실측+main 병합 완료) | 월범위 검증 + 부분인덱스 사용 확인 — EXPLAIN으로 Bitmap Index Scan 실사용 확인 |
-| 6 | 실장 KPI·예약 통계 | 빈구간 0 채움 확인 |
+| 6 | ✅ 실장 KPI·예약 통계(2026-08-26 `session-work`에서 구현+실측 완료, **이 세션에서 main 병합**) — 표+차트(D21)+담당실장축 | 빈구간 0 채움 확인 — **전건 실측 완료**(빈 주·무실적 실장·비활성 실장 전부 0/제외 확인, 수동 계산치와 API 응답 전부 일치) |
 | 7 | 계정 관리·감사 로그 | 3역할 CRUD 전부 기록되는지 확인. `AuditLogFilter` 도입 시 RouteMap(14-1절)에 이미 등록된 consultants/procedures POST·PUT 행도 실제로 잡히는지 확인 |
 | 8 | 유입 경로 분석 | 비어드민 접근 차단 실측 |
 | 9 | SEO·보안감사·배포 | 라이브 curl 검증 |
@@ -138,5 +142,5 @@
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고)
-- **2026-08-26 (18) — 🔴 `middleware/admin.ts` 화이트리스트 결함 main 직접 수정**: Phase 6 워크트리 세션에서 자체 검증 중 발견한 결함을 사용자가 "main에도 반영 안 됐다"며 처리 지시 — main을 직접 체크아웃해 수정(이 파일은 Phase6 워크트리가 아니라 main 자체). 원인: `to.path.startsWith(p + '/')`에서 `p='/admin'`이 자기 자신도 접두사로 매치해 `/admin/`로 시작하는 모든 경로가 전부 허용됨. **main에 이미 병합된 실제 페이지로 재현**: `test-manager`·`test-consultant` 계정 신규 생성(기존 TODO가 "문서상 언급되나 미실존"이라 지적하던 것 — 이번에 실제 추가) 후 root `docker compose build frontend`+재기동으로 수정 반영, curl로 3역할 전수 재검증 — **Consultant→`/admin/consultants`·`/admin/procedures` 302 차단(수정 전엔 200으로 뚫려있었을 것)**, HospitalManager·Admin은 그대로 200(회귀 없음), `/admin`·`/admin/calendar`·`/admin/reservations/2`(예약상세) 등 기존 허용 경로도 전부 회귀 없음 확인. design.md 6-3절 예제 코드도 동일하게 갱신. `git push`로 main에 반영 완료.
+- **2026-08-26 (20) — Phase 6 워크트리 → main 병합 + 세션 종료**: Phase 6 세션(신규 구현 → 4번째 구간 추가 → middleware 결함 발견·수정 → 동일 결함 main 직접 반영, 상세는 `docs/session-log.md` (18)·(19) 참고)을 마무리하며 사용자 지시로 `worktree-session-work` 브랜치를 `main`에 최종 병합. `git merge --no-ff` 충돌 7개 파일(`CLAUDE.md`·`docs/session-log.md`·`frontend/app/utils/datetime.ts`·로케일 4개) 전부 수동 해결 — `datetime.ts`는 Phase5의 `getKstToday()`와 Phase6의 `todayKst()`가 서로 다른 용도라 단순 병기, 로케일 4개는 Phase4의 `admin.consultants`/`admin.procedures`와 Phase6의 `admin.kpi`/`admin.stats`가 다른 네임스페이스라 합집합 병합(205키 4파일 동일 확인), `CLAUDE.md`·`session-log.md`는 두 세션이 각자 (16)~(18) 번호를 독립적으로 붙여 충돌한 것을 시간순으로 재번호(Phase6 쪽을 (18)·(19)로 이동, 이 항목을 (20)으로). 코드(`design.md`·`types/reservation.ts` 등)는 전부 자동 병합. 병합 후 `dotnet build`·`npm run build` 재검증 + 워크트리·브랜치 삭제로 세션 종료.
 
