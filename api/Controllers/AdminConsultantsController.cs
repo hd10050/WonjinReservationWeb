@@ -16,6 +16,11 @@ namespace WonjinApi.Controllers;
 [Authorize(Roles = "Admin,HospitalManager,Consultant")]
 public class AdminConsultantsController(AppDbContext db) : ControllerBase
 {
+    // 🔴 보안감사(2026-08-26) 발견 — 페이징이 전혀 없어 테이블이 커지면 매 호출마다 전량 스캔+응답이
+    // 된다(DB성능 절대원칙). 다만 이 API는 예약 배정 드롭다운·시술 다중선택 등 4곳에서 "전체 목록"을
+    // 배열 그대로 기대하며 재사용 중이라(응답을 PagedResult로 바꾸면 그 호출부가 전부 깨진다), 페이징
+    // UI 대신 안전 상한을 둔다 — 실장은 어드민이 관리 화면에서 수동 등록하는 단일 병원 인력이라 500명을
+    // 넘을 일이 사실상 없다(design.md 20-1절: 시딩 없음, 직접 등록).
     [HttpGet]
     public async Task<ActionResult<List<ConsultantLookupDto>>> GetList([FromQuery] bool includeInactive = false)
     {
@@ -25,6 +30,7 @@ public class AdminConsultantsController(AppDbContext db) : ControllerBase
 
         var items = await query
             .OrderBy(c => c.SortOrder)
+            .Take(500)
             .Select(c => new ConsultantLookupDto(c.Id, c.Name, c.IsActive, c.SortOrder))
             .ToListAsync();
 

@@ -232,11 +232,20 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
     [Authorize(Roles = "Admin,Consultant")]
     public async Task<ActionResult<ReservationDetailDto>> AssignConsultant(int id, [FromBody] AssignConsultantRequest req)
     {
-        var reservation = await db.Reservations.FirstOrDefaultAsync(r => r.Id == id);
-        if (reservation is null) return NotFound();
-
         var consultant = await db.Consultants.AsNoTracking().FirstOrDefaultAsync(c => c.Id == req.ConsultantId);
         if (consultant is null) return BadRequest(new { code = "CONSULTANT_NOT_FOUND" });
+
+        var now = DateTimeOffset.UtcNow;
+        var (userId, userName) = await GetCurrentUserAsync();
+
+        // 🔴 보안감사(2026-08-26) 부분개선 — 조회~반영~로그기록을 하나의 트랜잭션으로 묶어 창을 좁힌다.
+        // ⚠️ 완전한 해결(동시 재배정 시 로그의 "이전 담당자명"이 항상 정확함을 보장)은 낙관적 동시성
+        // 토큰(RowVersion) 도입이 필요한 별도 스키마 변경 작업이다 — 이번 라운드 범위 밖으로 TODO에
+        // 남긴다. 최종 배정 상태(last-write-wins)는 항상 정확하고 데이터 손상·권한상승은 없다.
+        await using var tx = await db.Database.BeginTransactionAsync();
+
+        var reservation = await db.Reservations.FirstOrDefaultAsync(r => r.Id == id);
+        if (reservation is null) return NotFound();
 
         var prevName = "미배정";
         if (reservation.ConsultantId is not null)
@@ -247,11 +256,9 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
                 .FirstOrDefaultAsync() ?? "알 수 없음";
         }
 
-        var now = DateTimeOffset.UtcNow;
         reservation.ConsultantId = req.ConsultantId;
         reservation.UpdatedAt = now;
 
-        var (userId, userName) = await GetCurrentUserAsync();
         db.ReservationLogs.Add(new ReservationLog
         {
             ReservationId = id,
@@ -263,6 +270,7 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
         });
 
         await db.SaveChangesAsync();
+        await tx.CommitAsync();
         return await GetDetail(id);
     }
 
@@ -330,19 +338,24 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
     [Authorize(Roles = "Admin,Consultant")]
     public async Task<ActionResult<ReservationNoteDto>> AddNote(int id, [FromBody] AddNoteRequest req)
     {
-        var reservation = await db.Reservations.AsNoTracking()
-            .Where(r => r.Id == id)
-            .Select(r => new { r.ConsultantId })
-            .FirstOrDefaultAsync();
-        if (reservation is null) return NotFound();
-        if (reservation.ConsultantId is null) return BadRequest(new { code = "RESERVATION_NOT_ASSIGNED" });
-
         var now = DateTimeOffset.UtcNow;
         var (userId, userName) = await GetCurrentUserAsync();
 
         // 🔴 상담기록 추가 + 자동전이 + 두 로그 기록을 하나의 트랜잭션으로 묶는다 — 뒤쪽 SaveChangesAsync가
         // 실패해도 앞서 저장된 상담기록까지 롤백되어 부분 반영을 막는다(재감사 1번 결함과 동일 패턴).
         await using var tx = await db.Database.BeginTransactionAsync();
+
+        // 🔴 보안감사(2026-08-26) 발견 — 이전엔 배정 여부를 트랜잭션 밖 별도 SELECT로만 확인했다.
+        // 그 확인과 아래 INSERT 사이에 SoftDelete가 먼저 커밋되면(둘 다 "상담기록 0건"을 보고 통과),
+        // 노트는 삭제된 예약에 조용히 저장되고 전역 쿼리 필터로 영구히 안 보이게 된다(D15 시나리오와
+        // 동일). ExecuteUpdateAsync 조건부 UPDATE가 이 행에 row-level lock을 걸어, 동시에 들어온
+        // SoftDelete의 UPDATE와 서로 직렬화되게 한다 — SoftDelete가 먼저 커밋되면 아래 WHERE의
+        // ConsultantId 조건이 전역 필터에 의해 대상 자체를 못 찾아 touched=0이 되어 안전하게 막힌다.
+        var touched = await db.Reservations
+            .Where(r => r.Id == id && r.ConsultantId != null)
+            .ExecuteUpdateAsync(s => s.SetProperty(r => r.UpdatedAt, now));
+        if (touched == 0)
+            return await DiagnoseNoteWriteFailureAsync(id);
 
         var note = new ReservationNote
         {
@@ -433,6 +446,19 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
         var cur = await db.Reservations.AsNoTracking()
             .Where(r => r.Id == id)
             .Select(r => new { r.Status, r.ConsultantId })
+            .FirstOrDefaultAsync();
+
+        if (cur is null) return NotFound();
+        if (cur.ConsultantId is null) return BadRequest(new { code = "RESERVATION_NOT_ASSIGNED" });
+        return Conflict(new { code = "RESERVATION_STATE_CHANGED" });
+    }
+
+    // AddNote 전용 — 판정 로직은 DiagnoseWriteFailureAsync와 같지만 반환 DTO 타입이 다르다(ReservationNoteDto).
+    private async Task<ActionResult<ReservationNoteDto>> DiagnoseNoteWriteFailureAsync(int id)
+    {
+        var cur = await db.Reservations.AsNoTracking()
+            .Where(r => r.Id == id)
+            .Select(r => new { r.ConsultantId })
             .FirstOrDefaultAsync();
 
         if (cur is null) return NotFound();

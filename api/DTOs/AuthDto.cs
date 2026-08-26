@@ -12,8 +12,12 @@ public record LoginRequest(
 
 public record UserDto(int Id, string Email, string Role, string Name, string Locale);
 
+// 🔴 보안감사(2026-08-26) 발견 — CurrentPassword에만 MaxLength가 없어 인증된 요청이 무제한 길이
+// 문자열을 검증 없이 BCrypt.Verify로 흘려보낼 수 있었다(입력 필드 길이 제한 절대원칙 위반).
+// NewPassword와 동일한 64자로 통일 — 프론트 비밀번호 변경 화면은 아직 없어(N/A) 백엔드만 우선 반영,
+// 화면 구현 시 이 값과 동일한 maxlength="64"를 반드시 함께 적용할 것.
 public record ChangePasswordRequest(
-    [Required] string CurrentPassword,
+    [Required, MaxLength(64)] string CurrentPassword,
     [Required, MinLength(8), MaxLength(64)] string NewPassword
 );
 

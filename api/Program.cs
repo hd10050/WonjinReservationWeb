@@ -17,6 +17,14 @@ var builder = WebApplication.CreateBuilder(args);
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? [];
 
+// 🔴 보안감사(2026-08-26) 발견 — 프론트(Cloudflare Workers)만 CF-Connecting-IP 뒤에 있고
+// 백엔드(Render)는 그렇지 않다. 이 헤더를 무조건 신뢰하면, 동일 출처 프록시를 건너뛰고
+// Render URL을 직접 호출하며 헤더를 조작해 Rate Limit을 무제한 우회할 수 있었다
+// (web-security-audit-guide.md 3-1절). 프론트·백엔드만 아는 내부시크릿(랜딩방문 기록과
+// 동일한 InternalSecret 재사용)이 유효할 때만 CF-Connecting-IP를 신뢰하고, 아니면 실제
+// TCP 연결 IP로 폴백한다 — 요청을 거부하지 않고 신뢰 헤더만 무시하는 방식(3-1절 권장).
+var internalSecret = builder.Configuration["InternalSecret"] ?? "";
+
 // Add services to the container.
 
 builder.Services.AddControllers(options =>
@@ -84,7 +92,7 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("auth", context =>
     {
         var email = context.Items["AuthEmail"] as string;
-        var partitionKey = $"{email?.Trim().ToLowerInvariant() ?? "-"}|{GetClientIp(context)}";
+        var partitionKey = $"{email?.Trim().ToLowerInvariant() ?? "-"}|{GetClientIp(context, internalSecret)}";
         return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = 20,
@@ -100,7 +108,7 @@ builder.Services.AddRateLimiter(options =>
     {
         var raw = context.Request.Cookies["wj_rt"];
         var partitionKey = string.IsNullOrEmpty(raw)
-            ? GetClientIp(context)
+            ? GetClientIp(context, internalSecret)
             : Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(raw)));
         return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
         {
@@ -113,7 +121,7 @@ builder.Services.AddRateLimiter(options =>
     // 공개 예약 폼(11-1·7-5절) — IP 파티션, 분당 5회. 광고 랜딩發 남용 방지가 목적이라
     // 로그인처럼 이메일 조합이 필요 없다(계정이 없는 익명 제출이므로).
     options.AddPolicy("reservation-create", context =>
-        RateLimitPartition.GetFixedWindowLimiter(GetClientIp(context), _ => new FixedWindowRateLimiterOptions
+        RateLimitPartition.GetFixedWindowLimiter(GetClientIp(context, internalSecret), _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = 5,
             Window = TimeSpan.FromMinutes(1),
@@ -241,8 +249,21 @@ app.MapControllers();
 
 app.Run();
 
-// Cloudflare가 실제 TCP 접속 정보로 직접 설정하는, 클라이언트가 위조 불가능한 헤더를 우선 사용한다(16장).
-static string GetClientIp(HttpContext context) =>
-    context.Request.Headers["CF-Connecting-IP"].FirstOrDefault()
-    ?? context.Connection.RemoteIpAddress?.ToString()
-    ?? "unknown";
+// Cloudflare가 실제 TCP 접속 정보로 직접 설정하는 CF-Connecting-IP는 "프론트(Workers) 뒤"에서만
+// 위조 불가능하다. 백엔드(Render)를 직접 호출하는 경로에선 공격자가 이 헤더를 마음대로 채울 수
+// 있으므로, 프론트만 아는 내부시크릿이 유효할 때만 신뢰하고 아니면 실제 TCP 연결 IP로 폴백한다
+// (16장 + 보안감사 2026-08-26 H1 수정).
+static string GetClientIp(HttpContext context, string internalSecret)
+{
+    var provided = context.Request.Headers["X-Internal-Secret"].FirstOrDefault();
+    var trusted = !string.IsNullOrEmpty(internalSecret) && !string.IsNullOrEmpty(provided)
+        && System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
+            Encoding.UTF8.GetBytes(provided), Encoding.UTF8.GetBytes(internalSecret));
+
+    if (trusted)
+    {
+        var cfIp = context.Request.Headers["CF-Connecting-IP"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(cfIp)) return cfIp;
+    }
+    return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+}

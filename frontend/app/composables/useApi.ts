@@ -44,17 +44,11 @@ export function useApi<T>(
       const baseURL = import.meta.server && config.apiBaseInternal
         ? (config.apiBaseInternal as string)
         : (config.public.apiBase as string)
-      const event = useRequestEvent()
-      const refreshRes = await $fetch.raw(`${baseURL}/api/auth/refresh`, { method: 'POST', headers })
-      const setCookies = typeof refreshRes.headers.getSetCookie === 'function'
-        ? refreshRes.headers.getSetCookie()
-        : (refreshRes.headers.get('set-cookie') ? [refreshRes.headers.get('set-cookie') as string] : [])
-      if (event && setCookies.length > 0) {
-        for (const cookie of setCookies) appendResponseHeader(event, 'set-cookie', cookie)
-      }
-      const newCookieStr = setCookies.map(c => c.split(';')[0]).join('; ')
-      if (!newCookieStr) throw e
-      const mergedCookie = headers.cookie ? `${headers.cookie}; ${newCookieStr}` : newCookieStr
+      // 🔴 보안감사(2026-08-26) 발견 — RT는 1회용 로테이션이라, 01.auth.ts의 fetchMe()가 같은 SSR
+      // 요청에서 이미 refresh를 했다면 그 RT는 폐기된 뒤다. 여기서 다시 원본 쿠키로 refresh를
+      // 시도하면 이미 폐기된 RT라 401로 실패한다 — useAuth.ts의 요청 스코프 공유 헬퍼로 통일.
+      const mergedCookie = await ssrRefreshCookie(baseURL, headers)
+      if (!mergedCookie) throw e
       return await fetchOnce({ ...headers, cookie: mergedCookie })
     }
   }

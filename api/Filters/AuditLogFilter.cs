@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Mvc.Filters;
 using WonjinApi.Data;
 using WonjinApi.Models;
@@ -7,14 +9,18 @@ namespace WonjinApi.Filters;
 
 // 전역 감사 로그 자동 기록(14장). Program.cs에서 AccountStateFilter보다 반드시 뒤에 등록할 것 —
 // 정지된 요청은 AccountStateFilter가 next()를 호출하지 않고 먼저 401로 끊어버리므로 여기까지 오지 않는다.
-public class AuditLogFilter(AppDbContext db, ILogger<AuditLogFilter> logger) : IAsyncActionFilter
+public class AuditLogFilter(AppDbContext db, ILogger<AuditLogFilter> logger, IConfiguration config) : IAsyncActionFilter
 {
-    // 본인 계정 관리 행위(로그인/로그아웃/갱신/내 정보)와 로그 조회 자체는 감사 대상이 아니다(14장).
-    // 이 프로젝트엔 같은 경로에서 메서드별로 제외 여부가 갈리는 경우가 없어 prefix만으로 충분하다.
+    // 본인 계정 관리 행위(로그인/로그아웃/갱신/내 정보 조회·수정)는 감사 대상이 아니다(14장).
+    // /api/auth/me는 GET(Me)뿐 아니라 PATCH(me/password, me/locale)도 이 prefix로 함께 제외되는데,
+    // 셋 다 "본인 계정 관리"라 의도된 동작이다.
+    // 🔴 보안감사(2026-08-26) 발견 — "/api/admin/audit-logs"는 원래 여기 있었으나 이 컨트롤러는
+    // GET만 존재해 애초에 OnActionExecutionAsync 상단(39행)에서 이미 걸러진다. prefix로 남겨두면
+    // 나중에 이 경로에 쓰기 액션(로그 삭제 등)이 추가될 때 그 민감한 행위까지 조용히 감사에서
+    // 빠지는 회귀 위험이 있어(admin-panel-pattern-reference.md 4-7절), 불필요한 이 항목을 제거했다.
     private static readonly string[] ExcludedPrefixes =
     [
         "/api/auth/login", "/api/auth/logout", "/api/auth/refresh", "/api/auth/me",
-        "/api/admin/audit-logs",
     ];
 
     // 14-1절 RouteMap. 세그먼트 개수 내림차순으로 매칭해야 /notes·/status가 상위 규칙에 먹히지 않는다.
@@ -89,9 +95,18 @@ public class AuditLogFilter(AppDbContext db, ILogger<AuditLogFilter> logger) : I
             var summary = context.HttpContext.Items["AuditSummary"] as string
                 ?? $"{entityType} {action}" + (entityId is not null ? $" #{entityId}" : "");
 
-            // Cloudflare가 실제 TCP 접속 정보로 직접 설정하는 위조 불가 헤더를 우선 사용한다(16장, Program.cs와 동일 원칙).
-            var ip = context.HttpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault()
-                ?? context.HttpContext.Connection.RemoteIpAddress?.ToString();
+            // 🔴 보안감사(2026-08-26) 발견 — CF-Connecting-IP는 프론트(Workers)를 거친 요청에서만
+            // 위조 불가능하다. 백엔드(Render) 직접호출 경로에선 조작 가능하므로 내부시크릿이 유효할
+            // 때만 신뢰한다(Program.cs GetClientIp와 동일 원칙 — 이 필터는 별도 클래스라 DI로 재검증).
+            var providedSecret = context.HttpContext.Request.Headers["X-Internal-Secret"].FirstOrDefault();
+            var expectedSecret = config["InternalSecret"];
+            var trustProxyIp = !string.IsNullOrEmpty(expectedSecret) && !string.IsNullOrEmpty(providedSecret)
+                && CryptographicOperations.FixedTimeEquals(
+                    Encoding.UTF8.GetBytes(providedSecret), Encoding.UTF8.GetBytes(expectedSecret));
+            var ip = trustProxyIp
+                ? context.HttpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault()
+                    ?? context.HttpContext.Connection.RemoteIpAddress?.ToString()
+                : context.HttpContext.Connection.RemoteIpAddress?.ToString();
 
             db.AuditLogs.Add(new AuditLog
             {
