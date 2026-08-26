@@ -110,6 +110,7 @@
 ### 다음 세션 최우선
 - [ ] **테스트 데이터 처리 여부 결정** — `test-admin@wonjin.local` + **`test-manager@wonjin.local`·`test-consultant@wonjin.local`(2026-08-26 middleware 결함 검증 위해 실제로 DB에 추가함, 동일 비번 `TestPassword123!`)** + 실장·시술 테스트 데이터. 운영 데이터 아님 — 정리 여부 여전히 사용자 확인 대기(나중에 정리)
 - [ ] **로컬 DB 테스트 더미 예약 정리 여부 확인** — Phase 2~4 실측 검증 중 생성된 더미 `reservations`가 로컬 dev DB에 계속 누적 중(30건+). 실서비스 데이터 아님(나중에 정리)
+- [ ] **`PATCH /{id}/consultant`(실장 배정)를 `AuditLogFilter`의 RouteMap에 세분화 등록할지 결정**(Phase 7 미작업분 점검 중 발견) — `design.md` 14-1절 표 자체에 이 액션이 없어 현재는 일반 `update`/`reservation`으로 뭉뚱그려 기록됨(틀린 분류는 아니나 notes·status처럼 세분화되지 않음). 필요하면 `design.md` 14-1절에 `(["/api/admin/reservations","/consultant"], PATCH, assign, reservation)` 행 추가 후 `AuditLogFilter.RouteMap`에도 반영
 ### Phase 계획 — 완료기준 포함 (design.md 19장과 동일, 상세 코드는 그쪽 참고)
 | # | 내용 | 완료기준 |
 |---|---|---|
