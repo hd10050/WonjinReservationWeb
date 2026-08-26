@@ -1,6 +1,9 @@
 {
   "common": {
-    "appName": "WonJin"
+    "appName": "WonJin",
+    "save": "保存",
+    "cancel": "取消",
+    "loading": "加载中..."
   },
   "admin": {
     "common": {
@@ -12,8 +15,79 @@
       "password": "密码",
       "submit": "登录"
     },
-    "index": {
-      "welcome": "欢迎"
+    "reservations": {
+      "title": "预约看板",
+      "cardNew": "新接收",
+      "cardConsulting": "咨询中",
+      "cardConfirmed": "已确认",
+      "cardVisitedThisMonth": "本月已到店",
+      "filterStatus": "状态",
+      "filterStatusAll": "全部",
+      "filterConsultant": "负责顾问",
+      "filterConsultantAll": "全部",
+      "filterFrom": "接收日期(起)",
+      "filterTo": "接收日期(止)",
+      "filterSearch": "搜索",
+      "filterSearchPlaceholder": "姓名·微信ID·预约码",
+      "filterApply": "应用",
+      "filterReset": "重置",
+      "colCode": "预约码",
+      "colName": "姓名",
+      "colWechatId": "微信ID",
+      "colStatus": "状态",
+      "colConsultant": "负责顾问",
+      "colCreatedAt": "接收时间",
+      "colVisitDate": "预计到店日",
+      "empty": "暂无预约。",
+      "unassigned": "未分配",
+      "filterIncludeInactive": "包含已停用",
+      "pageInfo": "第 {page} / {total} 页",
+      "prev": "上一页",
+      "next": "下一页"
+    },
+    "reservationDetail": {
+      "backToList": "返回列表",
+      "notAssignedBanner": "请先分配负责顾问。分配前无法添加咨询记录、变更状态或保存信息。",
+      "customerInfo": "客户信息",
+      "birthDate": "出生日期",
+      "age": "岁",
+      "gender": "性别",
+      "genderFemale": "女",
+      "genderMale": "男",
+      "genderOther": "其他",
+      "wechatId": "微信ID",
+      "preferredContactTime": "希望联系时间",
+      "preferredContactTimeHint": "韩国时间",
+      "locale": "申请语言",
+      "receivedAt": "接收时间",
+      "referralSource": "获客来源",
+      "consultant": "负责顾问",
+      "consultantPlaceholder": "请选择负责顾问",
+      "inactive": "已停用",
+      "assign": "分配",
+      "notes": "咨询记录",
+      "notesEmpty": "暂无咨询记录。",
+      "editNote": "编辑",
+      "edited": "已编辑",
+      "noteBodyLabel": "新增咨询记录",
+      "noteBodyPlaceholder": "请输入咨询内容",
+      "addNote": "添加记录",
+      "visitInfo": "到店预约",
+      "visitDate": "到店日期",
+      "visitTime": "到店时间",
+      "procedures": "项目/手术",
+      "depositCurrency": "定金币种",
+      "depositAmount": "定金金额",
+      "depositPaid": "已确认到账",
+      "logs": "处理记录",
+      "actions": "操作",
+      "markVisited": "确认到店",
+      "markVisitedConfirm": "确定要将此预约标记为已到店吗？此操作无法撤销。",
+      "cancelReservation": "取消预约",
+      "cancelReasonLabel": "取消原因",
+      "cancelReasonPlaceholder": "请输入取消原因",
+      "deleteReservation": "删除预约",
+      "deleteConfirm": "确定要删除此预约吗？删除后将从列表中排除。"
     }
   },
   "landing": {
@@ -53,10 +127,28 @@
     "title": "隐私政策",
     "pending": "本页面内容正在准备中。"
   },
-  "error": {
-    "notFound": "找不到页面。",
-    "serverError": "服务器发生错误，请稍后再试。",
-    "home": "返回首页"
+  "errorPage": {
+    "notFoundTitle": "页面未找到",
+    "notFoundMessage": "您访问的页面不存在或已被移动。",
+    "serverErrorTitle": "出现临时错误",
+    "serverErrorMessage": "请稍后重试。如果问题持续，请联系管理员。",
+    "goHome": "返回首页"
+  },
+  "status": {
+    "New": "新接收",
+    "Consulting": "咨询中",
+    "Confirmed": "已确认",
+    "Visited": "已到店",
+    "Cancelled": "已取消"
+  },
+  "reservationLogAction": {
+    "received": "已接收",
+    "assigned": "更改负责人",
+    "status_changed": "状态变更",
+    "note_added": "添加咨询记录",
+    "deposit_confirmed": "确认定金到账",
+    "cancelled": "预约取消",
+    "deleted": "已删除"
   },
   "errors": {
     "INVALID_CREDENTIALS": "邮箱或密码不正确。",
@@ -65,6 +157,16 @@
     "INVALID_GENDER": "性别选择无效。",
     "UNSUPPORTED_LOCALE": "不支持的语言。",
     "INVALID_BIRTH_DATE": "请填写正确的出生日期。",
-    "SUBMIT_FAILED": "提交失败，请稍后再试。"
+    "SUBMIT_FAILED": "提交失败，请稍后再试。",
+    "RESERVATION_NOT_ASSIGNED": "该预约尚未分配负责顾问，请先分配。",
+    "RESERVATION_HAS_NOTES": "存在咨询记录的预约无法删除。",
+    "RESERVATION_STATE_CHANGED": "状态已在其他地方被变更，请刷新后重试。",
+    "CONSULTANT_NOT_FOUND": "找不到该顾问。",
+    "INVALID_STATUS_TRANSITION": "不允许此状态变更。",
+    "CANCEL_REASON_REQUIRED": "请输入取消原因。",
+    "INVALID_DEPOSIT_CURRENCY": "定金币种不正确。",
+    "INVALID_PROCEDURE_IDS": "所选项目中包含不存在的项目。",
+    "INTERNAL_ERROR": "服务器发生临时错误，请稍后重试。",
+    "UNKNOWN": "发生未知错误。"
   }
 }
