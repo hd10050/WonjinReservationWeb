@@ -13,7 +13,7 @@
 :root {
   --radius: 0.625rem;
 
-  --background: oklch(0.981 0.034 99.8);   /* #FEFAE0 크림 */
+  --background: oklch(0.994 0.008 99.8);   /* #FEFDF7 — 원본 #FEFAE0 크림보다 채도를 낮춰 더 밝고 옅게(2026-08-27 피드백) */
   --foreground: oklch(0.312 0.053 129.6);  /* #283618 짙은 산림녹 */
 
   --card: oklch(1 0 0);                    /* 흰색 — 크림 배경 위에서 카드가 뜨도록 */
