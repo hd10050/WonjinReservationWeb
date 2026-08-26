@@ -90,6 +90,13 @@
       "deleteConfirm": "确定要删除此预约吗？删除后将从列表中排除。"
     }
   },
+  "errorPage": {
+    "notFoundTitle": "页面未找到",
+    "notFoundMessage": "您访问的页面不存在或已被移动。",
+    "serverErrorTitle": "出现临时错误",
+    "serverErrorMessage": "请稍后重试。如果问题持续，请联系管理员。",
+    "goHome": "返回首页"
+  },
   "status": {
     "New": "新接收",
     "Consulting": "咨询中",

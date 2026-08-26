@@ -90,6 +90,13 @@
       "deleteConfirm": "Delete this reservation? It will be excluded from the list afterward."
     }
   },
+  "errorPage": {
+    "notFoundTitle": "Page Not Found",
+    "notFoundMessage": "The page you're looking for doesn't exist or has been moved.",
+    "serverErrorTitle": "Something Went Wrong",
+    "serverErrorMessage": "Please try again in a moment. If the problem continues, contact an administrator.",
+    "goHome": "Go back home"
+  },
   "status": {
     "New": "New",
     "Consulting": "Consulting",

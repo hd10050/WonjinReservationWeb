@@ -90,6 +90,13 @@
       "deleteConfirm": "確定要刪除此預約嗎？刪除後將從列表中排除。"
     }
   },
+  "errorPage": {
+    "notFoundTitle": "找不到頁面",
+    "notFoundMessage": "您造訪的頁面不存在或已被移動。",
+    "serverErrorTitle": "發生暫時性錯誤",
+    "serverErrorMessage": "請稍後再試。如果問題持續，請聯絡管理員。",
+    "goHome": "返回首頁"
+  },
   "status": {
     "New": "新接收",
     "Consulting": "諮詢中",
