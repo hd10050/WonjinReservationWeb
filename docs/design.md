@@ -325,7 +325,11 @@ export default defineNuxtRouteMiddleware((to) => {
 
   const allowed = ALLOWED[user.value.role]
   if (!allowed) return navigateTo(LOGIN_PATH)
-  if (allowed.some(p => to.path === p || to.path.startsWith(p + '/'))) return
+  // 🔴 '/admin'(대시보드 루트)은 접두사 매칭에서 반드시 제외할 것 — 제외하지 않으면 '/admin/'로 시작하는
+  // 모든 경로가 전부 매치돼(예: '/admin/kpi'도 '/admin/'로 시작) 화이트리스트가 무력화된다(Phase 6에서 실측
+  // 확인된 실제 결함 — Consultant가 /admin/kpi·/admin/stats에 실제로 접근됨. 이전 버전 예제 코드에 이 버그가
+  // 있었다). 신규 관리자 페이지를 추가할 때마다 이 조건이 그대로 유지되는지 확인할 것.
+  if (allowed.some(p => to.path === p || (p !== '/admin' && to.path.startsWith(p + '/')))) return
   return navigateTo('/admin')
 })
 ```

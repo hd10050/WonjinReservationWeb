@@ -50,6 +50,7 @@
 | 계정 관리 · 로그(감사) · 유입 경로 분석 | ✅ | ❌ | ❌ |
 
 ## 🔴 이 프로젝트에서 특히 주의할 것
+- 🔴🔴 **`middleware/admin.ts`의 `to.path.startsWith(p + '/')` 접두사 매칭에서 `/admin`(대시보드 루트) 자신은 반드시 제외할 것** — 제외 안 하면 `/admin/`로 시작하는 **모든** 하위 경로가 전부 매치돼(예: `/admin/kpi`도 `/admin/`로 시작하므로) 역할별 화이트리스트가 통째로 무력화된다. **2026-08-26 실측으로 main에서 직접 발견·수정**(Phase 1·3부터 있던 기존 결함) — 수정 전 Consultant가 이미 병합돼 있던 `/admin/consultants`·`/admin/procedures`에 실제로 200 접근 가능했다. 백엔드 `[Authorize]`는 정상 작동해 데이터 유출은 없었음(`p !== '/admin' &&` 조건 추가로 수정, design.md 6-3절 예제도 갱신). **신규 관리자 페이지를 추가할 때마다 이 조건이 유지되는지 반드시 확인할 것**
 - **🔴 실장 ≠ 계정** — [실장 관리]는 `consultants` 마스터 CRUD이고 [계정 관리]는 `users` CRUD. `role='Consultant'`로 실장 목록을 만들려 하지 말 것(초안에서 실제로 저지른 오설계)
 - **비활성 실장 노출 규칙** — 신규 배정 드롭다운·KPI·통계에서는 제외, 과거 예약 상세·처리 이력에는 그대로 표시. 편집 드롭다운은 현재 배정된 비활성 실장을 목록에 남길 것(빼면 저장 시 담당자가 조용히 바뀜)
 - **감사 로그 대상은 3역할 전부** — 일반 가이드는 `role=="Admin"`만 감사하지만, 사용자 요구는 실장·병원관리자 CRUD까지 전부 감사하는 것. Admin으로 좁히면 실장 행위 전체가 로그에서 빠짐
@@ -103,7 +104,7 @@
 
 ## TODO
 ### 다음 세션 최우선
-- [ ] **테스트 데이터 처리 여부 결정** — `test-admin@wonjin.local`(현재 DB엔 이 계정 1개만 실존 확인, Phase3 문서상 언급된 manager/consultant 테스트 계정은 현재 DB에 없음) + 실장·시술 테스트 데이터. 운영 데이터 아님 — Phase 4 화면 완성으로 전제조건은 충족됨, 여전히 사용자 확인 대기(나중에 정리)
+- [ ] **테스트 데이터 처리 여부 결정** — `test-admin@wonjin.local` + **`test-manager@wonjin.local`·`test-consultant@wonjin.local`(2026-08-26 middleware 결함 검증 위해 실제로 DB에 추가함, 동일 비번 `TestPassword123!`)** + 실장·시술 테스트 데이터. 운영 데이터 아님 — 정리 여부 여전히 사용자 확인 대기(나중에 정리)
 - [ ] **로컬 DB 테스트 더미 예약 정리 여부 확인** — Phase 2~4 실측 검증 중 생성된 더미 `reservations`가 로컬 dev DB에 계속 누적 중(30건+). 실서비스 데이터 아님(나중에 정리)
 ### Phase 계획 — 완료기준 포함 (design.md 19장과 동일, 상세 코드는 그쪽 참고)
 | # | 내용 | 완료기준 |
@@ -137,5 +138,5 @@
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고)
-- **2026-08-26 (17) — M11 최종 결정(수동 유지) + Phase 5(예약 달력) 구현, `session-work-2` 워크트리에서 진행**: 다른 세션 2개가 동시에 Phase4·6을 각자 워크트리에서 진행 중이라 사용자 지시로 이 세션도 격리 워크트리(`session-work-2`)를 새로 파서 작업(기존 `session-work`는 다른 세션이 잠금 중이라 재사용 안 함). **M11**(로그인 locale 자동반영)은 브라우저 감지 자체는 가능하나 "최초 1회만" 조건에 별도 컬럼이 필요한데, 직원 3역할·대부분 한국 사무실 근무라는 전제상 실익이 낮아 **자동화 포기, `PATCH /api/auth/me/locale` 수동 변경만 유지**로 확정(design.md 5-4절·20장 갱신). **Phase 5**: 백엔드 `GET /api/admin/reservations/calendar`(year·month 필수 — from/to 파라미터 자체가 없어 무제한 범위 조회가 원천 불가, `status IN ('Confirmed','Visited')`) 신규 + 프론트 `/admin/calendar`(좌측 자체 월간 그리드 42셀 + 우측 선택일 목록, 라이브러리 없이 D11대로) 신규 + 로케일 4파일 `admin.calendar` 6키 추가(144키 전부 4파일 동일 확인). **부분 인덱스는 Phase 0에서 이미 생성돼 있어 신규 마이그레이션 불필요** — 합성 데이터 5,000건으로 `EXPLAIN`돌려 `Bitmap Index Scan on ix_reservations_visit_date` 실사용 확인(Execution Time 0.454ms). 목록 페이징 절대원칙은 "년·월 파라미터라 한 달 이상 조회가 애초에 불가능"이 페이징과 동일한 anti-full-scan 효과를 낸다고 판단해 미적용(캘린더 UI 특성상 페이징이 의미도 없음) — 근거를 design.md에 남김. 격리된 워크트리 전용 docker 스택(postgres/api/frontend, 포트 5435/5201/3702)을 임시로 띄워 브라우저 E2E(로그인→월이동→일자선택→상세이동)로 전건 실측 후 정리(`docker compose down -v`). **실수 1건 자체 발견·수정**: 절대경로로 파일을 고치다 워크트리가 아닌 main 작업 디렉터리를 직접 수정하고 있었음을 뒤늦게 발견 — `git diff`로 내 변경분만 패치 추출해 워크트리로 옮기고 main은 원상복구(다른 세션이 같은 이유로 main에 남겨둔 미커밋 변경은 그대로 보존, 손대지 않음 — Phase4 세션도 동일 실수를 했었던 것으로 (16)에서 확인됨). 사용자 요청으로 design.md 12-6·6-2·11-2·8-5절 대조 재점검(누락 없음 확인 — 사이드바 네비게이션은 프로젝트 전체에 아직 없어 이 페이지도 그대로 둠) + `git merge-tree`로 main 병합 전 충돌 여부 사전 확인. **main 병합 시 Phase 4(16)가 먼저 병합해 main이 이동해 있었음** — `CLAUDE.md`·`docs/session-log.md`(둘 다 세션요약 기록 위치 중복, (16) 번호도 두 세션이 각자 붙여 충돌)만 수동 병합(Phase4의 (16)을 `session-log.md`로, 이 항목을 (17)로 재번호). 코드·design.md는 전부 자동 병합. **이번 세션 작업분(M11+Phase5)만 main에 병합 완료 + `session-work-2` 워크트리·브랜치 정리 완료**(Phase4·6 워크트리는 별도 세션 소관이라 손대지 않음).
+- **2026-08-26 (18) — 🔴 `middleware/admin.ts` 화이트리스트 결함 main 직접 수정**: Phase 6 워크트리 세션에서 자체 검증 중 발견한 결함을 사용자가 "main에도 반영 안 됐다"며 처리 지시 — main을 직접 체크아웃해 수정(이 파일은 Phase6 워크트리가 아니라 main 자체). 원인: `to.path.startsWith(p + '/')`에서 `p='/admin'`이 자기 자신도 접두사로 매치해 `/admin/`로 시작하는 모든 경로가 전부 허용됨. **main에 이미 병합된 실제 페이지로 재현**: `test-manager`·`test-consultant` 계정 신규 생성(기존 TODO가 "문서상 언급되나 미실존"이라 지적하던 것 — 이번에 실제 추가) 후 root `docker compose build frontend`+재기동으로 수정 반영, curl로 3역할 전수 재검증 — **Consultant→`/admin/consultants`·`/admin/procedures` 302 차단(수정 전엔 200으로 뚫려있었을 것)**, HospitalManager·Admin은 그대로 200(회귀 없음), `/admin`·`/admin/calendar`·`/admin/reservations/2`(예약상세) 등 기존 허용 경로도 전부 회귀 없음 확인. design.md 6-3절 예제 코드도 동일하게 갱신. `git push`로 main에 반영 완료.
 
