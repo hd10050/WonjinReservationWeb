@@ -9,7 +9,7 @@
       :class="{ 'admin-sidebar--open': mobileNavOpen }"
     >
       <NuxtLink to="/admin" class="flex items-center gap-2 border-b px-4 py-4">
-        <img src="/logo.svg" :alt="t('common.appName')" class="h-6 w-auto shrink-0">
+        <img src="/logo.svg" :alt="t('common.appName')" class="h-12 w-auto shrink-0">
       </NuxtLink>
       <nav class="flex-1 space-y-0.5 px-3 py-4 text-sm">
         <NuxtLink
@@ -27,7 +27,7 @@
     <!-- 768px 이하 전용 오버레이 — 사이드바 밖을 클릭하면 닫힘 -->
     <div
       v-if="mobileNavOpen"
-      class="fixed inset-0 z-30 bg-black/40 md:hidden"
+      class="fixed inset-0 z-30 bg-black/20 md:hidden"
       aria-hidden="true"
       @click="mobileNavOpen = false"
     />

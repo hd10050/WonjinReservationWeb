@@ -3,7 +3,7 @@
     <header class="border-b bg-card">
       <div class="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
         <NuxtLink :to="localePath('index')" class="flex items-center">
-          <img src="/logo.svg" :alt="t('common.appName')" class="h-6 w-auto">
+          <img src="/logo.svg" :alt="t('common.appName')" class="h-12 w-auto">
         </NuxtLink>
         <DropdownMenuRoot>
           <DropdownMenuTrigger
