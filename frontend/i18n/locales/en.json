@@ -40,6 +40,7 @@
       "colVisitDate": "Visit Date",
       "empty": "No reservations found.",
       "unassigned": "Unassigned",
+      "filterIncludeInactive": "Include inactive",
       "pageInfo": "Page {page} of {total}",
       "prev": "Previous",
       "next": "Next"
@@ -81,6 +82,7 @@
       "logs": "Activity Log",
       "actions": "Actions",
       "markVisited": "Mark as Visited",
+      "markVisitedConfirm": "Mark this reservation as visited? This cannot be undone.",
       "cancelReservation": "Cancel Reservation",
       "cancelReasonLabel": "Cancellation Reason",
       "cancelReasonPlaceholder": "Enter the reason for cancellation",

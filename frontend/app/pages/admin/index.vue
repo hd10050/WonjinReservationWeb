@@ -26,8 +26,14 @@
           <Label for="f-consultant">{{ t('admin.reservations.filterConsultant') }}</Label>
           <select id="f-consultant" v-model="formConsultantId" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm">
             <option value="">{{ t('admin.reservations.filterConsultantAll') }}</option>
-            <option v-for="c in consultants" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+            <option v-for="c in consultants" :key="c.id" :value="String(c.id)">
+              {{ c.name }}{{ c.isActive ? '' : ` (${t('admin.reservationDetail.inactive')})` }}
+            </option>
           </select>
+          <label class="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <input type="checkbox" v-model="showInactiveConsultants">
+            {{ t('admin.reservations.filterIncludeInactive') }}
+          </label>
         </div>
         <div class="flex flex-col gap-1.5">
           <Label for="f-from">{{ t('admin.reservations.filterFrom') }}</Label>
@@ -116,7 +122,11 @@ const query = computed(() => ({
 
 const { data: summary } = await useApi<ReservationSummary>('/api/admin/reservations/summary')
 const { data } = await useApi<PagedResult<ReservationListItem>>('/api/admin/reservations', { query })
-const { data: consultants } = await useApi<ConsultantLookup[]>('/api/admin/consultants')
+// 8-4절/12-4절 — 대시보드 필터는 기본 활성 실장만, "비활성 포함" 체크 시 퇴사자도 필터 대상에 노출
+const showInactiveConsultants = ref(false)
+const { data: consultants } = await useApi<ConsultantLookup[]>('/api/admin/consultants', {
+  query: () => ({ includeInactive: showInactiveConsultants.value }),
+})
 
 const page = computed(() => query.value.page)
 const totalPages = computed(() => data.value ? Math.max(1, Math.ceil(data.value.total / data.value.pageSize)) : 1)

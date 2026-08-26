@@ -40,6 +40,7 @@
       "colVisitDate": "预计到店日",
       "empty": "暂无预约。",
       "unassigned": "未分配",
+      "filterIncludeInactive": "包含已停用",
       "pageInfo": "第 {page} / {total} 页",
       "prev": "上一页",
       "next": "下一页"
@@ -81,6 +82,7 @@
       "logs": "处理记录",
       "actions": "操作",
       "markVisited": "确认到店",
+      "markVisitedConfirm": "确定要将此预约标记为已到店吗？此操作无法撤销。",
       "cancelReservation": "取消预约",
       "cancelReasonLabel": "取消原因",
       "cancelReasonPlaceholder": "请输入取消原因",

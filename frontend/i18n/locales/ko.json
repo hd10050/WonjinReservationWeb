@@ -40,6 +40,7 @@
       "colVisitDate": "방문예정일",
       "empty": "예약이 없습니다.",
       "unassigned": "미배정",
+      "filterIncludeInactive": "비활성 포함",
       "pageInfo": "{page} / {total} 페이지",
       "prev": "이전",
       "next": "다음"
@@ -81,6 +82,7 @@
       "logs": "처리 이력",
       "actions": "액션",
       "markVisited": "내원 확인",
+      "markVisitedConfirm": "내원 확인으로 처리하시겠습니까? 이 상태는 되돌릴 수 없습니다.",
       "cancelReservation": "예약 취소",
       "cancelReasonLabel": "취소 사유",
       "cancelReasonPlaceholder": "취소 사유를 입력하세요",

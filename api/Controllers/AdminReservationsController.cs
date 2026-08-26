@@ -360,6 +360,23 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
         }
 
         db.ReservationLogs.Add(new ReservationLog { ReservationId = id, Action = "deleted", ActorUserId = userId, ActorName = userName, CreatedAt = now });
+
+        // 삭제는 되돌릴 수 없는 액션이므로 추적 근거를 reservation_logs 한쪽에만 두지 않는다(11-2절).
+        // AuditLogFilter(Phase 7, 전역 자동기록)는 아직 없으므로 이 액션만 직접 기록한다.
+        var actor = await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => new { u.Email, u.Role }).FirstOrDefaultAsync();
+        db.AuditLogs.Add(new AuditLog
+        {
+            ActorUserId = userId,
+            ActorEmail = actor?.Email ?? "SYSTEM",
+            ActorRole = actor?.Role ?? "",
+            Action = "soft_delete",
+            EntityType = "reservation",
+            EntityId = id.ToString(),
+            Summary = $"예약 #{id} 소프트 삭제(상담 기록 0건)",
+            StatusCode = 204,
+            CreatedAt = now,
+        });
+
         await db.SaveChangesAsync();
         return NoContent();
     }

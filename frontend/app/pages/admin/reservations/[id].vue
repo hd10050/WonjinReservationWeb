@@ -19,6 +19,8 @@
       <Card>
         <CardHeader><CardTitle>{{ t('admin.reservationDetail.customerInfo') }}</CardTitle></CardHeader>
         <CardContent class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-3">
+          <div><span class="text-muted-foreground">{{ t('admin.reservations.colName') }}: </span>{{ detail.name }}</div>
+          <div><span class="text-muted-foreground">{{ t('admin.reservations.colCode') }}: </span>{{ detail.code }}</div>
           <div><span class="text-muted-foreground">{{ t('admin.reservationDetail.birthDate') }}: </span>{{ detail.birthDate }} ({{ calculateAge(detail.birthDate) }}{{ t('admin.reservationDetail.age') }})</div>
           <div><span class="text-muted-foreground">{{ t('admin.reservationDetail.gender') }}: </span>{{ t(`admin.reservationDetail.gender${detail.gender}`) }}</div>
           <div><span class="text-muted-foreground">{{ t('admin.reservationDetail.wechatId') }}: </span>{{ detail.wechatId }}</div>
@@ -97,7 +99,7 @@
               <Input id="f-visit-date" v-model="visitDate" type="date" :disabled="!canWrite || !isAssigned" class="w-40" />
             </div>
             <div class="flex flex-col gap-1.5">
-              <Label for="f-visit-time">{{ t('admin.reservationDetail.visitTime') }}</Label>
+              <Label for="f-visit-time">{{ t('admin.reservationDetail.visitTime') }} ({{ t('admin.reservationDetail.preferredContactTimeHint') }})</Label>
               <Input id="f-visit-time" v-model="visitTime" type="time" :disabled="!canWrite || !isAssigned" class="w-32" />
             </div>
           </div>
@@ -105,9 +107,9 @@
           <div>
             <p class="mb-1.5 text-sm font-medium">{{ t('admin.reservationDetail.procedures') }}</p>
             <div class="flex flex-wrap gap-x-4 gap-y-2">
-              <label v-for="p in procedures" :key="p.id" class="flex items-center gap-1.5 text-sm">
+              <label v-for="p in visibleProcedures" :key="p.id" class="flex items-center gap-1.5 text-sm">
                 <input type="checkbox" :value="p.id" v-model="selectedProcedureIds" :disabled="!canWrite || !isAssigned">
-                {{ procedureName(p) }}
+                {{ procedureName(p) }}{{ p.isActive ? '' : ` (${t('admin.reservationDetail.inactive')})` }}
               </label>
             </div>
           </div>
@@ -202,7 +204,7 @@ const id = computed(() => Number(route.params.id))
 
 const { data: detail, refresh, error } = await useApi<ReservationDetail>(() => `/api/admin/reservations/${id.value}`)
 const { data: consultantsRaw } = await useApi<ConsultantLookup[]>('/api/admin/consultants', { query: { includeInactive: true } })
-const { data: procedures } = await useApi<ProcedureLookup[]>('/api/admin/procedures')
+const { data: proceduresRaw } = await useApi<ProcedureLookup[]>('/api/admin/procedures', { query: { includeInactive: true } })
 
 if (error.value) {
   throw createError({ statusCode: (error.value as any)?.statusCode ?? 404, statusMessage: 'Not Found', fatal: true })
@@ -216,6 +218,9 @@ const canWrite = computed(() => user.value?.role === 'Admin' || user.value?.role
 const isAssigned = computed(() => detail.value?.consultantId != null)
 const assignableConsultants = computed(() =>
   (consultantsRaw.value ?? []).filter(c => c.isActive || c.id === detail.value?.consultantId))
+// 8-3절 — 이미 선택된 비활성 시술은 목록에 남겨야 한다(빼면 편집 화면에서 확인·해제가 불가능해진다)
+const visibleProcedures = computed(() =>
+  (proceduresRaw.value ?? []).filter(p => p.isActive || detail.value?.procedureIds.includes(p.id)))
 
 function procedureName(p: ProcedureLookup): string {
   const map: Record<string, string> = { 'zh-CN': p.nameZhCn, 'zh-TW': p.nameZhTw, en: p.nameEn, ko: p.nameKo }
@@ -303,6 +308,8 @@ async function submitAssign() {
 
 const statusError = ref('')
 async function markVisited() {
+  // Visited는 종결 상태(10장) — 취소·삭제와 동일하게 되돌릴 수 없는 액션이라 확인 UI를 거친다(12-5절·16장)
+  if (!confirm(t('admin.reservationDetail.markVisitedConfirm'))) return
   statusError.value = ''
   try {
     await authFetch(`/api/admin/reservations/${id.value}/status`, { method: 'POST', body: { status: 'Visited' } })
