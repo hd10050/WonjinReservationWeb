@@ -45,6 +45,14 @@
       "prev": "上一页",
       "next": "下一页"
     },
+    "calendar": {
+      "title": "预约日历",
+      "prevMonth": "上个月",
+      "nextMonth": "下个月",
+      "dayListTitle": "{date} 的预约列表",
+      "empty": "该日期没有预约。",
+      "colTime": "到店时间"
+    },
     "reservationDetail": {
       "backToList": "返回列表",
       "notAssignedBanner": "请先分配负责顾问。分配前无法添加咨询记录、变更状态或保存信息。",

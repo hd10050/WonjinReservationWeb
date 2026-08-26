@@ -94,6 +94,30 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
             summary?.New ?? 0, summary?.Consulting ?? 0, summary?.Confirmed ?? 0, summary?.VisitedThisMonth ?? 0));
     }
 
+    // [예약 달력] year·month는 정확히 한 달만 조회 가능 — from/to 파라미터 자체가 없어 무제한 범위
+    // 조회를 클라이언트가 요청할 방법이 없다(12-6절 "최대 1개월 범위 검증"을 파라미터 설계로 만족).
+    // 필터가 부분 인덱스 ix_reservations_visit_date의 조건(status IN ('Confirmed','Visited'))과
+    // 정확히 일치해야 인덱스를 탄다(8-5절).
+    [HttpGet("calendar")]
+    public async Task<ActionResult<List<ReservationCalendarItemDto>>> GetCalendar([FromQuery] int year, [FromQuery] int month)
+    {
+        DateOnly monthStart;
+        try { monthStart = new DateOnly(year, month, 1); }
+        catch (ArgumentOutOfRangeException) { return BadRequest(new { code = "INVALID_CALENDAR_DATE" }); }
+        var monthEndExclusive = monthStart.AddMonths(1);
+
+        var items = await db.Reservations
+            .Where(r => r.VisitDate != null && r.VisitDate >= monthStart && r.VisitDate < monthEndExclusive
+                     && (r.Status == "Confirmed" || r.Status == "Visited"))
+            .OrderBy(r => r.VisitDate).ThenBy(r => r.VisitTime)
+            .Select(r => new ReservationCalendarItemDto(
+                r.Id, r.Code, r.Name, r.Status, r.VisitDate!.Value, r.VisitTime,
+                r.Consultant == null ? null : r.Consultant.Name))
+            .ToListAsync();
+
+        return Ok(items);
+    }
+
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ReservationDetailDto>> GetDetail(int id)
     {

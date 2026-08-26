@@ -28,6 +28,11 @@ public record ReservationListItemDto(
 
 public record ReservationSummaryDto(int New, int Consulting, int Confirmed, int VisitedThisMonth);
 
+// [예약 달력] year·month 1개월치만 반환(12-6절) — VisitDate는 항상 있음(쿼리에서 이미 필터링됨)
+public record ReservationCalendarItemDto(
+    int Id, string Code, string Name, string Status,
+    DateOnly VisitDate, TimeOnly? VisitTime, string? ConsultantName);
+
 public record ReservationNoteDto(
     int Id, string Body, int? AuthorUserId, string AuthorName,
     DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, bool IsEdited);

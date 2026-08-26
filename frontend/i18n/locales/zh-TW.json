@@ -45,6 +45,14 @@
       "prev": "上一頁",
       "next": "下一頁"
     },
+    "calendar": {
+      "title": "預約日曆",
+      "prevMonth": "上個月",
+      "nextMonth": "下個月",
+      "dayListTitle": "{date} 的預約清單",
+      "empty": "該日期沒有預約。",
+      "colTime": "到店時間"
+    },
     "reservationDetail": {
       "backToList": "返回列表",
       "notAssignedBanner": "請先分配負責顧問。分配前無法新增諮詢記錄、變更狀態或儲存資訊。",

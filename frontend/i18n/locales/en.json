@@ -45,6 +45,14 @@
       "prev": "Previous",
       "next": "Next"
     },
+    "calendar": {
+      "title": "Reservation Calendar",
+      "prevMonth": "Previous",
+      "nextMonth": "Next",
+      "dayListTitle": "Reservations on {date}",
+      "empty": "No reservations on this date.",
+      "colTime": "Visit Time"
+    },
     "reservationDetail": {
       "backToList": "Back to list",
       "notAssignedBanner": "Assign a consultant first. Notes, status changes, and saving are disabled until then.",

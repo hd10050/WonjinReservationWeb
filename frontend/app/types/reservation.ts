@@ -77,6 +77,16 @@ export interface ReservationDetail {
   logs: ReservationLog[]
 }
 
+export interface ReservationCalendarItem {
+  id: number
+  code: string
+  name: string
+  status: ReservationStatus
+  visitDate: string
+  visitTime: string | null
+  consultantName: string | null
+}
+
 export interface ConsultantLookup {
   id: number
   name: string

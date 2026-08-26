@@ -5,7 +5,7 @@
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원
 - 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~4 구현 완료·main 병합 완료**(2026-08-26). Phase 5(예약 달력)·Phase 6(실장 KPI·예약 통계)은 각각 다른 워크트리/세션에서 별도 진행 중(이 세션은 관여 안 함, **main 미병합**) — 그쪽 병합 시 `frontend/i18n/locales/*.json` 4파일과 `layouts/admin.vue`가 충돌 가능 지점. **사이드바 네비게이션(12-3절)은 각 Phase가 개별 구현하지 않고 병합 시점에 한 번에 정리하기로 사용자 결정**(2026-08-26) — 그 전까지 `/admin/consultants`·`/admin/procedures` 등 신규 화면은 URL 직접 접근으로만 확인 가능. Phase 7부터는 사용자 지시 대기
+- 현재 상태: **Phase 1~5 구현 완료·main 병합 완료**(2026-08-26). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제)·Phase 4(실장·시술 관리 CRUD, Phase 3 미해결 이슈 2건도 함께 해소)·Phase 5(예약 달력)까지 진행. **사이드바 네비게이션(12-3절)은 각 Phase가 개별 구현하지 않고 병합 시점에 한 번에 정리하기로 사용자 결정**(2026-08-26) — 그 전까지 `/admin/consultants`·`/admin/procedures`·`/admin/calendar`는 URL 직접 접근으로만 확인 가능. Phase 6은 별도 워크트리 세션에서 진행 중, Phase 7부터는 사용자 지시 대기
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -105,7 +105,6 @@
 ### 다음 세션 최우선
 - [ ] **테스트 데이터 처리 여부 결정** — `test-admin@wonjin.local`(현재 DB엔 이 계정 1개만 실존 확인, Phase3 문서상 언급된 manager/consultant 테스트 계정은 현재 DB에 없음) + 실장·시술 테스트 데이터. 운영 데이터 아님 — Phase 4 화면 완성으로 전제조건은 충족됨, 여전히 사용자 확인 대기(나중에 정리)
 - [ ] **로컬 DB 테스트 더미 예약 정리 여부 확인** — Phase 2~4 실측 검증 중 생성된 더미 `reservations`가 로컬 dev DB에 계속 누적 중(30건+). 실서비스 데이터 아님(나중에 정리)
-- [ ] **M11 로그인 시 locale 자동 반영 방식 결정** — 지금은 `PATCH /api/auth/me/locale` 수동 변경만 동작(design.md 20장)
 ### Phase 계획 — 완료기준 포함 (design.md 19장과 동일, 상세 코드는 그쪽 참고)
 | # | 내용 | 완료기준 |
 |---|---|---|
@@ -114,7 +113,7 @@
 | 2 | ✅ 랜딩 4언어 + 예약 폼 + 개인정보 처리방침 + 유입경로 수집(2026-08-26 완료) | 4언어 폼 제출→DB적재+UTM보존 + landing-visit 시크릿없이 404(F11) + 연락희망시각 `time` 저장 확인(D10) — 전건 실측 완료 |
 | 3 | ✅ 예약 대시보드·상세·상담기록 누적·상태머신·소프트삭제(2026-08-26 완료, main 병합 완료) | 상태전이 동시성409 + 코드동시생성 중복없음(F4) + 삭제조건409(D15) + **미배정 400 차단**(D17). 동시성 재현 스크립트 3종(`scripts/phase3-concurrency/`) 전건 통과. **설계서 대비 최종 감사 완료, 미해결 2건은 위 TODO 참고** |
 | 4 | ✅ 실장(`consultants`)·시술 관리 CRUD(2026-08-26 완료, main 병합 완료) | 4언어 탭 CRUD(시술) + 3역할 권한 매트릭스 실측(Admin·HospitalManager 200 / Consultant 403 / 익명 401) + 비활성 토글·`includeInactive` 필터 브라우저 실측(한중일 텍스트 입력 포함) + 시술 코드 UNIQUE 위반 검증(생성·수정 시 본인 제외) curl 실측. 비활성실장 배정 드롭다운 제외·과거예약 유지(D13)는 Phase 3 로직 그대로(Phase 4에서 변경 없음). **사이드바 미구현 — 병합 시점 일괄 정리 예정** |
-| 5 | 예약 달력 | 월범위 검증 + 부분인덱스 사용 확인 |
+| 5 | ✅ 예약 달력(2026-08-26 구현+실측+main 병합 완료) | 월범위 검증 + 부분인덱스 사용 확인 — EXPLAIN으로 Bitmap Index Scan 실사용 확인 |
 | 6 | 실장 KPI·예약 통계 | 빈구간 0 채움 확인 |
 | 7 | 계정 관리·감사 로그 | 3역할 CRUD 전부 기록되는지 확인. `AuditLogFilter` 도입 시 RouteMap(14-1절)에 이미 등록된 consultants/procedures POST·PUT 행도 실제로 잡히는지 확인 |
 | 8 | 유입 경로 분석 | 비어드민 접근 차단 실측 |
@@ -124,7 +123,6 @@
 - [ ] **M12 OG 공유 이미지** — 현재 로고(`favicon.png` 32×32, `logo.svg`)는 소셜 미리보기용으로 부적합(해상도 낮음·SVG 다수 플랫폼 미지원). 1200×630 권장 PNG/JPG 별도 제작 필요, Phase 9
 - [ ] **M6 랜딩 히어로·소개 콘텐츠**(4개 언어) — Phase 2는 기능 설명 최소 문구로 대체(마케팅 카피 아님), 실제 콘텐츠는 이후 결정
 - [ ] **M2 도메인·Cloudflare 계정** — Phase 9
-- [ ] **M11 로그인 시 locale 자동 반영 방식**(7-2절) — `users.locale`이 `NOT NULL DEFAULT`라 "비어있을 때만 채운다" 원문 구현 불가, 별도 컬럼 추가 여부 결정 필요
 > 최초 어드민 계정은 **사용자가 DB에 직접 삽입**(시딩 코드 없음). 실장·시술 마스터도 사용자가 관리 화면에서 직접 등록
 
 ## 🔴 범위 외 — 재론 금지 (상세: `docs/design.md` 20-1절)
@@ -139,5 +137,5 @@
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고)
-- **2026-08-26 (16) — 워크트리 격리 하에 Phase 3 미해결 이슈 2건 해소 + Phase 4(실장·시술 관리) 구현·실측**: Phase 5·6과 동시 진행 중이라 `worktree-phase4-consultants-procedures` 워크트리에서 격리 작업(main·다른 두 워크트리 미접촉 확인). design.md 전문(1570줄) 재독 후 **이슈①**(SoftDelete의 `audit_logs` 직접기록)은 코드에서 제거(14장 원칙대로 Phase 7 `AuditLogFilter` 대기로 통일). **이슈②**(`includeInactive` 문서 불일치)는 기존 프론트 코드(대시보드가 `/api/admin/consultants?includeInactive=`만으로 "비활성 포함" 필터를 이미 완전히 구현 중인 것을 확인)를 근거로 "이 파라미터는 애초에 필요 없었다"고 판단, design.md 11-2절 표를 정정. Phase 4 구현: `AdminConsultantsController`·`AdminProceduresController`에 POST/PUT 추가(액션 레벨 Authorize로 Consultant 쓰기 차단, 6-3절 원칙 1), 시술 코드 UNIQUE 사전검증(`PROCEDURE_CODE_DUPLICATE`), 프론트 `/admin/consultants`·`/admin/procedures` 신규(시술은 4언어 탭, shadcn Tabs 미도입 상태라 네이티브 버튼+`v-show`로 구현). **실측**: 로컬에 격리된 dotnet/nuxt 프로세스(포트 5257/3710, 다른 두 세션의 공유 docker 스택은 건드리지 않음)로 shared postgres(5535)에 연결해 curl+실제 브라우저로 검증 — 3역할 권한 매트릭스(Admin·HospitalManager 쓰기 200, Consultant 403, 익명 401, 테스트 계정 role을 SQL로 임시 변경 후 원복하는 방식으로 확인) + 한중일 텍스트 실제 입력(curl은 Windows Git Bash UTF-8 인코딩 문제로 실패, 브라우저는 정상 — 도구 특이사항으로 기록) + 중복 코드 에러 메시지 실제 렌더 확인. **실수 1건 자체 발견·즉시 정정**: docs/design.md를 워크트리가 아닌 main 체크아웃 경로에 잘못 편집(사용자 지적으로 발견) — `git diff`로 영향 범위가 그 파일 1개뿐임을 확인 후 `git checkout --`으로 원복, 워크트리 쪽에 동일 수정 재적용. i18n 4파일 171키 동일 확인(node 스크립트 직접 대조). **병합 가능성도 별도 확인** — `git merge-base main <이 브랜치>` = main HEAD 그대로라 순수 fast-forward(충돌 불가능)임을 사전 확인. **사용자 결정**: Phase 5·6은 각자 다른 세션에서 병합하기로 하고, 이 세션은 Phase 4만 main에 병합 후 워크트리·브랜치 전부 삭제로 세션 종료.
+- **2026-08-26 (17) — M11 최종 결정(수동 유지) + Phase 5(예약 달력) 구현, `session-work-2` 워크트리에서 진행**: 다른 세션 2개가 동시에 Phase4·6을 각자 워크트리에서 진행 중이라 사용자 지시로 이 세션도 격리 워크트리(`session-work-2`)를 새로 파서 작업(기존 `session-work`는 다른 세션이 잠금 중이라 재사용 안 함). **M11**(로그인 locale 자동반영)은 브라우저 감지 자체는 가능하나 "최초 1회만" 조건에 별도 컬럼이 필요한데, 직원 3역할·대부분 한국 사무실 근무라는 전제상 실익이 낮아 **자동화 포기, `PATCH /api/auth/me/locale` 수동 변경만 유지**로 확정(design.md 5-4절·20장 갱신). **Phase 5**: 백엔드 `GET /api/admin/reservations/calendar`(year·month 필수 — from/to 파라미터 자체가 없어 무제한 범위 조회가 원천 불가, `status IN ('Confirmed','Visited')`) 신규 + 프론트 `/admin/calendar`(좌측 자체 월간 그리드 42셀 + 우측 선택일 목록, 라이브러리 없이 D11대로) 신규 + 로케일 4파일 `admin.calendar` 6키 추가(144키 전부 4파일 동일 확인). **부분 인덱스는 Phase 0에서 이미 생성돼 있어 신규 마이그레이션 불필요** — 합성 데이터 5,000건으로 `EXPLAIN`돌려 `Bitmap Index Scan on ix_reservations_visit_date` 실사용 확인(Execution Time 0.454ms). 목록 페이징 절대원칙은 "년·월 파라미터라 한 달 이상 조회가 애초에 불가능"이 페이징과 동일한 anti-full-scan 효과를 낸다고 판단해 미적용(캘린더 UI 특성상 페이징이 의미도 없음) — 근거를 design.md에 남김. 격리된 워크트리 전용 docker 스택(postgres/api/frontend, 포트 5435/5201/3702)을 임시로 띄워 브라우저 E2E(로그인→월이동→일자선택→상세이동)로 전건 실측 후 정리(`docker compose down -v`). **실수 1건 자체 발견·수정**: 절대경로로 파일을 고치다 워크트리가 아닌 main 작업 디렉터리를 직접 수정하고 있었음을 뒤늦게 발견 — `git diff`로 내 변경분만 패치 추출해 워크트리로 옮기고 main은 원상복구(다른 세션이 같은 이유로 main에 남겨둔 미커밋 변경은 그대로 보존, 손대지 않음 — Phase4 세션도 동일 실수를 했었던 것으로 (16)에서 확인됨). 사용자 요청으로 design.md 12-6·6-2·11-2·8-5절 대조 재점검(누락 없음 확인 — 사이드바 네비게이션은 프로젝트 전체에 아직 없어 이 페이지도 그대로 둠) + `git merge-tree`로 main 병합 전 충돌 여부 사전 확인. **main 병합 시 Phase 4(16)가 먼저 병합해 main이 이동해 있었음** — `CLAUDE.md`·`docs/session-log.md`(둘 다 세션요약 기록 위치 중복, (16) 번호도 두 세션이 각자 붙여 충돌)만 수동 병합(Phase4의 (16)을 `session-log.md`로, 이 항목을 (17)로 재번호). 코드·design.md는 전부 자동 병합. **이번 세션 작업분(M11+Phase5)만 main에 병합 완료 + `session-work-2` 워크트리·브랜치 정리 완료**(Phase4·6 워크트리는 별도 세션 소관이라 손대지 않음).
 
