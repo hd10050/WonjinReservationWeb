@@ -26,11 +26,7 @@ public class AdminStatsController(AppDbContext db) : ControllerBase
 
         var (fromUtc, toUtc) = ToKstRangeUtc(from, to);
 
-        var activeConsultants = await db.Consultants.AsNoTracking()
-            .Where(c => c.IsActive)
-            .OrderBy(c => c.SortOrder)
-            .Select(c => new { c.Id, c.Name })
-            .ToListAsync();
+        var activeConsultants = await GetActiveConsultantsAsync();
         var activeIds = activeConsultants.Select(c => c.Id).ToHashSet();
 
         // 1단계 — 익명 타입으로 집계(11-6절 함정: GroupBy().Select()에서 record 생성자 직접 호출 금지)
@@ -109,7 +105,22 @@ public class AdminStatsController(AppDbContext db) : ControllerBase
             .OrderByDescending(x => x.Count)
             .ToList();
 
-        return Ok(new ReservationStatsDto(weekly, procedures, locales));
+        // 담당 실장 축(11-4절) — 비활성 실장 제외. KPI와 달리 0행 채움 없음(시술별·언어별과 동일하게 실적 있는 것만).
+        var activeConsultants = await GetActiveConsultantsAsync();
+        var activeIds = activeConsultants.Select(c => c.Id).ToHashSet();
+        var consultantRaw = await db.Reservations
+            .Where(r => r.CreatedAt >= fromUtc && r.CreatedAt < toUtc
+                     && r.ConsultantId != null && activeIds.Contains(r.ConsultantId.Value))
+            .GroupBy(r => r.ConsultantId!.Value)
+            .Select(g => new { ConsultantId = g.Key, Count = g.Count() })
+            .ToListAsync();
+        var consultantNameById = activeConsultants.ToDictionary(c => c.Id, c => c.Name);
+        var consultants = consultantRaw
+            .Select(x => new ConsultantReservationStatDto(x.ConsultantId, consultantNameById.GetValueOrDefault(x.ConsultantId, ""), x.Count))
+            .OrderByDescending(x => x.Count)
+            .ToList();
+
+        return Ok(new ReservationStatsDto(weekly, procedures, locales, consultants));
     }
 
     // 주 시작일(일요일) 기준 집계(D16). date_trunc('week',…)는 월요일 시작이라 하루 밀어 계산 — EF Core LINQ로
@@ -144,6 +155,16 @@ public class AdminStatsController(AppDbContext db) : ControllerBase
         }
         return result;
     }
+
+    // GetConsultantKpi·GetReservationStats 양쪽에서 쓰는 활성 실장 목록(D13 — 비활성 실장 제외).
+    private async Task<List<ActiveConsultant>> GetActiveConsultantsAsync() =>
+        await db.Consultants.AsNoTracking()
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.SortOrder)
+            .Select(c => new ActiveConsultant(c.Id, c.Name))
+            .ToListAsync();
+
+    private record ActiveConsultant(int Id, string Name);
 
     // DayOfWeek.Sunday == 0이므로 그 값만큼 빼면 그 주의 일요일이 된다(D16 검산 — 11-4절과 동일 결과).
     private static DateOnly StartOfWeek(DateOnly d) => d.AddDays(-(int)d.DayOfWeek);

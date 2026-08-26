@@ -117,6 +117,8 @@
       "colCount": "건수",
       "sectionLocales": "언어별 분포",
       "colLocale": "언어",
+      "sectionConsultants": "담당 실장별 집계",
+      "colConsultant": "실장",
       "empty": "데이터가 없습니다."
     }
   },

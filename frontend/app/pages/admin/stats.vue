@@ -126,6 +126,41 @@
         </table>
       </div>
     </section>
+
+    <section class="space-y-3">
+      <h2 class="text-lg font-medium text-foreground">{{ t('admin.stats.sectionConsultants') }}</h2>
+      <Card>
+        <CardContent class="pt-6">
+          <ClientOnly>
+            <div style="height: 320px">
+              <Bar :data="consultantChartData" :options="chartOptions" />
+            </div>
+            <template #fallback>
+              <div style="height: 320px" />
+            </template>
+          </ClientOnly>
+        </CardContent>
+      </Card>
+      <div class="overflow-x-auto rounded-md border border-border">
+        <table class="w-full text-sm">
+          <thead class="bg-muted text-muted-foreground">
+            <tr>
+              <th class="px-3 py-2 text-left">{{ t('admin.stats.colConsultant') }}</th>
+              <th class="px-3 py-2 text-right">{{ t('admin.stats.colCount') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="!data?.consultants.length">
+              <td colspan="2" class="p-6 text-center text-muted-foreground">{{ t('admin.stats.empty') }}</td>
+            </tr>
+            <tr v-for="c in data?.consultants" :key="c.consultantId" class="border-t border-border">
+              <td class="px-3 py-2">{{ c.consultantName }}</td>
+              <td class="px-3 py-2 text-right">{{ c.count }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -191,5 +226,10 @@ const procedureChartData = computed(() => ({
 const localeChartData = computed(() => ({
   labels: (data.value?.locales ?? []).map(l => l.locale),
   datasets: [{ data: (data.value?.locales ?? []).map(l => l.count), backgroundColor: PALETTE }],
+}))
+
+const consultantChartData = computed(() => ({
+  labels: (data.value?.consultants ?? []).map(c => c.consultantName),
+  datasets: [{ label: t('admin.stats.colCount'), data: (data.value?.consultants ?? []).map(c => c.count), backgroundColor: COLOR_PRIMARY }],
 }))
 </script>

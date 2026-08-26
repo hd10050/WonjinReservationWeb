@@ -117,6 +117,8 @@
       "colCount": "Count",
       "sectionLocales": "By Language",
       "colLocale": "Language",
+      "sectionConsultants": "By Consultant",
+      "colConsultant": "Consultant",
       "empty": "No data found."
     }
   },

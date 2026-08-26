@@ -14,7 +14,12 @@ public record ProcedureStatDto(
 
 public record LocaleStatDto(string Locale, int Count);
 
+// 담당 실장 축(11-4절 "담당 실장 축으로 나눌 때는 비활성 실장 제외") — 시술별/언어별과 같은 표+막대 구성이라
+// KPI(ConsultantKpiDto)처럼 0행 채움은 하지 않고 실적 있는 실장만 내려준다.
+public record ConsultantReservationStatDto(int ConsultantId, string ConsultantName, int Count);
+
 public record ReservationStatsDto(
     List<WeeklyReservationStatDto> Weekly,
     List<ProcedureStatDto> Procedures,
-    List<LocaleStatDto> Locales);
+    List<LocaleStatDto> Locales,
+    List<ConsultantReservationStatDto> Consultants);

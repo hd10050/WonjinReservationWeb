@@ -117,6 +117,8 @@
       "colCount": "數量",
       "sectionLocales": "語言分布",
       "colLocale": "語言",
+      "sectionConsultants": "按負責顧問統計",
+      "colConsultant": "顧問",
       "empty": "暫無資料。"
     }
   },

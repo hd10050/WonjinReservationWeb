@@ -127,8 +127,16 @@ export interface LocaleStat {
   count: number
 }
 
+// 담당 실장 축(11-4절) — 비활성 실장 제외, KPI와 달리 0행 채움 없음(실적 있는 실장만).
+export interface ConsultantReservationStat {
+  consultantId: number
+  consultantName: string
+  count: number
+}
+
 export interface ReservationStats {
   weekly: WeeklyReservationStat[]
   procedures: ProcedureStat[]
   locales: LocaleStat[]
+  consultants: ConsultantReservationStat[]
 }
