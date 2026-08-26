@@ -5,7 +5,7 @@
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원
 - 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **설계 문서 작성 완료, 구현 착수 전** (2026-08-25). 구현은 사용자 명시 승인 후 시작
+- 현재 상태: **Phase 0(스캐폴딩+DB) 구현 완료**(2026-08-26) — 컨테이너 기동·마이그레이션·인덱스·타임존 전건 실측 검증. Phase 1(인증)부터는 사용자 지시 대기
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -14,7 +14,8 @@
 | SEO | `@nuxtjs/sitemap` + `@nuxtjs/robots` |
 | 백엔드/DB | ASP.NET Core 10 + EF Core(`EFCore.NamingConventions` 스네이크케이스) / PostgreSQL 16 (스키마 `wonjin`) |
 | 인증 | 자체 JWT(AT 15분, 쿠키 `wj_at`) + RT(7일, SHA-256, 쿠키 `wj_rt`) — **소셜 로그인·회원가입 없음** |
-| UI | 라이브러리 미도입 — 모달은 네이티브 `<dialog>`, 달력은 자체 월간 그리드 |
+| UI | **shadcn-vue**(`shadcn-nuxt`, style `new-york`) + `reka-ui` 프리미티브 + `class-variance-authority`(D19, 구 D11 대체) |
+| 팔레트 | **Olive Garden Feast**(D20) — `#606C38`올리브(primary)·`#283618`짙은산림녹(foreground)·`#FEFAE0`크림(background)·`#DDA15E`탄(secondary)·`#BC6C25`번트오렌지(destructive), OKLCH 변환 후 shadcn CSS 변수에 적용 |
 | 배포 | 프론트 Cloudflare Workers / 백엔드·DB Render |
 | 로컬 | `docker compose up` — frontend:3700 / api:5200 / postgres:5435 |
 
@@ -35,6 +36,9 @@
 - **예약 코드 = `YYYYMMDD`+4자리 일별 리셋**(M3, 예 `202608260001`) — `reservation_code_counters` 원자적 증가로 발급
 - **모든 시각은 KST 고정** — 브라우저 타임존 사용 금지. `stat_date`·예약코드 날짜도 KST
 - 시술명은 언어별 컬럼 4개(`name_zh_cn` 등), **연락 희망 시각은 `<input type="time">` 직접 입력**(`time` 컬럼, 한국 시간 기준) — 선택지로 바꾸지 말 것
+- **중화권 브랜드 표기 = `WonJin`**(D18, 2026-08-26) — 4개 로케일 전부 이 토큰 그대로 사용(번역 안 함). title 접미사·og:site_name·JSON-LD name 전부 통일
+- **UI 라이브러리 = shadcn-vue**(D19, 2026-08-26) — 구 D11(라이브러리 미도입) 대체, Context7로 최신 설치 문서 확인 후 도입. `components.json`은 CLI 자동생성 대신 수동 작성(11-7절)
+- **팔레트 = Olive Garden Feast**(D20, 2026-08-26) — 참고 화면(`reservation-desk_1.html`)의 청록색 팔레트를 대체. coolors.co/palettes/trending을 playwright-cli로 실측 검증해 이름·좋아요 수 확인된 팔레트만 채택(발명 절대 금지 — 실제 발생했던 사고)
 
 ## 역할 · 메뉴 권한
 | 메뉴 | Admin | HospitalManager | Consultant |
@@ -71,6 +75,9 @@
 - **`detectBrowserLanguage`는 반드시 `false`** — 켜두면 카카오톡·라인 등 링크 미리보기 봇이 언어감지 리다이렉트를 따라가 엉뚱한 언어의 og:description 노출(5-2절)
 - **robots `disallow`는 트레일링 슬래시 필수**(`/admin/`) — 슬래시 없이 쓰면 prefix 매칭으로 다른 경로까지 막히고 sitemap exclude에도 적용돼 동적 URL이 원인불명으로 누락(5-5절)
 - **검색 입력을 반응형 쿼리에 직접 바인딩 금지** — 매 키입력마다 API 재호출됨. URL 쿼리를 `computed`로 감싸 제출 시에만 반응하게 할 것(12-4절)
+- **shadcn-vue 컴포넌트 추가 시 `app/lib/utils.ts`가 자동생성 안 됨** — `components.json`을 수동 작성했기 때문에 CLI가 `cn()` 헬퍼를 안 만듦. 컴포넌트 추가 전 직접 작성 필요(11-7절)
+- **reka-ui 기반 컴포넌트의 `interface Props extends PrimitiveProps`가 Vite 500 에러**(`Failed to resolve extends base type`) — `extends /* @vue-ignore */ PrimitiveProps`로 우회. Dialog·Select·Accordion 등 reka-ui 쓰는 모든 shadcn 컴포넌트에서 재발함. 근본 원인 `[미확인]`(11-7절)
+- **shadcn CLI의 tsconfig alias 인식 실패를 `tsconfig.json` 수정으로 고치지 말 것** — Nuxt의 실제 타입 해석(`.nuxt/tsconfig.*.json` 참조)이 깨짐. `components.json`을 손으로 작성해 우회할 것(11-7절)
 
 ## 절대 원칙 이행 (루트 CLAUDE.md)
 - **화면 깜빡임 금지** — 데이터 페이지는 `<script setup>` 최상위 `await useApi(...)` SSR 프리로드. `onMounted`+client fetch 금지. 전환 오버레이는 `<Transition>` 금지, 항상 마운트 + `pointer-events`를 상태값에 직접 클래스 바인딩
@@ -81,11 +88,11 @@
 
 ## TODO
 ### 다음 세션 최우선
-- [ ] 🔴 **구현 착수 승인 대기** — 설계 문서(`docs/design.md`) 검토 후 Phase 0부터 시작할지 사용자 결정 필요
+- [ ] **Phase 1(인증+`AccountStateFilter`+동일출처 프록시) 착수** — Phase 0 완료, 착수는 사용자 지시 대기
 ### Phase 계획 — 완료기준 포함 (design.md 19장과 동일, 상세 코드는 그쪽 참고)
 | # | 내용 | 완료기준 |
 |---|---|---|
-| 0 | 스캐폴딩 + DB 마이그레이션 | 컨테이너 기동+마이그레이션+인덱스 확인 + `Asia/Seoul` 타임존 조회 성공([미확인] 해소) |
+| 0 | ✅ 스캐폴딩 + DB 마이그레이션(2026-08-26 완료) | 컨테이너 기동+마이그레이션+인덱스 확인 + `Asia/Seoul` 타임존 조회 성공 — 전건 실측 검증 완료 |
 | 1 | 인증 + `AccountStateFilter` + 동일출처 프록시 | 로그인~정지차단 E2E + 랜딩에서 `/api/auth/me` 미호출 확인(F5) |
 | 2 | 랜딩 4언어 + 예약 폼 + **개인정보 처리방침** + 유입경로 수집 | 4언어 폼 제출→DB적재+UTM보존 + landing-visit 시크릿없이 404(F11) + 연락희망시각 `time` 저장 확인(D10) |
 | 3 | 예약 대시보드·상세·상담기록 누적·상태머신·소프트삭제 | 상태전이 동시성409 + 코드동시생성 중복없음(F4) + 삭제조건409(D15) + **미배정 400 차단**(D17). 🔴 **동시성 재현 스크립트 3종 필수**(코드생성·소프트삭제·상태전이 — 19-1절, curl+xargs -P) |
@@ -98,7 +105,6 @@
 
 ## 미결정 (상세: `docs/design.md` 20장)
 - [ ] **M8 병원 정식 정보**(상호·주소·대표전화·사업자번호) — 푸터·JSON-LD용, Phase 2
-- [ ] **M9 중화권 브랜드 표기**(검색 노출용 중국어 이름) — Phase 2
 - [ ] **M10 로고 이미지**(favicon·사이드바·OG) — Phase 2
 - [ ] **M6 랜딩 히어로·소개 콘텐츠**(4개 언어) — Phase 2 이후
 - [ ] **M2 도메인·Cloudflare 계정** — Phase 9
@@ -117,6 +123,7 @@
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고)
+- **2026-08-26 (10) — Phase 0 구현 완료 + shadcn-vue·팔레트 신규 요구사항 반영**: 사용자 승인("Phase 0(스캐폴딩·DB) 구현 시작")으로 구현 착수. `dotnet new webapi`(ASP.NET Core 10)·`nuxi init`(Nuxt 4)로 `api/`·`frontend/` 스캐폴딩, design.md 8장 그대로 11개 엔티티+`AppDbContext`(Fluent API 전량: CHECK 6개·부분인덱스·복합인덱스·소프트삭제 전역 쿼리 필터) 작성 후 `dotnet ef migrations add`로 InitialCreate 생성, 적용 전 파일 전체를 직접 읽어 스키마 대조(불필요한 DropIndex 없음 확인). Docker Compose로 postgres:16-alpine+api+frontend 기동, 실제 컨테이너 안에서 `psql`로 12테이블·34인덱스·6 CHECK 존재 확인 + 제약 위반 테스트로 CHECK 동작 실측 + `Asia/Seoul` 타임존 로그로 `[미확인]` 해소. 진행 중 사용자가 신규 요구사항 2건 추가: **UI 라이브러리 shadcn-vue 도입**(D19, Context7로 최신 설치 문서 확인) + **팔레트를 참고 화면 대신 coolors.co/palettes/trending 실측값으로 확정**(D20 — playwright-cli로 직접 순회). 이 과정에서 이름 없는(좋아요 1개) 항목을 "Teal Harmony"라는 이름으로 지어내 제시한 **명백한 날조**를 사용자가 즉시 지적 → 원본 데이터 재확인해 날조를 인정하고 철회, 실존 검증된 2개 팔레트만 재제시 → **Olive Garden Feast** 확정. shadcn-vue 통합 중 실측한 함정 3건(수동 `components.json` 사용 시 `app/lib/utils.ts` 미생성 / `reka-ui` `PrimitiveProps` 확장이 Vite 500 에러 → `/* @vue-ignore */`로 우회, 근본원인은 `[미확인]` / CLI의 tsconfig alias 인식 실패는 `tsconfig.json`이 아니라 `components.json` 수동 작성으로 해결)를 design.md 11-7절에 기록. Button 컴포넌트를 실제 브라우저에서 4개 variant 전부 OKLCH 계산값이 팔레트와 정확히 일치함을 검증 완료. **날조 재발 방지**: 외부 서비스의 이름·수치는 반드시 원본을 직접 확인한 것만 말하고, 확인 안 된 것은 자리표시자로도 만들지 말 것(루트 CLAUDE.md "추측을 팩트처럼 말하지 말 것" 원칙의 실제 위반 사례로 기록)
 - **2026-08-26 (9) — TODO/마일스톤 4갈래 병렬감사 후 공백 5건 수정**: Phase계획·확정결정·미결정·경고목록 4갈래로 병렬 교차검증(내용 오류는 0건 확인). 완전성 공백 5건 발견해 전건 수정: ①TODO의 Phase 계획에 design.md 19장의 **완료기준**이 빠져 있어 표 형식으로 편입(Phase별 실측 테스트 명시) ②D17(미배정 예약 400 차단)이 "확정 설계 결정" 나열에만 있고 구현 시 놓치기 쉬운 것을 모으는 "특히 주의할 것" 경고 목록엔 없어 승격 ③design.md에 🔴 표시됐지만 경고 목록에 없던 6건 추가(로그인 rate limit 공유IP·GroupBy record 생성자 금지·RouteMap 정렬규칙·detectBrowserLanguage:false·robots disallow 트레일링슬래시·검색입력 반응형바인딩 금지) ④19-1절 동시성 재현 스크립트 3종 요구를 Phase 3 완료기준에 명시 ⑤Phase 2 요약에 빠졌던 개인정보 처리방침 추가. design.md 19장에도 D17·D10 실측 조건을 함께 추가(Phase 2에 연락희망시각 time저장 확인, Phase 3에 미배정 400차단 실측). **사용자에게 명확히 고지**: 이 수정은 이번 감사에서 찾은 공백만 해소하는 것이며, 구현 착수 전까지는 설계가 "완전하다"고 보장할 수 없음(이번 세션에서만 감사 3회, 매회 새 문제 발견)
 - **2026-08-26 (8) — 연락 희망 시각을 요구사항대로 직접 입력으로 환원**: 요구사항 2번은 "연락 받고자 하는 시간을 **입력**한다"인데 초안에서 오전/오후/저녁/무관 4지선다(D10)로 임의 변경했던 것을 철회. `<input type="time">` 직접 입력 + `preferred_contact_time`을 `varchar(20)` CHECK → **`time` 컬럼**으로 변경(KST 벽시계 시각, `visit_time`과 동일 취급). 폼 라벨에 "한국 시간" 병기. **요구사항 동사("입력한다")를 임의로 다른 입력 방식으로 바꾸지 말 것** — 같은 세션에서 `consultants.team`(참고 화면 예시를 요구사항으로 착각), 시각 범위 하드코딩에 이어 세 번째로 지적받은 임의 확장
 - **2026-08-26 (7) — 시키지 않은 설계 요소 제거 + 남은 결정사항 정리**: 🔴 **`consultants.team`(실장 팀) 컬럼 제거** — 참고 화면 `reservation-desk_1.html`에 "室長 / A팀"이 있어 넣었으나 **사용자가 요구한 적 없는 필드**였음(요구사항 8번은 "담당 실장을 관리하는 [실장 관리]"뿐). 참고 화면의 예시 데이터를 요구사항으로 착각한 것이 원인. 🔴 **연락 희망 시간대의 구체적 시각 범위(09:00~12:00 등) 제거** — 이 역시 제가 임의로 붙인 값이고, 병원 상담 운영시간이 바뀔 때마다 4개 언어 번역을 고쳐야 하며 실제와 어긋나면 고객이 빈 시간대를 고르게 됨. "오전(한국 시간)"처럼 기준 시간대만 표기. **어드민 시딩 코드 제거**(사용자가 DB에 직접 삽입). 남은 결정사항을 M8(병원 정식정보)·M9(중화권 브랜드 표기)·M10(로고 이미지)로 TODO 등록

@@ -1,0 +1,75 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * D20 브랜드 팔레트 — coolors.co "Olive Garden Feast"(9.76만 좋아요) 확정, 2026-08-26.
+ * 원본 5색: #606C38(올리브) · #283618(짙은 산림녹) · #FEFAE0(따뜻한 크림) · #DDA15E(탄) · #BC6C25(번트오렌지)
+ * 아래 값은 표준 sRGB→OKLCH 변환식으로 계산한 정확한 값(임의 추정 아님).
+ * muted/border/ring은 같은 색상군(올리브 120°, 크림/탄 68~100°) 안에서 명도만 조정해 파생한 값 — 새 색상 도입 아님.
+ * 다크 모드는 요구되지 않아 만들지 않음(D11 나머지 반영) — 필요해지면 그때 추가.
+ */
+:root {
+  --radius: 0.625rem;
+
+  --background: oklch(0.981 0.034 99.8);   /* #FEFAE0 크림 */
+  --foreground: oklch(0.312 0.053 129.6);  /* #283618 짙은 산림녹 */
+
+  --card: oklch(1 0 0);                    /* 흰색 — 크림 배경 위에서 카드가 뜨도록 */
+  --card-foreground: oklch(0.312 0.053 129.6);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.312 0.053 129.6);
+
+  --primary: oklch(0.508 0.076 119.9);     /* #606C38 올리브 */
+  --primary-foreground: oklch(0.981 0.034 99.8);
+
+  --secondary: oklch(0.753 0.11 67.8);     /* #DDA15E 탄 */
+  --secondary-foreground: oklch(0.312 0.053 129.6);
+
+  --muted: oklch(0.94 0.02 100);           /* 파생 — 크림보다 살짝 어두운 중립 */
+  --muted-foreground: oklch(0.5 0.03 120); /* 파생 — 올리브 계열 중간 톤 텍스트 */
+
+  --accent: oklch(0.88 0.05 100);          /* 파생 — 연한 탄색 틴트, hover 배경용 */
+  --accent-foreground: oklch(0.312 0.053 129.6);
+
+  --destructive: oklch(0.609 0.13 57.3);   /* #BC6C25 번트오렌지 — 파괴적 액션은 항상 확인 텍스트 동반(16장) */
+
+  --border: oklch(0.88 0.02 100);          /* 파생 */
+  --input: oklch(0.88 0.02 100);
+  --ring: oklch(0.6 0.09 120);             /* 파생 — primary 색상군의 포커스 링 */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
