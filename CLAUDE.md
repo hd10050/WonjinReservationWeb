@@ -5,7 +5,7 @@
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원
 - 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~3 구현 완료, main 병합 완료**(2026-08-26). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제, `session-work` 워크트리에서 구현+3차 감사 후 병합)까지 진행. **Phase 3 설계서 대비 최종 감사에서 미해결 이슈 2건 발견 — 아래 TODO 참고**. Phase 4부터는 사용자 지시 대기
+- 현재 상태: **Phase 1~3 구현 완료, main 병합 완료**(2026-08-26). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제, `session-work` 워크트리에서 구현+3차 감사 후 병합)까지 진행. **Phase 3 설계서 대비 최종 감사에서 미해결 이슈 2건 발견 — 아래 TODO 참고**. **Phase 5(예약 달력)는 `session-work-2` 워크트리에서 구현+실측 완료(2026-08-26), main 병합은 사용자 지시 대기**. Phase 4·6은 별도 워크트리 세션에서 동시 진행 중(상태는 각 세션 소관)
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -107,7 +107,7 @@
 - [ ] **로컬 DB 테스트 더미 예약 정리 여부 확인** — Phase 2 실측 검증 중 생성된 더미 `reservations` 약 30건이 로컬 dev DB에 남아있음. 실서비스 데이터 아님
 - [ ] **관리자 헤더 로고(`layouts/admin.vue`) 시각 미검증** — 코드는 배포됨(빌드 성공 확인)이나 브라우저 자동화 도구의 로그인 클릭이 반응하지 않아 화면 실측은 못 함. 다음 접속 시 육안 확인 권장
 - [ ] **Phase 4 착수 시 참고** — `GET /api/admin/consultants`·`GET /api/admin/procedures`(조회 전용)는 Phase 3에서 배정·시술선택 드롭다운용으로 이미 추가됨. Phase 4는 POST/PUT(등록·수정·비활성화)만 추가하면 됨
-- [ ] **M11 로그인 시 locale 자동 반영 방식 결정** — 지금은 `PATCH /api/auth/me/locale` 수동 변경만 동작(design.md 20장)
+- [ ] **Phase 5(예약 달력) main 병합 대기** — `session-work-2` 워크트리 브랜치에 구현+실측 완료(design.md 19장 참고), 병합·워크트리 정리는 사용자가 "합쳐/메인에 올려" 지시할 때만 진행
 ### Phase 계획 — 완료기준 포함 (design.md 19장과 동일, 상세 코드는 그쪽 참고)
 | # | 내용 | 완료기준 |
 |---|---|---|
@@ -116,7 +116,7 @@
 | 2 | ✅ 랜딩 4언어 + 예약 폼 + 개인정보 처리방침 + 유입경로 수집(2026-08-26 완료) | 4언어 폼 제출→DB적재+UTM보존 + landing-visit 시크릿없이 404(F11) + 연락희망시각 `time` 저장 확인(D10) — 전건 실측 완료 |
 | 3 | ✅ 예약 대시보드·상세·상담기록 누적·상태머신·소프트삭제(2026-08-26 완료, main 병합 완료) | 상태전이 동시성409 + 코드동시생성 중복없음(F4) + 삭제조건409(D15) + **미배정 400 차단**(D17). 동시성 재현 스크립트 3종(`scripts/phase3-concurrency/`) 전건 통과. **설계서 대비 최종 감사 완료, 미해결 2건은 위 TODO 참고** |
 | 4 | 실장(`consultants`)·시술 관리 | 4언어 탭 CRUD + 비활성실장 배정·KPI 제외/과거예약 유지(D13) |
-| 5 | 예약 달력 | 월범위 검증 + 부분인덱스 사용 확인 |
+| 5 | ✅ 예약 달력(2026-08-26 구현+실측 완료, `session-work-2` 워크트리, 병합 대기) | 월범위 검증 + 부분인덱스 사용 확인 — EXPLAIN으로 Bitmap Index Scan 실사용 확인 |
 | 6 | 실장 KPI·예약 통계 | 빈구간 0 채움 확인 |
 | 7 | 계정 관리·감사 로그 | 3역할 CRUD 전부 기록되는지 확인. **`AuditLogFilter` 도입 시 위 TODO 미해결 이슈①도 같이 정리할 것** |
 | 8 | 유입 경로 분석 | 비어드민 접근 차단 실측 |
@@ -126,7 +126,6 @@
 - [ ] **M12 OG 공유 이미지** — 현재 로고(`favicon.png` 32×32, `logo.svg`)는 소셜 미리보기용으로 부적합(해상도 낮음·SVG 다수 플랫폼 미지원). 1200×630 권장 PNG/JPG 별도 제작 필요, Phase 9
 - [ ] **M6 랜딩 히어로·소개 콘텐츠**(4개 언어) — Phase 2는 기능 설명 최소 문구로 대체(마케팅 카피 아님), 실제 콘텐츠는 이후 결정
 - [ ] **M2 도메인·Cloudflare 계정** — Phase 9
-- [ ] **M11 로그인 시 locale 자동 반영 방식**(7-2절) — `users.locale`이 `NOT NULL DEFAULT`라 "비어있을 때만 채운다" 원문 구현 불가, 별도 컬럼 추가 여부 결정 필요
 > 최초 어드민 계정은 **사용자가 DB에 직접 삽입**(시딩 코드 없음). 실장·시술 마스터도 사용자가 관리 화면에서 직접 등록
 
 ## 🔴 범위 외 — 재론 금지 (상세: `docs/design.md` 20-1절)
@@ -141,5 +140,5 @@
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고)
-- **2026-08-26 (15) — Phase 3 설계서 대비 최종 감사 + Phase 2·3 main 병합 + 세션 정리**: design.md 전문(1~1549줄) 재독 + 구현 파일 전체 재Read + 핵심 심볼 grep 교차검증(`AuditLogs.Add`·`includeInactive`·`ExecuteUpdateAsync`·`CancelReason` 등, 결과 파일이 전부 읽은 목록에 있는지 대조)으로 "설계서에 있는데 구현 안 된 것"만 별도 감사. **실제 DB에 psql 직접 접속해 8-5절 인덱스 5종 실재 확인**(부분 인덱스 `WHERE status IN ('Confirmed','Visited')` 조건까지 일치) — 코드만 보고 판단하지 않음. 신규 미구현 항목은 없었으나 **미해결 이슈 2건 발견**(위 TODO·주의사항 참고, "확인해" 요청이라 의도적으로 미수정): ①`audit_logs` 컨트롤러 직접기록이 14장 원문·자체 코드 주석과 불일치 ②목록 API `includeInactive` 파라미터가 11-2절 문언과 불일치. 이후 `session-work` 브랜치(Phase3 구현·재감사6건·error.vue·전면재감사7건 등 커밋 5개)를 `main`(Phase2 구현 완료 상태)에 병합. **충돌 8개 파일**(`CLAUDE.md`·`api/DTOs/ReservationDto.cs`·`docs/session-log.md`·`frontend/app/error.vue`·로케일 4개)을 전부 수동 해결 — `ReservationDto.cs`는 공개 예약신청 record(Phase2)와 관리자 DTO(Phase3)가 이름 안 겹쳐 단순 연결, 로케일 4개는 `landing.*`/`privacy.*`(Phase2)와 `admin.*`/`status.*`/`errors.*`(Phase3)가 서로 다른 네임스페이스라 합집합으로 병합, `error.vue`는 두 세션이 각각 새로 만든 add/add 충돌이라 design.md 12-1절에 더 충실하고 4언어+관리자경로까지 실측 검증된 Phase3 버전을 채택(Phase2 버전의 `error.*` i18n 키 3개는 다른 곳에서 참조 없음을 grep 확인 후 폐기, `admin.index.welcome` 죽은 키도 함께 정리). 병합 후 `dotnet build`·i18n 4파일 키 대조로 회귀 없음 확인.
+- **2026-08-26 (16) — M11 최종 결정(수동 유지) + Phase 5(예약 달력) 구현, `session-work-2` 워크트리에서 진행**: 다른 세션 2개가 동시에 Phase4·6을 각자 워크트리에서 진행 중이라 사용자 지시로 이 세션도 격리 워크트리(`session-work-2`)를 새로 파서 작업(기존 `session-work`는 다른 세션이 잠금 중이라 재사용 안 함). **M11**(로그인 locale 자동반영)은 브라우저 감지 자체는 가능하나 "최초 1회만" 조건에 별도 컬럼이 필요한데, 직원 3역할·대부분 한국 사무실 근무라는 전제상 실익이 낮아 **자동화 포기, `PATCH /api/auth/me/locale` 수동 변경만 유지**로 확정(design.md 5-4절·20장 갱신). **Phase 5**: 백엔드 `GET /api/admin/reservations/calendar`(year·month 필수 — from/to 파라미터 자체가 없어 무제한 범위 조회가 원천 불가, `status IN ('Confirmed','Visited')`) 신규 + 프론트 `/admin/calendar`(좌측 자체 월간 그리드 42셀 + 우측 선택일 목록, 라이브러리 없이 D11대로) 신규 + 로케일 4파일 `admin.calendar` 6키 추가(144키 전부 4파일 동일 확인). **부분 인덱스는 Phase 0에서 이미 생성돼 있어 신규 마이그레이션 불필요** — 합성 데이터 5,000건으로 `EXPLAIN`돌려 `Bitmap Index Scan on ix_reservations_visit_date` 실사용 확인(Execution Time 0.454ms). 목록 페이징 절대원칙은 "년·월 파라미터라 한 달 이상 조회가 애초에 불가능"이 페이징과 동일한 anti-full-scan 효과를 낸다고 판단해 미적용(캘린더 UI 특성상 페이징이 의미도 없음) — 근거를 design.md에 남김. 격리된 워크트리 전용 docker 스택(postgres/api/frontend, 포트 5435/5201/3702)을 임시로 띄워 브라우저 E2E(로그인→월이동→일자선택→상세이동)로 전건 실측 후 정리(`docker compose down -v`). **실수 1건 자체 발견·수정**: 절대경로로 파일을 고치다 워크트리가 아닌 main 작업 디렉터리를 직접 수정하고 있었음을 뒤늦게 발견 — `git diff`로 내 변경분만 패치 추출해 워크트리로 옮기고 main은 원상복구(다른 세션이 같은 이유로 main에 남겨둔 `docs/design.md` 커밋 전 변경은 그대로 보존, 손대지 않음). 커밋은 `worktree-session-work-2` 브랜치에만, main 병합·워크트리 정리는 사용자 지시 대기.
 

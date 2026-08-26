@@ -45,6 +45,14 @@
       "prev": "이전",
       "next": "다음"
     },
+    "calendar": {
+      "title": "예약 달력",
+      "prevMonth": "이전 달",
+      "nextMonth": "다음 달",
+      "dayListTitle": "{date} 예약 목록",
+      "empty": "이 날짜에는 예약이 없습니다.",
+      "colTime": "방문 시각"
+    },
     "reservationDetail": {
       "backToList": "목록으로",
       "notAssignedBanner": "담당 실장을 먼저 배정하세요. 배정 전에는 상담 기록·상태 변경·저장이 모두 제한됩니다.",

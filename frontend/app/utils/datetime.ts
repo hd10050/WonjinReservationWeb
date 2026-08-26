@@ -10,6 +10,16 @@ export function formatKst(value: string | Date, withTime = true): string {
   }).format(typeof value === 'string' ? new Date(value) : value)
 }
 
+// [예약 달력] 기본 조회월 계산용 — 서버(SSR)·클라이언트 호스트의 로컬 타임존과 무관하게
+// 항상 KST 기준 "오늘"을 반환한다(9-2절②와 동일한 이유, formatKst와 같은 패턴).
+export function getKstToday(): { year: number, month: number, day: number } {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: KST, year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date())
+  const map = Object.fromEntries(parts.map(p => [p.type, p.value]))
+  return { year: Number(map.year), month: Number(map.month), day: Number(map.day) }
+}
+
 // birthDate는 date(타임존 없음) 컬럼이라 KST 변환이 필요 없다 — 달력 나이 계산만 한다.
 export function calculateAge(birthDate: string): number {
   const [y, m, d] = birthDate.split('-').map(Number)
