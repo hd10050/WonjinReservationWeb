@@ -119,7 +119,7 @@
 
 ## 미결정 (상세: `docs/design.md` 20장)
 - [ ] **M8 병원 정식 정보**(상호·주소·대표전화·사업자번호) — 푸터·JSON-LD용. Phase 2 완료기준엔 없어 브랜드 토큰 `WonJin`(D18)만으로 footer 처리, 실제 JSON-LD는 Phase 9로 재확인
-- [ ] **M10 로고 이미지**(favicon·사이드바·OG) — Phase 2엔 텍스트 브랜드로 대체, 실제 파일은 Phase 9
+- [ ] **M10 로고 이미지 파일 제공됨**(`frontend/public/favicon.png`, `frontend/public/logo.svg`, 2026-08-26) — 아직 코드 미적용(헤더·favicon·OG 전부 텍스트 브랜드 `WonJin` 유지 중, 기존 `favicon.ico`도 그대로). 적용은 별도 지시 시 진행
 - [ ] **M6 랜딩 히어로·소개 콘텐츠**(4개 언어) — Phase 2는 기능 설명 최소 문구로 대체(마케팅 카피 아님), 실제 콘텐츠는 Phase 2 이후
 - [ ] **M2 도메인·Cloudflare 계정** — Phase 9
 - [ ] **M11 로그인 시 locale 자동 반영 방식**(7-2절) — `users.locale`이 `NOT NULL DEFAULT`라 "비어있을 때만 채운다" 원문 구현 불가, 별도 컬럼 추가 여부 결정 필요
