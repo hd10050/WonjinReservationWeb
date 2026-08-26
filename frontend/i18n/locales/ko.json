@@ -164,6 +164,22 @@
       "sectionConsultants": "담당 실장별 집계",
       "colConsultant": "실장",
       "empty": "데이터가 없습니다."
+    },
+    "referrals": {
+      "title": "유입 경로 분석",
+      "filterFrom": "시작일",
+      "filterTo": "종료일",
+      "filterApply": "조회",
+      "colReferralCode": "추천 코드",
+      "colUtmSource": "유입 소스",
+      "colUtmMedium": "매체",
+      "colUtmCampaign": "캠페인",
+      "colVisitCount": "방문 수",
+      "colReservationCount": "예약 수",
+      "colConversionRate": "예약 전환율",
+      "colConfirmedCount": "확정 수",
+      "colConfirmedConversionRate": "확정 전환율",
+      "empty": "데이터가 없습니다."
     }
   },
   "landing": {

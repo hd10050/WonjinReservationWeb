@@ -164,6 +164,22 @@
       "sectionConsultants": "按负责顾问统计",
       "colConsultant": "顾问",
       "empty": "暂无数据。"
+    },
+    "referrals": {
+      "title": "获客渠道分析",
+      "filterFrom": "起始日期",
+      "filterTo": "结束日期",
+      "filterApply": "查询",
+      "colReferralCode": "推荐码",
+      "colUtmSource": "来源",
+      "colUtmMedium": "媒介",
+      "colUtmCampaign": "广告系列",
+      "colVisitCount": "访问数",
+      "colReservationCount": "预约数",
+      "colConversionRate": "预约转化率",
+      "colConfirmedCount": "已确认数",
+      "colConfirmedConversionRate": "确认转化率",
+      "empty": "暂无数据。"
     }
   },
   "landing": {
