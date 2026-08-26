@@ -5,7 +5,7 @@
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원
 - 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1(인증) 구현 완료**(2026-08-26) — 로그인·갱신·로그아웃·정지즉시차단·F5(랜딩 미호출) 전건 브라우저 실측 검증. Phase 2(랜딩)부터는 사용자 지시 대기
+- 현재 상태: **Phase 2(랜딩+예약폼+유입경로) 구현 완료**(2026-08-26) — 4언어 브라우저 E2E + 백엔드 curl 실측(동시성·rate limit·honeypot 포함) 전건 검증. Phase 3(대시보드)부터는 사용자 지시 대기
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -84,6 +84,10 @@
 - 🔴 **C# record의 검증 애노테이션은 `[property: ...]`가 아니라 파라미터에 직접 붙일 것** — `[property: Required]`는 컴파일은 통과하지만 그 record를 실제로 모델 바인딩하는 첫 요청에서 500(`InvalidOperationException`)을 던짐. `[Required] string Email`처럼 타겟 지정자 없이 쓸 것(11-8절)
 - **`useOpsLocale()`은 `locale.value = code` 직접 대입 금지, 반드시 `await setLocale(code)`** — 직접 대입은 lazy 로케일 메시지 로드를 트리거 안 해 `t()`가 raw key를 반환함. 호출부(로그인 페이지·admin 레이아웃)도 `await useOpsLocale()`로 SSR 완료를 기다릴 것(5-4절)
 - **`refresh` rate limit 파티션은 사용자 ID가 아니라 RT 쿠키 해시로 구현**(설계 원문과 의도적 편차, 7-2절) — DB 조회 없이 동기 콜백에서 즉시 얻을 수 있어 세션 단위로 더 세밀하게 격리됨
+- 🔴 **`db.Database.SqlQuery<T>(...)`에 바로 `.SingleAsync()`를 걸지 말 것** — `INSERT...RETURNING`처럼 non-composable SQL을 서브쿼리로 감싸려다 `InvalidOperationException`을 던진다(실측 확인, 8-11절 코드카운터). `.ToListAsync()`로 먼저 그대로 구체화한 뒤 메모리에서 `.Single()`을 적용할 것
+- **Vue 템플릿에서 `{{ prefix }}<A>{{ link }}</A>{{ suffix }}` 사이에 줄바꿈을 넣으면 공백이 하나씩 끼어든다** — 한국어("본인은 개인정보처리방침 에 동의")처럼 조사가 바로 붙어야 하는 언어에서 실제로 어색해짐(실측 확인). 4언어 문구를 한 태그에 이어붙일 땐 줄바꿈 없이 한 줄로 쓰고, 언어별로 필요한 공백은 번역 문자열 자체(prefix 끝 등)에 포함시킬 것 — 중국어는 공백 없음이 정상, 한국어·영어는 필요
+- **`@nuxtjs/i18n`의 `locales[].code`가 대문자를 포함하면(`zh-TW`) URL prefix도 그 대소문자 그대로 생성된다**(`/zh-TW`, design.md 5-1절이 표기한 소문자 `/zh-tw`와 다름) — 실측 결과 대문자·소문자 URL 둘 다 같은 페이지로 정상 라우팅되어 기능 문제는 없으나, 링크 자체는 항상 대문자로 생성됨. `code`를 DB `locale` 값(`zh-TW`, CHECK 제약과 동일)과 반드시 일치시켜야 하므로 지금은 그대로 둠 — SEO 정규화가 필요해지면(Phase 9) 재검토
+- **honeypot 필드가 채워진 요청은 400이 아니라 200으로 조용히 흘려보내고 DB에 저장하지 않을 것** — 실패 응답을 주면 봇이 실패 패턴을 학습해 우회를 시도할 여지를 준다(11-1절)
 
 ## 절대 원칙 이행 (루트 CLAUDE.md)
 - **화면 깜빡임 금지** — 데이터 페이지는 `<script setup>` 최상위 `await useApi(...)` SSR 프리로드. `onMounted`+client fetch 금지. 전환 오버레이는 `<Transition>` 금지, 항상 마운트 + `pointer-events`를 상태값에 직접 클래스 바인딩
@@ -94,16 +98,17 @@
 
 ## TODO
 ### 다음 세션 최우선
-- [ ] **Phase 2(랜딩 4언어+예약 폼+유입경로 수집) 착수** — Phase 1 완료, 착수는 사용자 지시 대기
+- [ ] **Phase 3(예약 대시보드+상세+상담기록+상태머신+소프트삭제) 착수** — Phase 2 완료, 착수는 사용자 지시 대기
 - [ ] **테스트 계정 `test-admin@wonjin.local`(비번 `TestPassword123!`) 처리 여부 결정** — Phase 1 브라우저 E2E 검증용으로 DB에 직접 삽입, 최초 운영 어드민 계정과 별개. 삭제할지 유지할지 사용자 확인 대기
 - [ ] **M11 로그인 시 locale 자동 반영 방식 결정** — 지금은 `PATCH /api/auth/me/locale` 수동 변경만 동작(design.md 20장)
-- [ ] **Phase 1에서 범위상 의도적으로 안 만든 것**(design.md 19-2절 근거) — `useApi.ts`(GET SSR 래퍼, 실사용처 없어 Phase 3에서), 관리자 사이드바 전체(12-3절 10메뉴, 메뉴 화면 자체가 아직 없어 죽은 링크 방지차 최소 헤더만), 전환 차단 오버레이(13-2절, 데이터 프리로드 화면이 느는 Phase 2 이후 실효). 이 3개를 "빠뜨렸다"고 오인하지 말 것 — 각 Phase에서 자연스럽게 채워짐
+- [ ] **로컬 DB 테스트 더미 예약 정리 여부 확인** — Phase 2 실측 검증(동시성 20건·rate limit·honeypot 등) 중 생성된 더미 `reservations` 약 27건이 로컬 dev DB에 남아있음. 실서비스 데이터 아님, Phase 3에서 대시보드 목록 확인 전에 정리 권장
+- [ ] **Phase 1에서 범위상 의도적으로 안 만든 것**(design.md 19-2절 근거) — `useApi.ts`(GET SSR 래퍼, 실사용처 없어 Phase 3에서), 관리자 사이드바 전체(12-3절 10메뉴, 메뉴 화면 자체가 아직 없어 죽은 링크 방지차 최소 헤더만), 전환 차단 오버레이(13-2절 — Phase 2 페이지들은 SSR 데이터 페칭이 없어 전환 지연이 없으므로 여전히 불필요, 관리자 대시보드가 생기는 Phase 3에서 실효). 이 항목들을 "빠뜨렸다"고 오인하지 말 것 — 각 Phase에서 자연스럽게 채워짐
 ### Phase 계획 — 완료기준 포함 (design.md 19장과 동일, 상세 코드는 그쪽 참고)
 | # | 내용 | 완료기준 |
 |---|---|---|
 | 0 | ✅ 스캐폴딩 + DB 마이그레이션(2026-08-26 완료) | 컨테이너 기동+마이그레이션+인덱스 확인 + `Asia/Seoul` 타임존 조회 성공 — 전건 실측 검증 완료 |
 | 1 | ✅ 인증 + `AccountStateFilter` + 동일출처 프록시(2026-08-26 완료) | 로그인~정지차단 E2E + 랜딩에서 `/api/auth/me` 미호출 확인(F5) — 전건 실측 검증 완료(design.md 19-2절) |
-| 2 | 랜딩 4언어 + 예약 폼 + **개인정보 처리방침** + 유입경로 수집 | 4언어 폼 제출→DB적재+UTM보존 + landing-visit 시크릿없이 404(F11) + 연락희망시각 `time` 저장 확인(D10) |
+| 2 | ✅ 랜딩 4언어 + 예약 폼 + **개인정보 처리방침**(틀만) + 유입경로 수집(2026-08-26 완료) | 4언어 폼 제출→DB적재+UTM보존 + landing-visit 시크릿없이 404(F11) + 연락희망시각 `time` 저장 확인(D10) — 전건 실측 완료(19-3절) |
 | 3 | 예약 대시보드·상세·상담기록 누적·상태머신·소프트삭제 | 상태전이 동시성409 + 코드동시생성 중복없음(F4) + 삭제조건409(D15) + **미배정 400 차단**(D17). 🔴 **동시성 재현 스크립트 3종 필수**(코드생성·소프트삭제·상태전이 — 19-1절, curl+xargs -P) |
 | 4 | 실장(`consultants`)·시술 관리 | 4언어 탭 CRUD + 비활성실장 배정·KPI 제외/과거예약 유지(D13) |
 | 5 | 예약 달력 | 월범위 검증 + 부분인덱스 사용 확인 |
@@ -113,9 +118,9 @@
 | 9 | SEO·보안감사·배포 | 라이브 curl 검증 |
 
 ## 미결정 (상세: `docs/design.md` 20장)
-- [ ] **M8 병원 정식 정보**(상호·주소·대표전화·사업자번호) — 푸터·JSON-LD용, Phase 2
-- [ ] **M10 로고 이미지**(favicon·사이드바·OG) — Phase 2
-- [ ] **M6 랜딩 히어로·소개 콘텐츠**(4개 언어) — Phase 2 이후
+- [ ] **M8 병원 정식 정보**(상호·주소·대표전화·사업자번호) — 푸터·JSON-LD용. Phase 2 완료기준엔 없어 브랜드 토큰 `WonJin`(D18)만으로 footer 처리, 실제 JSON-LD는 Phase 9로 재확인
+- [ ] **M10 로고 이미지**(favicon·사이드바·OG) — Phase 2엔 텍스트 브랜드로 대체, 실제 파일은 Phase 9
+- [ ] **M6 랜딩 히어로·소개 콘텐츠**(4개 언어) — Phase 2는 기능 설명 최소 문구로 대체(마케팅 카피 아님), 실제 콘텐츠는 Phase 2 이후
 - [ ] **M2 도메인·Cloudflare 계정** — Phase 9
 - [ ] **M11 로그인 시 locale 자동 반영 방식**(7-2절) — `users.locale`이 `NOT NULL DEFAULT`라 "비어있을 때만 채운다" 원문 구현 불가, 별도 컬럼 추가 여부 결정 필요
 > 최초 어드민 계정은 **사용자가 DB에 직접 삽입**(시딩 코드 없음). 실장·시술 마스터도 사용자가 관리 화면에서 직접 등록
@@ -133,4 +138,4 @@
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고)
-- **2026-08-26 (11) — Phase 1(인증) 구현 완료 + 근본 원인 2건 규명**: 로그인/갱신/로그아웃/`AccountStateFilter`/동일출처 프록시(`server/api/[...].ts`)/`useAuth`·`useAuthFetch`·`useTokenRefresh`·`useOpsLocale` 컴포저블/`admin.ts` 미들웨어/로그인 화면·최소 admin 셸을 design.md 6~7장 그대로 구현. 실측 중 신규 결함 4건 발견·전건 수정: ①**TypeScript 7.x 근본 원인 규명**(Phase 0의 `[미확인]` 해소) — 네이티브 재작성판이 `@vue/compiler-sfc`의 `ts.sys` 타입 해석과 비호환. `typescript@^5.9.3`으로 다운그레이드가 진짜 해결책이고, **기존 `/* @vue-ignore */` 우회는 철회** — 이 우회 때문에 `as` prop 기본값이 깨져 로그인 버튼이 `<button>` 대신 `<div>`로 렌더링되어 폼 제출이 조용히 안 되고 있었음(Phase 0 "실사용에 영향 없음" 기록이 틀렸음을 정정) ②`app.vue`에 `<NuxtPage />` 누락 발견 — `pages/` 신설 시 전 라우트가 404 ③C# record `[property: Required]`가 런타임 500(모델 바인딩 시점에만 드러남) — 파라미터 직접 부착으로 수정 ④`useOpsLocale`이 `locale.value` 직접 대입 방식이라 로케일 메시지 lazy 로드가 안 걸려 로그인 화면에 raw i18n key 노출 → `await setLocale()`로 수정. **F5 완료기준 4개 경로 전건 실측**(로그인/갱신/로그아웃 4가지 방법/정지 즉시차단 — design.md 19-2절 표) 후 테스트 계정(`test-admin@wonjin.local`, DB 직접 삽입)으로 검증 완료. design.md에 11-7·11-8절 신설, M11(로그인 locale 자동반영 보류) 신규 등록
+- **2026-08-26 (12) — Phase 2(랜딩+예약폼+유입경로) 구현 완료**: 백엔드 `ReservationsController`(공개 예약 신청, rate limit `reservation-create` IP 분당5)·`InternalController`(`landing-visit`, 시크릿 헤더 없으면 404)와 프론트 `layouts/landing.vue`+`pages/index.vue`+`pages/privacy.vue`+`app/error.vue`+5-3절 언어감지 스크립트+4로케일 JSON(39키 일치 자체대조)을 design.md 11-1·12-1·15-1장 그대로 구현. 새 마이그레이션 없음(Phase 0 스키마 재사용). 실행 중 실제 버그 4건 발견·수정: ①`InternalController`에 `using Microsoft.EntityFrameworkCore;` 누락(컴파일 실패) ②`db.Database.SqlQuery<int>().SingleAsync()`가 `INSERT...RETURNING`을 서브쿼리로 감싸려다 `InvalidOperationException`(실행 전엔 안 보이던 런타임 버그) → `ToListAsync()`+메모리 `Single()`로 수정 ③Vue 템플릿에서 동의 문구 태그 사이 줄바꿈이 언어별로 다른 공백 오류를 만듦(태그를 한 줄로 붙이고 필요한 공백은 번역 문자열 자체에 포함) ④페이지 `<title>` 미설정. **실측 전건 통과**: curl로 정상제출(한자 이름·UTM·`time` 컬럼 DB 정확 저장)·honeypot봇(200이지만 미저장)·동의없음(400)·잘못된성별(400)·landing-visit 무시크릿(404)/유시크릿(200) 확인 + **동시 예약 20건 제출(F4 재현, 서로 다른 IP로 rate limit 우회)→전부 200·코드 20개 전부 유니크** + rate limit 분당5(6번째 429) 확인. 브라우저 E2E로 4언어(zh-CN/zh-TW/en/ko) 랜딩·폼 제출→성공화면 전환(U2)→DB 저장, UTM이 언어감지 리다이렉트를 거쳐도 보존됨(`/?utm_source=...`→`/ko?utm_source=...`), 404 에러화면(U3, 로케일 유지)+홈복귀, honeypot 필드 오프스크린(`left:-9942px`)+`tabindex=-1` 전부 확인. **편차 발견**: `@nuxtjs/i18n`의 `code:'zh-TW'`가 URL prefix도 대문자로 생성(design.md 5-1절 소문자 `/zh-tw` 표기와 다름) — 대소문자 둘 다 실제로는 정상 라우팅되어 기능 문제는 없음, Phase 9 SEO 작업 시 재검토 필요. M8(병원정보)·M10(로고)은 Phase 2 완료기준에 없어 브랜드 토큰 `WonJin`만으로 대체, 실제 값은 Phase 9로 재확인

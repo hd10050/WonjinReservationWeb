@@ -16,8 +16,52 @@
       "welcome": "欢迎"
     }
   },
+  "landing": {
+    "hero": {
+      "title": "预约咨询",
+      "subtitle": "请填写以下信息，我们的顾问将通过微信与您联系。"
+    },
+    "form": {
+      "title": "预约申请表",
+      "name": "姓名",
+      "birthDate": "出生日期",
+      "gender": "性别",
+      "genderFemale": "女",
+      "genderMale": "男",
+      "genderOther": "其他",
+      "wechatId": "微信号",
+      "contactTime": "希望联系时间（韩国时间）",
+      "consentPrefix": "我已阅读并同意",
+      "consentLink": "《隐私政策》",
+      "consentSuffix": "，同意收集和使用本人的个人信息以用于本次咨询预约。",
+      "submit": "提交申请"
+    },
+    "success": {
+      "message": "申请已提交，我们的顾问将通过微信与您联系。",
+      "codeLabel": "预约编号",
+      "wechatLabel": "微信号"
+    },
+    "footer": {
+      "privacy": "隐私政策",
+      "copyright": "© {year} WonJin"
+    }
+  },
+  "privacy": {
+    "title": "隐私政策",
+    "pending": "本页面内容正在准备中。"
+  },
+  "error": {
+    "notFound": "找不到页面。",
+    "serverError": "服务器发生错误，请稍后再试。",
+    "home": "返回首页"
+  },
   "errors": {
     "INVALID_CREDENTIALS": "邮箱或密码不正确。",
-    "ACCOUNT_SUSPENDED": "该账号已被停用，请联系管理员。"
+    "ACCOUNT_SUSPENDED": "该账号已被停用，请联系管理员。",
+    "PRIVACY_CONSENT_REQUIRED": "请先同意隐私政策。",
+    "INVALID_GENDER": "性别选择无效。",
+    "UNSUPPORTED_LOCALE": "不支持的语言。",
+    "INVALID_BIRTH_DATE": "请填写正确的出生日期。",
+    "SUBMIT_FAILED": "提交失败，请稍后再试。"
   }
 }

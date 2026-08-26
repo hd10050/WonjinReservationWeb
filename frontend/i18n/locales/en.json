@@ -16,8 +16,52 @@
       "welcome": "Welcome"
     }
   },
+  "landing": {
+    "hero": {
+      "title": "Book a Consultation",
+      "subtitle": "Fill out the form below and our consultant will contact you via WeChat."
+    },
+    "form": {
+      "title": "Reservation Form",
+      "name": "Name",
+      "birthDate": "Date of Birth",
+      "gender": "Gender",
+      "genderFemale": "Female",
+      "genderMale": "Male",
+      "genderOther": "Other",
+      "wechatId": "WeChat ID",
+      "contactTime": "Preferred Contact Time (Korea Time)",
+      "consentPrefix": "I have read and agree to the ",
+      "consentLink": "Privacy Policy",
+      "consentSuffix": ", and consent to the collection and use of my personal information for this consultation request.",
+      "submit": "Submit"
+    },
+    "success": {
+      "message": "Your request has been submitted. Our consultant will contact you via WeChat.",
+      "codeLabel": "Reservation Code",
+      "wechatLabel": "WeChat ID"
+    },
+    "footer": {
+      "privacy": "Privacy Policy",
+      "copyright": "© {year} WonJin"
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "pending": "This page's content is being prepared."
+  },
+  "error": {
+    "notFound": "Page not found.",
+    "serverError": "A server error occurred. Please try again later.",
+    "home": "Go to Homepage"
+  },
   "errors": {
     "INVALID_CREDENTIALS": "Invalid email or password.",
-    "ACCOUNT_SUSPENDED": "This account has been suspended. Please contact an administrator."
+    "ACCOUNT_SUSPENDED": "This account has been suspended. Please contact an administrator.",
+    "PRIVACY_CONSENT_REQUIRED": "Please agree to the Privacy Policy.",
+    "INVALID_GENDER": "Invalid gender selection.",
+    "UNSUPPORTED_LOCALE": "Unsupported language.",
+    "INVALID_BIRTH_DATE": "Please enter a valid date of birth.",
+    "SUBMIT_FAILED": "Submission failed. Please try again later."
   }
 }

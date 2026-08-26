@@ -108,6 +108,16 @@ builder.Services.AddRateLimiter(options =>
             QueueLimit = 0,
         });
     });
+
+    // 공개 예약 폼(11-1·7-5절) — IP 파티션, 분당 5회. 광고 랜딩發 남용 방지가 목적이라
+    // 로그인처럼 이메일 조합이 필요 없다(계정이 없는 익명 제출이므로).
+    options.AddPolicy("reservation-create", context =>
+        RateLimitPartition.GetFixedWindowLimiter(GetClientIp(context), _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 5,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+        }));
 });
 
 // ── 리버스 프록시(Render/Cloudflare) 뒤에서 실제 클라이언트 IP·스킴 복원 ──

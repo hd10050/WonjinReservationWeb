@@ -10,6 +10,38 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
   },
 
+  app: {
+    head: {
+      script: [
+        {
+          // 5-3절 — detectBrowserLanguage(5-2절)를 끈 대신, 자동 감지는 <head> 동기 인라인
+          // 스크립트로만 구현한다. 크롤러는 스크립트를 실행하지 않으므로 '/'는 항상 SSR
+          // 그대로(zh-CN) 응답된다 — 카카오톡·라인 등 링크 미리보기 봇이 리다이렉트를 따라가
+          // 엉뚱한 언어의 og:description을 노출하는 문제를 피하기 위함.
+          innerHTML: `(function () {
+  try {
+    if (location.pathname !== '/') return;
+    var manual = /(?:^|; )wj_lang_manual=1(?:;|$)/.test(document.cookie);
+    var t;
+    if (manual) {
+      var m = document.cookie.match(/(?:^|; )wj_lang=([^;]*)/);
+      t = m ? decodeURIComponent(m[1]) : 'zh-CN';
+    } else {
+      var l = navigator.language || '';
+      if (l.indexOf('ko') === 0) t = 'ko';
+      else if (l === 'zh-TW' || l === 'zh-HK' || l === 'zh-Hant' || l.indexOf('zh-Hant') === 0) t = 'zh-TW';
+      else if (l.indexOf('zh') === 0) t = 'zh-CN';
+      else t = 'en';
+      document.cookie = 'wj_lang=' + t + '; expires=' + new Date(Date.now() + 31536000000).toUTCString() + '; path=/; samesite=lax';
+    }
+    if (t !== 'zh-CN') location.replace('/' + (t === 'zh-TW' ? 'zh-tw' : t) + location.search);
+  } catch (e) {}
+})();`,
+        },
+      ],
+    },
+  },
+
   modules: ['@nuxtjs/i18n', '@nuxtjs/sitemap', '@nuxtjs/robots', 'shadcn-nuxt'],
 
   // D19 — shadcn-vue. 컴포넌트는 `npx shadcn-vue add <name>`으로 소스를 직접 복사해 여기 쌓인다.

@@ -16,8 +16,52 @@
       "welcome": "환영합니다"
     }
   },
+  "landing": {
+    "hero": {
+      "title": "상담 예약",
+      "subtitle": "아래 정보를 입력해 주시면 담당 실장이 위챗으로 연락드립니다."
+    },
+    "form": {
+      "title": "예약 신청서",
+      "name": "이름",
+      "birthDate": "생년월일",
+      "gender": "성별",
+      "genderFemale": "여성",
+      "genderMale": "남성",
+      "genderOther": "기타",
+      "wechatId": "위챗 ID",
+      "contactTime": "연락 희망 시각 (한국 시간)",
+      "consentPrefix": "본인은 ",
+      "consentLink": "개인정보 처리방침",
+      "consentSuffix": "에 동의하며, 상담 신청을 위한 개인정보 수집·이용에 동의합니다.",
+      "submit": "신청하기"
+    },
+    "success": {
+      "message": "신청이 접수되었습니다. 담당 실장이 위챗으로 연락드립니다.",
+      "codeLabel": "예약 코드",
+      "wechatLabel": "위챗 ID"
+    },
+    "footer": {
+      "privacy": "개인정보 처리방침",
+      "copyright": "© {year} WonJin"
+    }
+  },
+  "privacy": {
+    "title": "개인정보 처리방침",
+    "pending": "이 페이지 내용은 준비 중입니다."
+  },
+  "error": {
+    "notFound": "페이지를 찾을 수 없습니다.",
+    "serverError": "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+    "home": "홈으로 돌아가기"
+  },
   "errors": {
     "INVALID_CREDENTIALS": "이메일 또는 비밀번호가 올바르지 않습니다.",
-    "ACCOUNT_SUSPENDED": "정지된 계정입니다. 관리자에게 문의하세요."
+    "ACCOUNT_SUSPENDED": "정지된 계정입니다. 관리자에게 문의하세요.",
+    "PRIVACY_CONSENT_REQUIRED": "개인정보 처리방침에 동의해주세요.",
+    "INVALID_GENDER": "성별 선택이 올바르지 않습니다.",
+    "UNSUPPORTED_LOCALE": "지원하지 않는 언어입니다.",
+    "INVALID_BIRTH_DATE": "생년월일을 정확히 입력해주세요.",
+    "SUBMIT_FAILED": "제출에 실패했습니다. 잠시 후 다시 시도해주세요."
   }
 }
