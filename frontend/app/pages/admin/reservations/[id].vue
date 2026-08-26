@@ -124,7 +124,7 @@
             </div>
             <div class="flex flex-col gap-1.5">
               <Label for="f-deposit-amount">{{ t('admin.reservationDetail.depositAmount') }}</Label>
-              <Input id="f-deposit-amount" v-model.number="depositAmount" type="number" min="0" :disabled="!canWrite || !isAssigned" class="w-32" />
+              <Input id="f-deposit-amount" v-model.number="depositAmount" type="number" min="0" max="9999999999.99" :disabled="!canWrite || !isAssigned" class="w-32" />
             </div>
             <label class="flex items-center gap-1.5 pb-2 text-sm">
               <input type="checkbox" v-model="depositPaid" :disabled="!canWrite || !isAssigned">

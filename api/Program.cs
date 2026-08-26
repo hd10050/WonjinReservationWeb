@@ -145,6 +145,22 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+else
+{
+    // 🔴 커스텀 예외 처리기가 없으면 처리 안 된 예외의 응답 형태가 미정이라 이후 클라이언트의
+    // {code:...} 파싱 계약이 깨진다. Development의 상세 스택트레이스 노출(재감사 2번 결함)은
+    // UseDeveloperExceptionPage가 이 분기 밖(암묵적으로 Development에서만 활성)이라 여기서
+    // 건드리지 않고, Production 전용으로 항상 {code:"INTERNAL_ERROR"} 형태만 반환하게 한다.
+    app.UseExceptionHandler(errApp =>
+    {
+        errApp.Run(async context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new { code = "INTERNAL_ERROR" });
+        });
+    });
+}
 
 app.UseHttpsRedirection();
 

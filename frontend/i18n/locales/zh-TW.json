@@ -123,6 +123,8 @@
     "INVALID_STATUS_TRANSITION": "不允許此狀態變更。",
     "CANCEL_REASON_REQUIRED": "請輸入取消原因。",
     "INVALID_DEPOSIT_CURRENCY": "訂金幣別不正確。",
+    "INVALID_PROCEDURE_IDS": "所選項目中包含不存在的項目。",
+    "INTERNAL_ERROR": "伺服器發生暫時性錯誤，請稍後再試。",
     "UNKNOWN": "發生未知錯誤。"
   }
 }

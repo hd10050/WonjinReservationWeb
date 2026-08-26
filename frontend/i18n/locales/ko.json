@@ -123,6 +123,8 @@
     "INVALID_STATUS_TRANSITION": "허용되지 않는 상태 변경입니다.",
     "CANCEL_REASON_REQUIRED": "취소 사유를 입력하세요.",
     "INVALID_DEPOSIT_CURRENCY": "예약금 통화가 올바르지 않습니다.",
+    "INVALID_PROCEDURE_IDS": "존재하지 않는 시술이 포함되어 있습니다.",
+    "INTERNAL_ERROR": "서버에 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
     "UNKNOWN": "알 수 없는 오류가 발생했습니다."
   }
 }

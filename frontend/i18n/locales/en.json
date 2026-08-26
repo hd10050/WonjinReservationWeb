@@ -123,6 +123,8 @@
     "INVALID_STATUS_TRANSITION": "This status change is not allowed.",
     "CANCEL_REASON_REQUIRED": "Please enter a cancellation reason.",
     "INVALID_DEPOSIT_CURRENCY": "Invalid deposit currency.",
+    "INVALID_PROCEDURE_IDS": "One or more selected procedures do not exist.",
+    "INTERNAL_ERROR": "A temporary server error occurred. Please try again in a moment.",
     "UNKNOWN": "An unknown error occurred."
   }
 }

@@ -123,6 +123,8 @@
     "INVALID_STATUS_TRANSITION": "不允许此状态变更。",
     "CANCEL_REASON_REQUIRED": "请输入取消原因。",
     "INVALID_DEPOSIT_CURRENCY": "定金币种不正确。",
+    "INVALID_PROCEDURE_IDS": "所选项目中包含不存在的项目。",
+    "INTERNAL_ERROR": "服务器发生临时错误，请稍后重试。",
     "UNKNOWN": "发生未知错误。"
   }
 }

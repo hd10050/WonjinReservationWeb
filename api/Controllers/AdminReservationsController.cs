@@ -13,7 +13,7 @@ namespace WonjinApi.Controllers;
 [ApiController]
 [Route("api/admin/reservations")]
 [Authorize(Roles = "Admin,HospitalManager,Consultant")]
-public class AdminReservationsController(AppDbContext db) : ControllerBase
+public class AdminReservationsController(AppDbContext db, ILogger<AdminReservationsController> logger) : ControllerBase
 {
     private static readonly TimeZoneInfo Kst = TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul");
 
@@ -132,6 +132,18 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
         if (req.DepositCurrency is not ("CNY" or "KRW"))
             return BadRequest(new { code = "INVALID_DEPOSIT_CURRENCY" });
 
+        // 🔴 시술 ID 존재 검증 — AssignConsultant의 CONSULTANT_NOT_FOUND와 대칭. 검증 없이 그대로 삽입하면
+        // FK 위반(fk_reservation_procedures_procedures_procedure_id)이 SaveChangesAsync에서 500으로
+        // 터지고, 트랜잭션이 없던 예전 코드에서는 그 시점에 이미 스칼라 필드·자동전이가 커밋된 뒤라
+        // "응답은 실패인데 시술 목록만 조용히 삭제된" 상태가 됐다(실측 확인 — 재감사 1번 결함).
+        var distinctProcedureIds = req.ProcedureIds.Distinct().ToArray();
+        if (distinctProcedureIds.Length > 0)
+        {
+            var existingCount = await db.Procedures.CountAsync(p => distinctProcedureIds.Contains(p.Id));
+            if (existingCount != distinctProcedureIds.Length)
+                return BadRequest(new { code = "INVALID_PROCEDURE_IDS" });
+        }
+
         var before = await db.Reservations.AsNoTracking()
             .Where(r => r.Id == id)
             .Select(r => new { r.ConsultantId, r.DepositPaid })
@@ -140,6 +152,10 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
         if (before.ConsultantId is null) return BadRequest(new { code = "RESERVATION_NOT_ASSIGNED" });
 
         var now = DateTimeOffset.UtcNow;
+
+        // 🔴 스칼라 저장·시술 재설정·자동전이·로그 기록을 하나의 트랜잭션으로 묶는다 — 그중 하나라도
+        // 실패하면 전부 롤백되어 "응답은 실패인데 일부만 반영된" 상태를 만들지 않는다(재감사 1번 결함 수정).
+        await using var tx = await db.Database.BeginTransactionAsync();
 
         // D17 — 배정 여부를 같은 UPDATE의 WHERE에 다시 넣어 조회~쓰기 사이 배정 해제된 경우를 닫는다(10-1절).
         var affected = await db.Reservations
@@ -153,13 +169,13 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
                 .SetProperty(r => r.UpdatedAt, now));
 
         if (affected == 0)
-            return await DiagnoseWriteFailureAsync(id);
+            return await DiagnoseWriteFailureAsync(id); // tx는 커밋 안 됐으므로 using 종료 시 자동 롤백
 
         await db.ReservationProcedures.Where(rp => rp.ReservationId == id).ExecuteDeleteAsync();
-        if (req.ProcedureIds.Length > 0)
+        if (distinctProcedureIds.Length > 0)
         {
             db.ReservationProcedures.AddRange(
-                req.ProcedureIds.Distinct().Select(pid => new ReservationProcedure { ReservationId = id, ProcedureId = pid }));
+                distinctProcedureIds.Select(pid => new ReservationProcedure { ReservationId = id, ProcedureId = pid }));
         }
 
         // New/Consulting에서 방문일+입금확인 둘 다 충족하면 Confirmed로 자동 전이(10장)
@@ -182,6 +198,8 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
             db.ReservationLogs.Add(new ReservationLog { ReservationId = id, Action = "status_changed", Note = "예약금·방문일 확인 → Confirmed", ActorUserId = userId, ActorName = userName, CreatedAt = now });
 
         await db.SaveChangesAsync();
+        await tx.CommitAsync();
+
         return await GetDetail(id);
     }
 
@@ -234,6 +252,10 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
         string logAction;
         string? logNote;
 
+        // 🔴 상태 전이 UPDATE와 그 처리 이력 기록을 하나의 트랜잭션으로 묶는다 — 로그 기록이 실패해도
+        // 이미 커밋된 상태 전이만 남고 응답은 실패로 보이는 불일치를 막는다(재감사 1번 결함과 동일 패턴).
+        await using var tx = await db.Database.BeginTransactionAsync();
+
         if (req.Status == "Visited")
         {
             affected = await db.Reservations
@@ -275,6 +297,7 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
             ReservationId = id, Action = logAction, Note = logNote, ActorUserId = userId, ActorName = userName, CreatedAt = now,
         });
         await db.SaveChangesAsync();
+        await tx.CommitAsync();
         return await GetDetail(id);
     }
 
@@ -292,6 +315,10 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
 
         var now = DateTimeOffset.UtcNow;
         var (userId, userName) = await GetCurrentUserAsync();
+
+        // 🔴 상담기록 추가 + 자동전이 + 두 로그 기록을 하나의 트랜잭션으로 묶는다 — 뒤쪽 SaveChangesAsync가
+        // 실패해도 앞서 저장된 상담기록까지 롤백되어 부분 반영을 막는다(재감사 1번 결함과 동일 패턴).
+        await using var tx = await db.Database.BeginTransactionAsync();
 
         var note = new ReservationNote
         {
@@ -313,6 +340,8 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
             db.ReservationLogs.Add(new ReservationLog { ReservationId = id, Action = "status_changed", Note = "New → Consulting", ActorUserId = userId, ActorName = userName, CreatedAt = now });
             await db.SaveChangesAsync();
         }
+
+        await tx.CommitAsync();
 
         return Ok(new ReservationNoteDto(note.Id, note.Body, note.AuthorUserId, note.AuthorName, note.CreatedAt, note.UpdatedAt, false));
     }
@@ -345,39 +374,55 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
         var now = DateTimeOffset.UtcNow;
         var (userId, userName) = await GetCurrentUserAsync();
 
-        // 조건(상담기록 0건)과 갱신이 같은 문장에서 평가되므로 경쟁 조건이 없다(11-2절)
-        var affected = await db.Reservations
-            .Where(r => r.Id == id && !db.ReservationNotes.Any(n => n.ReservationId == id))
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(r => r.DeletedAt, now)
-                .SetProperty(r => r.DeletedByUserId, userId));
-
-        if (affected == 0)
+        // 🔴 삭제 UPDATE와 그 처리 이력(reservation_logs) 기록을 하나의 트랜잭션으로 묶는다 — 로그 기록이
+        // 실패해도 "삭제됐는데 이력이 없는" 불일치를 막는다(재감사 1번 결함과 동일 패턴).
+        await using (var tx = await db.Database.BeginTransactionAsync())
         {
-            var exists = await db.Reservations.AnyAsync(r => r.Id == id);
-            if (!exists) return NotFound();
-            return Conflict(new { code = "RESERVATION_HAS_NOTES" });
+            // 조건(상담기록 0건)과 갱신이 같은 문장에서 평가되므로 경쟁 조건이 없다(11-2절)
+            var affected = await db.Reservations
+                .Where(r => r.Id == id && !db.ReservationNotes.Any(n => n.ReservationId == id))
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(r => r.DeletedAt, now)
+                    .SetProperty(r => r.DeletedByUserId, userId));
+
+            if (affected == 0)
+            {
+                var exists = await db.Reservations.AnyAsync(r => r.Id == id);
+                if (!exists) return NotFound();
+                return Conflict(new { code = "RESERVATION_HAS_NOTES" });
+            }
+
+            db.ReservationLogs.Add(new ReservationLog { ReservationId = id, Action = "deleted", ActorUserId = userId, ActorName = userName, CreatedAt = now });
+            await db.SaveChangesAsync();
+            await tx.CommitAsync();
         }
 
-        db.ReservationLogs.Add(new ReservationLog { ReservationId = id, Action = "deleted", ActorUserId = userId, ActorName = userName, CreatedAt = now });
-
-        // 삭제는 되돌릴 수 없는 액션이므로 추적 근거를 reservation_logs 한쪽에만 두지 않는다(11-2절).
-        // AuditLogFilter(Phase 7, 전역 자동기록)는 아직 없으므로 이 액션만 직접 기록한다.
-        var actor = await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => new { u.Email, u.Role }).FirstOrDefaultAsync();
-        db.AuditLogs.Add(new AuditLog
+        // 🔴 audit_logs는 위 트랜잭션과 의도적으로 분리한 베스트에포트 기록이다 — 삭제 자체(위)는 이미
+        // 커밋 완료됐으므로, 감사 로그 저장이 실패해도 그 실패가 이미 끝난 삭제를 실패로 보이게 하지
+        // 않는다(16장 체크리스트 "감사 로그 저장 실패가 본 작업을 실패시키지 않도록 격리"의 원래 취지 —
+        // reservation_logs처럼 삭제 자체와 함께 롤백돼야 하는 것과는 반대로, 이건 원래도 "실패해도 무방한" 부가 기록).
+        try
         {
-            ActorUserId = userId,
-            ActorEmail = actor?.Email ?? "SYSTEM",
-            ActorRole = actor?.Role ?? "",
-            Action = "soft_delete",
-            EntityType = "reservation",
-            EntityId = id.ToString(),
-            Summary = $"예약 #{id} 소프트 삭제(상담 기록 0건)",
-            StatusCode = 204,
-            CreatedAt = now,
-        });
+            var actor = await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => new { u.Email, u.Role }).FirstOrDefaultAsync();
+            db.AuditLogs.Add(new AuditLog
+            {
+                ActorUserId = userId,
+                ActorEmail = actor?.Email ?? "SYSTEM",
+                ActorRole = actor?.Role ?? "",
+                Action = "soft_delete",
+                EntityType = "reservation",
+                EntityId = id.ToString(),
+                Summary = $"예약 #{id} 소프트 삭제(상담 기록 0건)",
+                StatusCode = 204,
+                CreatedAt = now,
+            });
+            await db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "소프트 삭제 감사 로그 기록 실패: reservationId={ReservationId}", id);
+        }
 
-        await db.SaveChangesAsync();
         return NoContent();
     }
 

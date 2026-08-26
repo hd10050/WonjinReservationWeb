@@ -29,11 +29,13 @@ public record ReservationDetailDto(
     List<ReservationLogDto> Logs);
 
 // 9-1절 3곳 일치: DB varchar(200)/varchar(3) — 아래 백엔드 검증과 프론트 maxlength가 이 값을 그대로 따른다.
+// 🔴 DepositAmount 상한은 DB numeric(12,2)(AppDbContext.cs HasPrecision(12,2))와 반드시 일치시킬 것 —
+// double.MaxValue로 뒀다가 큰 값 입력 시 400 대신 numeric overflow 500이 났다(재감사 발견).
 public record UpdateReservationRequest(
     DateOnly? VisitDate,
     TimeOnly? VisitTime,
     int[] ProcedureIds,
-    [Range(0, double.MaxValue)] decimal? DepositAmount,
+    [Range(0, 9999999999.99)] decimal? DepositAmount,
     [Required, MaxLength(3)] string DepositCurrency,
     bool DepositPaid);
 
