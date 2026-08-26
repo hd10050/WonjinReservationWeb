@@ -1,0 +1,18 @@
+name = "wonjinreservationweb"
+main = ".output/server/index.mjs"
+compatibility_date = "2026-08-26"
+
+[assets]
+directory = ".output/public"
+binding = "ASSETS"
+
+[vars]
+# D7 동일 출처 프록시 — 반드시 빈 문자열 유지 (값 채우면 프록시 무력화)
+NUXT_PUBLIC_API_BASE = ""
+# Render API 공개 URL (SSR 서버 전용, 브라우저는 호출 안 함)
+NUXT_API_BASE_INTERNAL = "https://wonjinreservationweb.onrender.com"
+NUXT_PUBLIC_SITE_URL = "https://wonjinreservationweb.hd1005019.workers.dev"
+
+# NUXT_INTERNAL_SECRET은 여기 넣지 않는다 — [vars]는 평문으로 git에 커밋됨.
+# 배포 후 아래 명령으로 별도 등록:
+#   npx wrangler secret put NUXT_INTERNAL_SECRET

@@ -49,6 +49,10 @@ export default defineNuxtConfig({
 
   modules: ['@nuxtjs/i18n', '@nuxtjs/sitemap', '@nuxtjs/robots', 'shadcn-nuxt'],
 
+  nitro: {
+    preset: 'cloudflare_module',
+  },
+
   // D19 — shadcn-vue. 컴포넌트는 `npx shadcn-vue add <name>`으로 소스를 직접 복사해 여기 쌓인다.
   shadcn: {
     prefix: '',
