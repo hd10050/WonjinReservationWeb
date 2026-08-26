@@ -93,3 +93,42 @@ export interface ProcedureLookup {
   isActive: boolean
   sortOrder: number
 }
+
+// Phase 6 — 실장 KPI(11-4절). 활성 실장은 실적 0건이어도 0행으로 내려온다(11-6절 구간 0 채움).
+export interface ConsultantKpi {
+  consultantId: number
+  consultantName: string
+  assigned: number
+  confirmed: number
+  visited: number
+  conversionRate: number
+}
+
+// Phase 6 — 예약 통계 주간 추이(D16). weekStart는 date(타임존 없음) 컬럼이라 KST 변환 불필요.
+export interface WeeklyReservationStat {
+  weekStart: string
+  received: number
+  confirmed: number
+  visited: number
+  cancelled: number
+}
+
+export interface ProcedureStat {
+  procedureId: number
+  nameZhCn: string
+  nameZhTw: string
+  nameEn: string
+  nameKo: string
+  count: number
+}
+
+export interface LocaleStat {
+  locale: string
+  count: number
+}
+
+export interface ReservationStats {
+  weekly: WeeklyReservationStat[]
+  procedures: ProcedureStat[]
+  locales: LocaleStat[]
+}

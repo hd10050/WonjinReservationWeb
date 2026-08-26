@@ -88,6 +88,36 @@
       "cancelReasonPlaceholder": "취소 사유를 입력하세요",
       "deleteReservation": "예약 삭제",
       "deleteConfirm": "이 예약을 삭제하시겠습니까? 삭제 후에는 목록에서 제외됩니다."
+    },
+    "kpi": {
+      "title": "실장 KPI",
+      "filterFrom": "시작일",
+      "filterTo": "종료일",
+      "filterApply": "조회",
+      "colConsultant": "실장",
+      "colAssigned": "배정",
+      "colConfirmed": "확정",
+      "colVisited": "방문",
+      "colConversionRate": "확정전환율",
+      "empty": "데이터가 없습니다."
+    },
+    "stats": {
+      "title": "예약 통계",
+      "filterFrom": "시작일",
+      "filterTo": "종료일",
+      "filterApply": "조회",
+      "sectionWeekly": "주간 추이",
+      "colWeekStart": "주 시작일",
+      "colReceived": "접수",
+      "colConfirmed": "확정",
+      "colVisited": "방문",
+      "colCancelled": "취소",
+      "sectionProcedures": "시술별 집계",
+      "colProcedure": "시술",
+      "colCount": "건수",
+      "sectionLocales": "언어별 분포",
+      "colLocale": "언어",
+      "empty": "데이터가 없습니다."
     }
   },
   "landing": {

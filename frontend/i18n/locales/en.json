@@ -88,6 +88,36 @@
       "cancelReasonPlaceholder": "Enter the reason for cancellation",
       "deleteReservation": "Delete Reservation",
       "deleteConfirm": "Delete this reservation? It will be excluded from the list afterward."
+    },
+    "kpi": {
+      "title": "Consultant KPI",
+      "filterFrom": "From",
+      "filterTo": "To",
+      "filterApply": "Apply",
+      "colConsultant": "Consultant",
+      "colAssigned": "Assigned",
+      "colConfirmed": "Confirmed",
+      "colVisited": "Visited",
+      "colConversionRate": "Conversion Rate",
+      "empty": "No data found."
+    },
+    "stats": {
+      "title": "Reservation Stats",
+      "filterFrom": "From",
+      "filterTo": "To",
+      "filterApply": "Apply",
+      "sectionWeekly": "Weekly Trend",
+      "colWeekStart": "Week Start",
+      "colReceived": "Received",
+      "colConfirmed": "Confirmed",
+      "colVisited": "Visited",
+      "colCancelled": "Cancelled",
+      "sectionProcedures": "By Procedure",
+      "colProcedure": "Procedure",
+      "colCount": "Count",
+      "sectionLocales": "By Language",
+      "colLocale": "Language",
+      "empty": "No data found."
     }
   },
   "landing": {

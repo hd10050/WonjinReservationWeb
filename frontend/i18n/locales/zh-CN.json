@@ -88,6 +88,36 @@
       "cancelReasonPlaceholder": "请输入取消原因",
       "deleteReservation": "删除预约",
       "deleteConfirm": "确定要删除此预约吗？删除后将从列表中排除。"
+    },
+    "kpi": {
+      "title": "顾问KPI",
+      "filterFrom": "起始日期",
+      "filterTo": "结束日期",
+      "filterApply": "查询",
+      "colConsultant": "顾问",
+      "colAssigned": "分配数",
+      "colConfirmed": "已确认",
+      "colVisited": "已到店",
+      "colConversionRate": "确认转化率",
+      "empty": "暂无数据。"
+    },
+    "stats": {
+      "title": "预约统计",
+      "filterFrom": "起始日期",
+      "filterTo": "结束日期",
+      "filterApply": "查询",
+      "sectionWeekly": "每周趋势",
+      "colWeekStart": "周起始日",
+      "colReceived": "接收",
+      "colConfirmed": "已确认",
+      "colVisited": "已到店",
+      "colCancelled": "已取消",
+      "sectionProcedures": "项目分布",
+      "colProcedure": "项目",
+      "colCount": "数量",
+      "sectionLocales": "语言分布",
+      "colLocale": "语言",
+      "empty": "暂无数据。"
     }
   },
   "landing": {

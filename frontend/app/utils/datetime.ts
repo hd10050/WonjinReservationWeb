@@ -10,6 +10,11 @@ export function formatKst(value: string | Date, withTime = true): string {
   }).format(typeof value === 'string' ? new Date(value) : value)
 }
 
+// 통계 화면 기간 기본값(오늘, KST 기준 YYYY-MM-DD) — en-CA 로케일 포맷이 그대로 이 형식을 낸다.
+export function todayKst(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: KST }).format(new Date())
+}
+
 // birthDate는 date(타임존 없음) 컬럼이라 KST 변환이 필요 없다 — 달력 나이 계산만 한다.
 export function calculateAge(birthDate: string): number {
   const [y, m, d] = birthDate.split('-').map(Number)

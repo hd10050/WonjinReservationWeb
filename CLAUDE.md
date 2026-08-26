@@ -5,7 +5,7 @@
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원
 - 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~3 구현 완료, main 병합 완료**(2026-08-26). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제, `session-work` 워크트리에서 구현+3차 감사 후 병합)까지 진행. **Phase 3 설계서 대비 최종 감사에서 미해결 이슈 2건 발견 — 아래 TODO 참고**. Phase 4부터는 사용자 지시 대기
+- 현재 상태: **Phase 1~3은 main 병합 완료**(2026-08-26). **Phase 4·5·6은 각각 독립 워크트리 세션 3개가 동시 진행 중**(main 미병합, 병합은 사용자 지시 대기) — 이 파일은 Phase 6(실장 KPI·예약 통계) 세션(`session-work`) 기준. Phase 6은 백엔드·프론트·차트(D21) 구현 + 실측 검증 완료. **Phase 3 설계서 대비 최종 감사 미해결 이슈 2건 — 아래 TODO 참고**
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -16,6 +16,7 @@
 | 인증 | 자체 JWT(AT 15분, 쿠키 `wj_at`) + RT(7일, SHA-256, 쿠키 `wj_rt`) — **소셜 로그인·회원가입 없음** |
 | UI | **shadcn-vue**(`shadcn-nuxt`, style `new-york`) + `reka-ui` 프리미티브 + `class-variance-authority`(D19, 구 D11 대체) |
 | 팔레트 | **Olive Garden Feast**(D20) — `#606C38`올리브(primary)·`#283618`짙은산림녹(foreground)·`#FEFAE0`크림(background)·`#DDA15E`탄(secondary)·`#BC6C25`번트오렌지(destructive), OKLCH 변환 후 shadcn CSS 변수에 적용 |
+| 시각화 | **vue-chartjs**(`^5.3.x`) + **chart.js**(`^4.5.x`)(D21) — 실장 KPI·예약 통계 표+차트 병행. Canvas 기반이라 SSR 불가, `<ClientOnly>` 필수. Chart.js 요소 등록은 `plugins/chartjs.client.ts` 한 곳에 집중 |
 | 언어 버전 고정 | **TypeScript 5.9.3 고정**(devDependency) — 7.x(네이티브 재작성판)는 `@vue/compiler-sfc`의 `ts.sys` 타입 해석과 비호환이라 reka-ui 기반 shadcn 컴포넌트 컴파일이 깨짐(11-7절) |
 | 배포 | 프론트 Cloudflare Workers / 백엔드·DB Render |
 | 로컬 | `docker compose up` — frontend:3700 / api:5200 / postgres:5435 |
@@ -41,6 +42,7 @@
 - **UI 라이브러리 = shadcn-vue**(D19, 2026-08-26) — 구 D11(라이브러리 미도입) 대체, Context7로 최신 설치 문서 확인 후 도입. `components.json`은 CLI 자동생성 대신 수동 작성(11-7절)
 - **팔레트 = Olive Garden Feast**(D20, 2026-08-26) — 참고 화면(`reservation-desk_1.html`)의 청록색 팔레트를 대체. coolors.co/palettes/trending을 playwright-cli로 실측 검증해 이름·좋아요 수 확인된 팔레트만 채택(발명 절대 금지 — 실제 발생했던 사고)
 - **병원 정식 정보 확정**(M8, 2026-08-26) — 상호 `원진성형외과의원`·사업자번호 `824-67-00414`·주소는 화면 푸터에 원문 그대로 표기(고유명사 번역 안 함). 🔴 **대표전화는 화면에 노출하지 않고 JSON-LD에만 포함**(예약 폼 유도 우선, 사용자 결정) — 상세는 design.md 12-1-1절
+- **실장 KPI·예약 통계 = 표+차트 병행**(D21, 2026-08-26) — 차트는 `vue-chartjs`+`chart.js`, 색상은 새로 만들지 않고 D20 팔레트 재사용. Canvas는 SSR 불가라 `<ClientOnly>`로 감싸고(화면 깜빡임 금지 원칙은 데이터 프리로드 대상이라 위반 아님), 레이아웃 시프트 방지로 고정 높이 컨테이너 사용
 
 ## 역할 · 메뉴 권한
 | 메뉴 | Admin | HospitalManager | Consultant |
@@ -86,6 +88,8 @@
 - **`useOpsLocale()`은 `locale.value = code` 직접 대입 금지, 반드시 `await setLocale(code)`** — 직접 대입은 lazy 로케일 메시지 로드를 트리거 안 해 `t()`가 raw key를 반환함. 호출부(로그인 페이지·admin 레이아웃)도 `await useOpsLocale()`로 SSR 완료를 기다릴 것(5-4절)
 - **`refresh` rate limit 파티션은 사용자 ID가 아니라 RT 쿠키 해시로 구현**(설계 원문과 의도적 편차, 7-2절) — DB 조회 없이 동기 콜백에서 즉시 얻을 수 있어 세션 단위로 더 세밀하게 격리됨
 - 🔴 **`db.Database.SqlQuery<T>(...)`에 바로 `.SingleAsync()`를 걸지 말 것** — `INSERT...RETURNING`처럼 non-composable SQL을 서브쿼리로 감싸려다 `InvalidOperationException`을 던진다(실측 확인, 8-11절 코드카운터). `.ToListAsync()`로 먼저 그대로 구체화한 뒤 메모리에서 `.Single()`을 적용할 것
+- 🔴 **`db.Database.SqlQuery<T>(...)`의 다중 컬럼 매핑은 `UseSnakeCaseNamingConvention()`의 영향을 그대로 받는다** — 결과 타입 프로퍼티가 `WeekStart`면 SQL 별칭도 `week_start`(스네이크케이스)여야 매칭된다. PascalCase 따옴표 별칭(`AS "WeekStart"`)을 쓰면 "required column 'week_start' was not present" 예외(실측 확인, 11-4절 주간 통계). 8-11절의 `SqlQuery<int>` 스칼라 예시는 컬럼명 매칭이 아니라서 이 규칙이 안 보였을 뿐, 다중 컬럼 raw SQL엔 항상 적용됨
+- 🔴 **`[FromQuery] DateOnly` 등 비-nullable 값 타입은 파라미터 누락 시 400이 아니라 `default`(예: `0001-01-01`)로 조용히 바인딩된다**(`[ApiController]`의 자동 400은 문자열류에만 해당, 실측 확인 — 문서만으로 400을 단정하지 말 것). 필수 쿼리 파라미터는 컨트롤러에서 `== default` 명시적으로 검사해 400을 직접 반환할 것
 - **Vue 템플릿에서 `{{ prefix }}<A>{{ link }}</A>{{ suffix }}` 사이에 줄바꿈을 넣으면 공백이 하나씩 끼어든다** — 한국어처럼 조사가 바로 붙어야 하는 언어에서 실제로 어색해짐(실측 확인). 4언어 문구를 한 태그에 이어붙일 땐 줄바꿈 없이 한 줄로 쓰고, 필요한 공백은 번역 문자열 자체에 포함시킬 것
 - **`@nuxtjs/i18n`의 `locales[].code`가 대문자를 포함하면(`zh-TW`) URL prefix도 그 대소문자 그대로 생성된다**(`/zh-TW`) — 대소문자 URL 둘 다 정상 라우팅되어 기능 문제는 없으나, `code`를 DB `locale` 값과 일치시켜야 하므로 지금은 그대로 둠. SEO 정규화 필요해지면(Phase 9) 재검토
 - **honeypot 필드가 채워진 요청은 400이 아니라 200으로 조용히 흘려보내고 DB에 저장하지 않을 것** — 실패 응답을 주면 봇이 실패 패턴을 학습해 우회를 시도할 여지를 준다(11-1절)
@@ -117,7 +121,7 @@
 | 3 | ✅ 예약 대시보드·상세·상담기록 누적·상태머신·소프트삭제(2026-08-26 완료, main 병합 완료) | 상태전이 동시성409 + 코드동시생성 중복없음(F4) + 삭제조건409(D15) + **미배정 400 차단**(D17). 동시성 재현 스크립트 3종(`scripts/phase3-concurrency/`) 전건 통과. **설계서 대비 최종 감사 완료, 미해결 2건은 위 TODO 참고** |
 | 4 | 실장(`consultants`)·시술 관리 | 4언어 탭 CRUD + 비활성실장 배정·KPI 제외/과거예약 유지(D13) |
 | 5 | 예약 달력 | 월범위 검증 + 부분인덱스 사용 확인 |
-| 6 | 실장 KPI·예약 통계 | 빈구간 0 채움 확인 |
+| 6 | 🔶 실장 KPI·예약 통계(2026-08-26 `session-work`에서 구현+실측 완료, **병합 대기**) — 표+차트(D21) | 빈구간 0 채움 확인 — **전건 실측 완료**(빈 주·무실적 실장 전부 0 확인, 수동 계산치와 API 응답 전부 일치) |
 | 7 | 계정 관리·감사 로그 | 3역할 CRUD 전부 기록되는지 확인. **`AuditLogFilter` 도입 시 위 TODO 미해결 이슈①도 같이 정리할 것** |
 | 8 | 유입 경로 분석 | 비어드민 접근 차단 실측 |
 | 9 | SEO·보안감사·배포 | 라이브 curl 검증 |
@@ -141,5 +145,5 @@
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고)
-- **2026-08-26 (15) — Phase 3 설계서 대비 최종 감사 + Phase 2·3 main 병합 + 세션 정리**: design.md 전문(1~1549줄) 재독 + 구현 파일 전체 재Read + 핵심 심볼 grep 교차검증(`AuditLogs.Add`·`includeInactive`·`ExecuteUpdateAsync`·`CancelReason` 등, 결과 파일이 전부 읽은 목록에 있는지 대조)으로 "설계서에 있는데 구현 안 된 것"만 별도 감사. **실제 DB에 psql 직접 접속해 8-5절 인덱스 5종 실재 확인**(부분 인덱스 `WHERE status IN ('Confirmed','Visited')` 조건까지 일치) — 코드만 보고 판단하지 않음. 신규 미구현 항목은 없었으나 **미해결 이슈 2건 발견**(위 TODO·주의사항 참고, "확인해" 요청이라 의도적으로 미수정): ①`audit_logs` 컨트롤러 직접기록이 14장 원문·자체 코드 주석과 불일치 ②목록 API `includeInactive` 파라미터가 11-2절 문언과 불일치. 이후 `session-work` 브랜치(Phase3 구현·재감사6건·error.vue·전면재감사7건 등 커밋 5개)를 `main`(Phase2 구현 완료 상태)에 병합. **충돌 8개 파일**(`CLAUDE.md`·`api/DTOs/ReservationDto.cs`·`docs/session-log.md`·`frontend/app/error.vue`·로케일 4개)을 전부 수동 해결 — `ReservationDto.cs`는 공개 예약신청 record(Phase2)와 관리자 DTO(Phase3)가 이름 안 겹쳐 단순 연결, 로케일 4개는 `landing.*`/`privacy.*`(Phase2)와 `admin.*`/`status.*`/`errors.*`(Phase3)가 서로 다른 네임스페이스라 합집합으로 병합, `error.vue`는 두 세션이 각각 새로 만든 add/add 충돌이라 design.md 12-1절에 더 충실하고 4언어+관리자경로까지 실측 검증된 Phase3 버전을 채택(Phase2 버전의 `error.*` i18n 키 3개는 다른 곳에서 참조 없음을 grep 확인 후 폐기, `admin.index.welcome` 죽은 키도 함께 정리). 병합 후 `dotnet build`·i18n 4파일 키 대조로 회귀 없음 확인.
+- **2026-08-26 (16) — Phase 6(실장 KPI·예약 통계) 구현 + 실측 검증, `session-work` 워크트리**: 다른 두 세션이 각각 Phase 4·5를 동시 진행 중이라 워크트리 격리 유지(병합은 사용자 지시 대기). 착수 전 design.md 관련 절 전체(6·8-4·8-5·9-2·10·11-4·11-6·12-7·13·17·19·20-1장) 선언 후 Read. 사용자가 "표+차트 둘 다"를 요청해 **D21 신설**(`vue-chartjs`+`chart.js`, D20 팔레트 재사용, `<ClientOnly>`) 후 구현 착수. 백엔드 `AdminStatsController`(`GET /consultants`·`GET /reservations`) + `StatsDto.cs` 신규, 실장 KPI는 LINQ 2단계(11-6절), 주간 집계만 raw SQL(11-4절, 허용 3곳 중 하나), 시술별 집계는 `db.Reservations`에서 `SelectMany`로 접근(8-5절 "필터 없는 자식에서 부모 역참조" 경고 회피). 프론트 `kpi.vue`·`stats.vue`·`plugins/chartjs.client.ts` 신규 + `datetime.ts`/`types/reservation.ts`/4로케일 신규. **실제 실행으로 결함 2건 발견·수정**(둘 다 문서·추측만으로는 몰랐을 것): ①`[FromQuery] DateOnly` 미지정 시 400이 아니라 `default`로 조용히 바인딩됨(자동 400을 사용자에게 잘못 예고했다가 실측으로 정정, 명시적 `== default` 검사 추가) ②`SqlQuery<T>`가 `UseSnakeCaseNamingConvention()`을 받아 PascalCase 따옴표 별칭을 못 찾음(`AS "WeekStart"`→`AS week_start`로 수정). 격리 docker postgres(포트 5436) + 로컬 `dotnet run`/`npm run dev`에 씨드 데이터(빈 주 1개·무실적 실장 1명 의도적 포함) 심어 API curl 실측 + 브라우저 로그인 후 화면 실측 — **모든 수치가 수동 계산과 정확히 일치**(빈 구간 0 채움 포함, 완료기준 충족). 차트는 이 자동화 도구의 pane 비표시로 rAF가 안 돌아 화면상 안 보였으나, Chart.js 인스턴스에 데이터 정상 주입 확인 + 수동 `chart.draw()` 강제 호출로 실제 렌더링 가능함을 별도 확정(설계서 19-2절 "자동화 도구 특이사항"과 동일 범주, 코드 결함 아님). **작업 중 발견한 인프라 교훈**: 동시 3세션 환경이라 `docker-compose.override.yml`을 워크트리 로컬로 새로 만들어 포트 격리(그래도 다른 세션과 1회 충돌, 포트 재조정), Windows에서 `TaskStop`은 `npm run`/`dotnet run`의 실제 자식 프로세스를 안 죽여 `Stop-Process`로 직접 종료 필요. `dotnet build`(0경고 0오류)·`npm run build` 둘 다 최종 성공.
 
