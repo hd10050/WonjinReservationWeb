@@ -16,6 +16,8 @@ export default defineNuxtConfig({
         // M10 — favicon.png(32x32) 명시 등록. 기존 favicon.ico는 그대로 두되(구형 브라우저 폴백),
         // 이 <link>가 있으면 최신 브라우저는 이쪽을 우선한다.
         { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+        // Phase 9 — apple-touch-icon도 같은 자산 재사용(권장 180x180에는 못 미치지만 M10 범위 내 자산).
+        { rel: 'apple-touch-icon', href: '/favicon.png' },
       ],
       script: [
         {
@@ -72,6 +74,10 @@ export default defineNuxtConfig({
   },
 
   i18n: {
+    // 🔴 Phase 9 보안감사 실측 발견 — 없으면 "I18n baseUrl is required to generate valid SEO
+    // tag links" 경고와 함께 useLocaleHead()의 hreflang alternate가 상대경로(예: href="/ko")로
+    // 생성된다. SEO 표준은 hreflang이 절대 URL이어야 하므로 반드시 지정할 것(5-1절).
+    baseUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://example.com',
     strategy: 'prefix_except_default',
     defaultLocale: 'zh-CN',
     locales: [
@@ -88,7 +94,9 @@ export default defineNuxtConfig({
   },
 
   sitemap: {
-    // Phase 2에서 server/api/_sitemap-urls.ts 추가 시 sources: ['/api/_sitemap-urls'] 연결
+    hostname: process.env.NUXT_PUBLIC_SITE_URL,
+    // 공개 상세 페이지가 없는 구조(랜딩+privacy뿐)라 동적 URL 소스 불필요 — 파일기반 라우트를
+    // @nuxtjs/sitemap이 자동 포함한다(Phase 9 보안감사 시 확인).
     exclude: ['/admin/**'],
   },
 
@@ -96,5 +104,9 @@ export default defineNuxtConfig({
     // 🔴 트레일링 슬래시 필수 — 없으면 prefix 매칭으로 무관한 경로까지 막히고
     // sitemap exclude에도 같은 규칙이 적용돼 동적 URL이 원인불명으로 누락된다(5-5절)
     groups: [{ userAgent: ['*'], allow: ['/'], disallow: ['/admin/'] }],
+    // 🔴 Phase 9 실측 발견 — sitemap 필드를 직접 지정하면 안 됨. @nuxtjs/sitemap이 설치돼 있으면
+    // sitemap_index.xml을 robots.txt에 이미 자동 등록한다(로컬 프로덕션모킹 curl로 확인). 여기서
+    // sitemap.xml(메타리프레시 HTML일 뿐, 실제 sitemap 아님)을 직접 추가하면 design.md 5-5절이
+    // 경고하는 "잘못된 sitemap 제출" 상황이 robots.txt 자체에 중복으로 생긴다.
   },
 })

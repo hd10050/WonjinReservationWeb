@@ -9,5 +9,5 @@
 // 개인정보 처리방침 — 문안·보유기간은 범위 외(20-1절), 페이지 틀만 만든다(12-1절).
 definePageMeta({ layout: 'landing' })
 const { t } = useI18n()
-useHead({ title: () => `${t('privacy.title')} - ${t('common.appName')}` })
+useSeo({ title: () => t('privacy.title') })
 </script>

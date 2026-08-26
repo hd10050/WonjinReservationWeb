@@ -100,7 +100,10 @@ const config = useRuntimeConfig()
 // D11에 따라 별도 JS 날짜선택 라이브러리를 쓰지 않기로 했으므로 이 잔여 한계는 감수한다).
 const inputLang = computed(() => locales.value.find(l => l.code === locale.value)?.language ?? locale.value)
 
-useHead({ title: () => `${t('landing.hero.title')} - ${t('common.appName')}` })
+useSeo({
+  title: () => t('landing.hero.title'),
+  description: () => t('landing.hero.subtitle'),
+})
 
 const name = ref('')
 const birthDate = ref('')
