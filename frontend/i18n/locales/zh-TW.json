@@ -255,7 +255,7 @@
       "genderMale": "男",
       "genderOther": "其他",
       "wechatId": "微信號",
-      "contactTime": "希望聯絡時間（韓國時間）",
+      "contactTime": "希望聯絡時間（韓國時間 UTC+9）",
       "consentPrefix": "我已閱讀並同意",
       "consentLink": "《隱私政策》",
       "consentSuffix": "，同意收集和使用本人的個人資料以用於本次諮詢預約。",

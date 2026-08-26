@@ -29,7 +29,7 @@
 
           <div class="flex flex-col gap-2">
             <Label for="birthDate">{{ t('landing.form.birthDate') }}</Label>
-            <Input id="birthDate" v-model="birthDate" type="date" required />
+            <Input id="birthDate" v-model="birthDate" type="date" required :lang="inputLang" />
           </div>
 
           <div class="flex flex-col gap-2">
@@ -57,7 +57,7 @@
 
           <div class="flex flex-col gap-2">
             <Label for="contactTime">{{ t('landing.form.contactTime') }}</Label>
-            <Input id="contactTime" v-model="contactTime" type="time" required />
+            <Input id="contactTime" v-model="contactTime" type="time" required :lang="inputLang" />
           </div>
 
           <!-- honeypot(12-1절) — 사람에게는 보이지 않는 필드. 채워지면 봇으로 간주한다. -->
@@ -87,10 +87,18 @@
 // 히어로 문구는 최소 기능 설명이며, 실제 마케팅 카피·이미지(M6)는 범위 외(20장)로 보류된 상태다.
 definePageMeta({ layout: 'landing' })
 
-const { t, locale } = useI18n()
+const { t, locale, locales } = useI18n()
 const localePath = useLocalePath()
 const route = useRoute()
 const config = useRuntimeConfig()
+
+// 🔴 네이티브 <input type="date">/<input type="time">의 표시 형식(연월일 순서·오전/오후 표기)은
+// 브라우저가 이 lang 속성으로 판단한다(<html lang>만으로는 개별 입력 요소까지 안 이어지는
+// 경우가 있어 명시적으로 지정) — nuxt.config.ts의 locales[].language(BCP-47 태그)를 그대로 쓴다.
+// 단, 팝업 달력 자체의 요일·월 이름은 이 속성과 무관하게 브라우저/OS 자체 언어를 따르는
+// 네이티브 위젯이라 웹페이지 코드로 제어할 수 없다(브라우저 공통의 잘 알려진 한계 — 이 프로젝트는
+// D11에 따라 별도 JS 날짜선택 라이브러리를 쓰지 않기로 했으므로 이 잔여 한계는 감수한다).
+const inputLang = computed(() => locales.value.find(l => l.code === locale.value)?.language ?? locale.value)
 
 useHead({ title: () => `${t('landing.hero.title')} - ${t('common.appName')}` })
 

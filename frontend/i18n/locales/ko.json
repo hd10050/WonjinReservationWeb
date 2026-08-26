@@ -255,7 +255,7 @@
       "genderMale": "남성",
       "genderOther": "기타",
       "wechatId": "위챗 ID",
-      "contactTime": "연락 희망 시각 (한국 시간)",
+      "contactTime": "연락 희망 시각 (한국시간 UTC +9)",
       "consentPrefix": "본인은 ",
       "consentLink": "개인정보 처리방침",
       "consentSuffix": "에 동의하며, 상담 신청을 위한 개인정보 수집·이용에 동의합니다.",

@@ -255,7 +255,7 @@
       "genderMale": "Male",
       "genderOther": "Other",
       "wechatId": "WeChat ID",
-      "contactTime": "Preferred Contact Time (Korea Time)",
+      "contactTime": "Preferred Contact Time (Korea Time, UTC+9)",
       "consentPrefix": "I have read and agree to the ",
       "consentLink": "Privacy Policy",
       "consentSuffix": ", and consent to the collection and use of my personal information for this consultation request.",
