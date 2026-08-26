@@ -3,8 +3,7 @@
 
 ## 개요
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
-- 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원
-- 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
+- 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원 · 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
 - 현재 상태: **Phase 1~8 전부 main 병합 완료 + 인프라 실배포 완료**(2026-08-26). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제)·Phase 4(실장·시술 관리 CRUD, Phase 3 미해결 이슈 2건도 함께 해소)·Phase 5(예약 달력)·Phase 6(실장 KPI·예약 통계, 표+차트 D21, 담당 실장 축 포함)·Phase 7(계정 CRUD + 전역 `AuditLogFilter` + `/admin/users`·`/admin/audit-logs`)·Phase 8(유입 경로 분석, `/admin/referrals` 어드민 전용)까지 진행. **프론트 Cloudflare Workers(`wonjinreservationweb.hd1005019.workers.dev`)·백엔드+DB Render(`wonjinreservationweb.onrender.com`) 실배포 완료**(2026-08-26). **어드민 사이드바 네비게이션(12-3절) 구현 완료**(2026-08-26, 역할별 메뉴 필터 포함 — 상세는 세션 요약 (25)). 랜딩 헤더 언어 스위처는 드롭다운 디자인, 푸터 주소는 로케일별 분리 표기(D22). Phase 9(SEO·보안감사)부터는 사용자 지시 대기
 
 ## 기술 스택
@@ -114,6 +113,7 @@
 ### 다음 세션 최우선
 - [ ] **테스트 데이터 처리 여부 결정** — `test-admin@wonjin.local`+`test-manager@wonjin.local`+`test-consultant@wonjin.local`(동일 비번 `TestPassword123!`) 계정 + 실장·시술 테스트 데이터 + Phase 2~4 실측 중 쌓인 더미 `reservations`(30건+, 로컬 dev DB). 전부 운영 데이터 아님 — 정리 여부 여전히 사용자 확인 대기(나중에 정리)
 - [ ] **`PATCH /{id}/consultant`(실장 배정)를 `AuditLogFilter`의 RouteMap에 세분화 등록할지 결정**(Phase 7 미작업분 점검 중 발견) — `design.md` 14-1절 표 자체에 이 액션이 없어 현재는 일반 `update`/`reservation`으로 뭉뚱그려 기록됨(틀린 분류는 아니나 notes·status처럼 세분화되지 않음). 필요하면 `design.md` 14-1절에 `(["/api/admin/reservations","/consultant"], PATCH, assign, reservation)` 행 추가 후 `AuditLogFilter.RouteMap`에도 반영
+- [ ] **🔴 실브라우저 시각 확인 2건 대기**(이 자동화 pane은 화면 미표시로 픽셀 렌더링 확인 불가, Claude in Chrome 연결 시 진행) — ①어드민 사이드바 모바일(<768px) `translateX` 슬라이드 애니메이션이 실제로 부드럽게 열리는지 ②예약 폼 날짜·시간 `<input>`의 팝업 캘린더가 로케일별로 실제 어떤 언어로 뜨는지(요일·월 이름 — `lang` 속성 무관 브라우저/OS 종속 한계로 추정, `[미확인]`)
 ### Phase 계획 — 완료기준 포함 (design.md 19장과 동일, 상세 코드는 그쪽 참고)
 | # | 내용 | 완료기준 |
 |---|---|---|
