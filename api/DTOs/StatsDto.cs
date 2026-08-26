@@ -23,3 +23,11 @@ public record ReservationStatsDto(
     List<ProcedureStatDto> Procedures,
     List<LocaleStatDto> Locales,
     List<ConsultantReservationStatDto> Consultants);
+
+// Phase 8 — 유입 경로 분석(D4·D5, 15-2절). 어드민 전용. landing_daily_stats 조합을 기준으로 그룹핑하고
+// (15-2절 "추천코드/UTM 조합 | landing_daily_stats 그룹"), 같은 조합의 reservations 건수를 매핑한다.
+// 실적 있는 조합만 내려준다 — ConsultantReservationStatDto와 동일하게 마스터 테이블이 없어 0행 채움 대상이 아니다.
+public record ReferralStatDto(
+    string ReferralCode, string UtmSource, string UtmMedium, string UtmCampaign,
+    int VisitCount, int ReservationCount, decimal ConversionRate,
+    int ConfirmedCount, decimal ConfirmedConversionRate);

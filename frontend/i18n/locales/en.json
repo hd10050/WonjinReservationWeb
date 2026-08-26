@@ -164,6 +164,22 @@
       "sectionConsultants": "By Consultant",
       "colConsultant": "Consultant",
       "empty": "No data found."
+    },
+    "referrals": {
+      "title": "Referral Analytics",
+      "filterFrom": "From",
+      "filterTo": "To",
+      "filterApply": "Apply",
+      "colReferralCode": "Referral Code",
+      "colUtmSource": "UTM Source",
+      "colUtmMedium": "UTM Medium",
+      "colUtmCampaign": "UTM Campaign",
+      "colVisitCount": "Visits",
+      "colReservationCount": "Reservations",
+      "colConversionRate": "Conversion Rate",
+      "colConfirmedCount": "Confirmed",
+      "colConfirmedConversionRate": "Confirmed Rate",
+      "empty": "No data found."
     }
   },
   "landing": {

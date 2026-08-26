@@ -123,6 +123,63 @@ public class AdminStatsController(AppDbContext db) : ControllerBase
         return Ok(new ReservationStatsDto(weekly, procedures, locales, consultants));
     }
 
+    // 유입 경로 분석(D4·D5, 15-2절) — 어드민 전용. 클래스 레벨(Admin,HospitalManager)을 액션 레벨에서
+    // 좁힌다(6-3절 원칙1과 동일 기법 — 컨트롤러 공유는 재사용, 노출 범위만 재선언).
+    [HttpGet("referrals")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<List<ReferralStatDto>>> GetReferralStats([FromQuery] DateOnly from, [FromQuery] DateOnly to)
+    {
+        // 🔴 [ApiController]는 DateOnly 미지정 시 400이 아니라 default로 조용히 바인딩한다(실측 확인,
+        // GetConsultantKpi와 동일 사유).
+        if (from == default || to == default || to < from)
+            return BadRequest(new { code = "INVALID_DATE_RANGE" });
+
+        var (fromUtc, toUtc) = ToKstRangeUtc(from, to);
+
+        // 1단계 — landing_daily_stats를 조합별로 집계. stat_date는 이미 KST 기준 date 컬럼이라(8-10절)
+        // DateOnly로 직접 비교하면 되고 reservations처럼 UTC 환산이 필요 없다.
+        var visits = await db.LandingDailyStats
+            .Where(s => s.StatDate >= from && s.StatDate <= to)
+            .GroupBy(s => new { s.ReferralCode, s.UtmSource, s.UtmMedium, s.UtmCampaign })
+            .Select(g => new
+            {
+                g.Key.ReferralCode, g.Key.UtmSource, g.Key.UtmMedium, g.Key.UtmCampaign,
+                VisitCount = g.Sum(s => s.VisitCount),
+            })
+            .ToListAsync();
+
+        // 2단계 — 같은 조합의 reservations 집계(15-2절 "예약 수 | reservations 같은 조합 COUNT").
+        var reservations = await db.Reservations
+            .Where(r => r.CreatedAt >= fromUtc && r.CreatedAt < toUtc)
+            .GroupBy(r => new { r.ReferralCode, r.UtmSource, r.UtmMedium, r.UtmCampaign })
+            .Select(g => new
+            {
+                g.Key.ReferralCode, g.Key.UtmSource, g.Key.UtmMedium, g.Key.UtmCampaign,
+                ReservationCount = g.Count(),
+                ConfirmedCount = g.Count(r => r.Status == "Confirmed" || r.Status == "Visited"),
+            })
+            .ToListAsync();
+        var reservationByKey = reservations.ToDictionary(x => (x.ReferralCode, x.UtmSource, x.UtmMedium, x.UtmCampaign));
+
+        // 3단계 — 메모리에서 DTO 매핑(11-6절: GroupBy().Select(new record(...)) 직접 호출 금지와 동일 이유로
+        // 집계 프로젝션은 익명 타입으로 받고 record 생성은 여기서 한다). landing_daily_stats에 없는 조합은
+        // 애초에 방문 기록이 없다는 뜻이라 표에 올릴 근거가 없으므로 기준 집합에 넣지 않는다(15-2절 "그룹" 원문).
+        var items = visits.Select(v =>
+        {
+            reservationByKey.TryGetValue((v.ReferralCode, v.UtmSource, v.UtmMedium, v.UtmCampaign), out var r);
+            var reservationCount = r?.ReservationCount ?? 0;
+            var confirmedCount = r?.ConfirmedCount ?? 0;
+            var conversionRate = v.VisitCount == 0 ? 0m : Math.Round((decimal)reservationCount / v.VisitCount * 100, 1);
+            var confirmedRate = v.VisitCount == 0 ? 0m : Math.Round((decimal)confirmedCount / v.VisitCount * 100, 1);
+            return new ReferralStatDto(v.ReferralCode, v.UtmSource, v.UtmMedium, v.UtmCampaign,
+                v.VisitCount, reservationCount, conversionRate, confirmedCount, confirmedRate);
+        })
+        .OrderByDescending(x => x.VisitCount)
+        .ToList();
+
+        return Ok(items);
+    }
+
     // 주 시작일(일요일) 기준 집계(D16). date_trunc('week',…)는 월요일 시작이라 하루 밀어 계산 — EF Core LINQ로
     // 번역되지 않는 표현이라 이 쿼리만 raw SQL(11-4절 원문 그대로, 허용된 raw SQL 3곳 중 하나).
     private async Task<List<WeeklyReservationStatDto>> GetWeeklyStatsAsync(

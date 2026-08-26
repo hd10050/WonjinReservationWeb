@@ -151,3 +151,16 @@ export interface ReservationStats {
   locales: LocaleStat[]
   consultants: ConsultantReservationStat[]
 }
+
+// Phase 8 — 유입 경로 분석(D4·D5, 15-2절). 방문 기록(landing_daily_stats)이 있는 조합만 내려온다.
+export interface ReferralStat {
+  referralCode: string
+  utmSource: string
+  utmMedium: string
+  utmCampaign: string
+  visitCount: number
+  reservationCount: number
+  conversionRate: number
+  confirmedCount: number
+  confirmedConversionRate: number
+}
