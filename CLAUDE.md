@@ -5,7 +5,7 @@
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원
 - 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~8 전부 main 병합 완료 + 인프라 실배포 완료**(2026-08-26). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제)·Phase 4(실장·시술 관리 CRUD, Phase 3 미해결 이슈 2건도 함께 해소)·Phase 5(예약 달력)·Phase 6(실장 KPI·예약 통계, 표+차트 D21, 담당 실장 축 포함)·Phase 7(계정 CRUD + 전역 `AuditLogFilter` + `/admin/users`·`/admin/audit-logs`)·Phase 8(유입 경로 분석, `/admin/referrals` 어드민 전용)까지 진행. **프론트 Cloudflare Workers(`wonjinreservationweb.hd1005019.workers.dev`)·백엔드+DB Render(`wonjinreservationweb.onrender.com`) 실배포 완료**(2026-08-26). **사이드바 네비게이션(12-3절)은 각 Phase가 개별 구현하지 않고 병합 시점에 한 번에 정리하기로 사용자 결정**(2026-08-26) — 그 전까지 `/admin/consultants`·`/admin/procedures`·`/admin/calendar`·`/admin/kpi`·`/admin/stats`·`/admin/referrals`·`/admin/users`·`/admin/audit-logs`는 URL 직접 접근으로만 확인 가능. Phase 9(SEO·보안감사)부터는 사용자 지시 대기
+- 현재 상태: **Phase 1~8 전부 main 병합 완료 + 인프라 실배포 완료**(2026-08-26). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제)·Phase 4(실장·시술 관리 CRUD, Phase 3 미해결 이슈 2건도 함께 해소)·Phase 5(예약 달력)·Phase 6(실장 KPI·예약 통계, 표+차트 D21, 담당 실장 축 포함)·Phase 7(계정 CRUD + 전역 `AuditLogFilter` + `/admin/users`·`/admin/audit-logs`)·Phase 8(유입 경로 분석, `/admin/referrals` 어드민 전용)까지 진행. **프론트 Cloudflare Workers(`wonjinreservationweb.hd1005019.workers.dev`)·백엔드+DB Render(`wonjinreservationweb.onrender.com`) 실배포 완료**(2026-08-26). **어드민 사이드바 네비게이션(12-3절) 구현 완료**(2026-08-26, 역할별 메뉴 필터 포함 — 상세는 세션 요약 (25)). 랜딩 헤더 언어 스위처는 드롭다운 디자인, 푸터 주소는 로케일별 분리 표기(D22). Phase 9(SEO·보안감사)부터는 사용자 지시 대기
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -43,6 +43,7 @@
 - **팔레트 = Olive Garden Feast**(D20, 2026-08-26) — 참고 화면(`reservation-desk_1.html`)의 청록색 팔레트를 대체. coolors.co/palettes/trending을 playwright-cli로 실측 검증해 이름·좋아요 수 확인된 팔레트만 채택(발명 절대 금지 — 실제 발생했던 사고)
 - **병원 정식 정보 확정**(M8, 2026-08-26) — 상호 `원진성형외과의원`·사업자번호 `824-67-00414`·주소는 화면 푸터에 원문 그대로 표기(고유명사 번역 안 함). 🔴 **대표전화는 화면에 노출하지 않고 JSON-LD에만 포함**(예약 폼 유도 우선, 사용자 결정) — 상세는 design.md 12-1-1절
 - **실장 KPI·예약 통계 = 표+차트 병행**(D21, 2026-08-26) — 차트는 `vue-chartjs`+`chart.js`, 색상은 새로 만들지 않고 D20 팔레트 재사용. Canvas는 SSR 불가라 `<ClientOnly>`로 감싸고(화면 깜빡임 금지 원칙은 데이터 프리로드 대상이라 위반 아님), 레이아웃 시프트 방지로 고정 높이 컨테이너 사용
+- 🔴 **푸터 주소는 로케일별로 다른 문구**(D22, 2026-08-26) — "고유명사 번역 안 함" 원칙의 예외. 상호·사업자번호는 여전히 원문 고정, 주소만 ko=등록원문/zh-CN=제공된 간체/zh-TW·en=영문. JSON-LD도 영문 주소로 동기화(상세: design.md 12-1-1·D22)
 
 ## 역할 · 메뉴 권한
 | 메뉴 | Admin | HospitalManager | Consultant |
@@ -111,8 +112,7 @@
 
 ## TODO
 ### 다음 세션 최우선
-- [ ] **테스트 데이터 처리 여부 결정** — `test-admin@wonjin.local` + **`test-manager@wonjin.local`·`test-consultant@wonjin.local`(2026-08-26 middleware 결함 검증 위해 실제로 DB에 추가함, 동일 비번 `TestPassword123!`)** + 실장·시술 테스트 데이터. 운영 데이터 아님 — 정리 여부 여전히 사용자 확인 대기(나중에 정리)
-- [ ] **로컬 DB 테스트 더미 예약 정리 여부 확인** — Phase 2~4 실측 검증 중 생성된 더미 `reservations`가 로컬 dev DB에 계속 누적 중(30건+). 실서비스 데이터 아님(나중에 정리)
+- [ ] **테스트 데이터 처리 여부 결정** — `test-admin@wonjin.local`+`test-manager@wonjin.local`+`test-consultant@wonjin.local`(동일 비번 `TestPassword123!`) 계정 + 실장·시술 테스트 데이터 + Phase 2~4 실측 중 쌓인 더미 `reservations`(30건+, 로컬 dev DB). 전부 운영 데이터 아님 — 정리 여부 여전히 사용자 확인 대기(나중에 정리)
 - [ ] **`PATCH /{id}/consultant`(실장 배정)를 `AuditLogFilter`의 RouteMap에 세분화 등록할지 결정**(Phase 7 미작업분 점검 중 발견) — `design.md` 14-1절 표 자체에 이 액션이 없어 현재는 일반 `update`/`reservation`으로 뭉뚱그려 기록됨(틀린 분류는 아니나 notes·status처럼 세분화되지 않음). 필요하면 `design.md` 14-1절에 `(["/api/admin/reservations","/consultant"], PATCH, assign, reservation)` 행 추가 후 `AuditLogFilter.RouteMap`에도 반영
 ### Phase 계획 — 완료기준 포함 (design.md 19장과 동일, 상세 코드는 그쪽 참고)
 | # | 내용 | 완료기준 |
@@ -121,7 +121,7 @@
 | 1 | ✅ 인증 + `AccountStateFilter` + 동일출처 프록시(2026-08-26 완료) | 로그인~정지차단 E2E + 랜딩에서 `/api/auth/me` 미호출 확인(F5) — 전건 실측 검증 완료 |
 | 2 | ✅ 랜딩 4언어 + 예약 폼 + 개인정보 처리방침 + 유입경로 수집(2026-08-26 완료) | 4언어 폼 제출→DB적재+UTM보존 + landing-visit 시크릿없이 404(F11) + 연락희망시각 `time` 저장 확인(D10) — 전건 실측 완료 |
 | 3 | ✅ 예약 대시보드·상세·상담기록 누적·상태머신·소프트삭제(2026-08-26 완료, main 병합 완료) | 상태전이 동시성409 + 코드동시생성 중복없음(F4) + 삭제조건409(D15) + **미배정 400 차단**(D17). 동시성 재현 스크립트 3종(`scripts/phase3-concurrency/`) 전건 통과. **설계서 대비 최종 감사 완료, 미해결 2건은 위 TODO 참고** |
-| 4 | ✅ 실장(`consultants`)·시술 관리 CRUD(2026-08-26 완료, main 병합 완료) | 4언어 탭 CRUD(시술) + 3역할 권한 매트릭스 실측(Admin·HospitalManager 200 / Consultant 403 / 익명 401) + 비활성 토글·`includeInactive` 필터 브라우저 실측(한중일 텍스트 입력 포함) + 시술 코드 UNIQUE 위반 검증(생성·수정 시 본인 제외) curl 실측. 비활성실장 배정 드롭다운 제외·과거예약 유지(D13)는 Phase 3 로직 그대로(Phase 4에서 변경 없음). **사이드바 미구현 — 병합 시점 일괄 정리 예정** |
+| 4 | ✅ 실장(`consultants`)·시술 관리 CRUD(2026-08-26 완료, main 병합 완료) | 4언어 탭 CRUD(시술) + 3역할 권한 매트릭스 실측(Admin·HospitalManager 200 / Consultant 403 / 익명 401) + 비활성 토글·`includeInactive` 필터 브라우저 실측(한중일 텍스트 입력 포함) + 시술 코드 UNIQUE 위반 검증(생성·수정 시 본인 제외) curl 실측. 비활성실장 배정 드롭다운 제외·과거예약 유지(D13)는 Phase 3 로직 그대로(Phase 4에서 변경 없음) |
 | 5 | ✅ 예약 달력(2026-08-26 구현+실측+main 병합 완료) | 월범위 검증 + 부분인덱스 사용 확인 — EXPLAIN으로 Bitmap Index Scan 실사용 확인 |
 | 6 | ✅ 실장 KPI·예약 통계(2026-08-26 `session-work`에서 구현+실측 완료, **이 세션에서 main 병합**) — 표+차트(D21)+담당실장축 | 빈구간 0 채움 확인 — **전건 실측 완료**(빈 주·무실적 실장·비활성 실장 전부 0/제외 확인, 수동 계산치와 API 응답 전부 일치) |
 | 7 | ✅ 계정 관리·감사 로그(2026-08-26 `phase7-users-audit` 워크트리에서 구현+실측+미작업분 점검 **전건 완료**, main 병합 완료) | **3역할(Admin·HospitalManager·Consultant) 전부** 실제 쓰기 행위가 `audit_logs`에 정확히 기록됨을 curl+동시성 20건(200/400/500 전 상태코드 정확 기록)+브라우저 실측(JS 레벨 confirm() 오버라이드로 실제 클릭 이벤트 경로 확인 — 확인 시 PATCH 실행·화면 반영, 취소 시 PATCH 자체가 안 나가고 화면 불변까지 둘 다 확인)으로 전부 통과. RouteMap 등록 액션(notes/status/consultants create) 정확 분류 확인. 16장 체크리스트 재대조로 정지 확인 UI 누락·500 시 감사로그 유실 2건 발견·수정. **부가 발견(임의 수정 안 함, TODO 등록)**: `PATCH /{id}/consultant`(실장 배정)가 design.md 14-1절 RouteMap 표 자체에 없어 일반 `update`로 뭉뚱그려 기록됨 |
@@ -145,5 +145,5 @@
 `docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종)
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
-## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고)
-- **2026-08-26 (24) — Cloudflare Workers + Render 실배포 완료**: 하네스 검증(루트 `.claude/settings.json`의 PostToolUse·PreToolUse 훅, `WebProject\memory\MEMORY.md` 경로 전부 정상 로드 확인) 후 배포 진행. Render는 완전 신규 — PostgreSQL·API Web Service 생성 지원하며 Internal Database URL(`postgresql://` 형식)을 Npgsql 키=값 형식(`Host=...;Port=...;Database=...;Username=...;Password=...`)으로 직접 변환, `Jwt__Secret`·`InternalSecret` 랜덤 시크릿 생성. 프론트는 `nuxt.config.ts`에 `nitro.preset: 'cloudflare_module'` 추가 + `frontend/wrangler.toml` 신규 작성(워커명·`NUXT_API_BASE_INTERNAL`·D7 동일출처 프록시 유지용 빈 `NUXT_PUBLIC_API_BASE`·`NUXT_PUBLIC_SITE_URL` 등록. 진짜 시크릿 `NUXT_INTERNAL_SECRET`은 `[vars]`에 평문 커밋되는 걸 피하려 `wrangler secret put`으로 분리). **Cloudflare Workers Builds(Git 연동) 1차 배포가 `npm ci`에서 실패** — `package.json`↔`package-lock.json` 불일치(eslint 의존 트리가 락파일에서 누락, 직접 의존성엔 없는데도 nuxt 내부 트리 변경만으로 stale해짐) → `npx npm@10.9.2 install`로 재생성(CLAUDE.md 74번째 줄 npm 버전 고정 원칙과 동일 이유), 로컬 `npm run build`로 `cloudflare_module` 빌드 성공 확인 후 커밋(`6c81175`)·push. 재배포로 프론트·백엔드·DB 전부 배포 완료(사용자 확인). **세션 종료 시점에 다른 세션이 `phase7-users-audit`→`main` 병합을 동시 진행 중인 것을 발견**(`CLAUDE.md`·`types/reservation.ts` 충돌 mid-resolution) — 병합 주체를 확인 없이 임의로 커밋하지 않고 사용자에게 상태를 보고·확인 후 그대로 완료되길 대기, 이 세션은 배포 커밋만 별도로 관리해 병합과 섞이지 않게 함.
+## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (24)까지 이동 완료)
+- **2026-08-26 (25) — 푸터 다국어 주소·구조 개편 + 헤더 언어 드롭다운 + 어드민 사이드바 신규 구현**: MeiyantongWeb 참고 지시로 3가지 작업. ①푸터 주소 로케일 분리(D22 신설, `landing.vue`의 `ADDRESS_BY_LOCALE` 상수) + JSON-LD 영문 주소 동기화 — 진행 전 애매한 지점 3가지 사용자 확인 ②푸터 개인정보처리방침·저작권 링크를 최하단으로 이동 ③헤더 언어 스위처를 `reka-ui` `DropdownMenu` 드롭다운으로 전환(MeiyantongWeb `layouts/public.vue` 패턴) ④어드민 사이드바 신규 구현(12-3절 — 전 Phase가 미뤄온 항목, 이 세션에서 완성) — 220px 고정(`--sidebar-w` 변수로 폭 동기화), 역할별 메뉴 필터, `admin.nav.*` i18n 4로케일. **실측 중 발견·수정**: Tailwind v4 `:class` 삼항연산자로 토글한 `md:translate-x-0` 계열 유틸이 실제로 CSS 생성이 안 됨(프로덕션 빌드 CSS 직접 grep으로 확인) → `<style scoped>` 순수 CSS로 전환. `npm run build` 클린, docker 컨테이너 재기동 후 4로케일 푸터·JSON-LD·헤더 드롭다운·Admin/Consultant 역할별 사이드바 메뉴·언어 `PATCH` 저장까지 브라우저 실측 완료. **모바일 슬라이드 애니메이션의 픽셀 단위 시각 확인은 이 자동화 브라우저 환경 한계로 끝내 못함**(CSS 규칙 자체가 스펙대로 올바르게 생성됨은 DOM 조회로 확인, 실제 픽셀 이동은 사용자 재확인 권장) — 상세는 `docs/session-log.md` (25). 진행 중 다른 세션이 쓰던 것으로 보이는 동일 docker 스택을 재빌드·재기동시킨 점 투명 공지.

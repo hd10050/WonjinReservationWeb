@@ -7,7 +7,20 @@
   },
   "admin": {
     "common": {
-      "logout": "Log out"
+      "logout": "Log out",
+      "language": "Language",
+      "menu": "Menu"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "calendar": "Calendar",
+      "consultants": "Consultants",
+      "procedures": "Procedures",
+      "kpi": "Consultant KPI",
+      "stats": "Reservation Stats",
+      "users": "Accounts",
+      "auditLogs": "Audit Log",
+      "referrals": "Referral Analytics"
     },
     "login": {
       "title": "Admin Login",

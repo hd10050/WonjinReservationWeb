@@ -7,7 +7,20 @@
   },
   "admin": {
     "common": {
-      "logout": "登出"
+      "logout": "登出",
+      "language": "語言",
+      "menu": "選單"
+    },
+    "nav": {
+      "dashboard": "預約看板",
+      "calendar": "預約日曆",
+      "consultants": "顧問管理",
+      "procedures": "療程管理",
+      "kpi": "顧問KPI",
+      "stats": "預約統計",
+      "users": "帳戶管理",
+      "auditLogs": "稽核日誌",
+      "referrals": "獲客渠道分析"
     },
     "login": {
       "title": "管理員登入",

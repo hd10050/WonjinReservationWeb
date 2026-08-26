@@ -7,7 +7,20 @@
   },
   "admin": {
     "common": {
-      "logout": "退出登录"
+      "logout": "退出登录",
+      "language": "语言",
+      "menu": "菜单"
+    },
+    "nav": {
+      "dashboard": "预约看板",
+      "calendar": "预约日历",
+      "consultants": "顾问管理",
+      "procedures": "项目管理",
+      "kpi": "顾问KPI",
+      "stats": "预约统计",
+      "users": "账户管理",
+      "auditLogs": "审计日志",
+      "referrals": "获客渠道分析"
     },
     "login": {
       "title": "管理员登录",
