@@ -164,3 +164,29 @@ export interface ReferralStat {
   confirmedCount: number
   confirmedConversionRate: number
 }
+
+export type AdminRole = 'Admin' | 'HospitalManager' | 'Consultant'
+
+export interface AdminUser {
+  id: number
+  email: string
+  role: AdminRole
+  name: string
+  locale: string
+  isSuspended: boolean
+  createdAt: string
+}
+
+export interface AuditLogEntry {
+  id: number
+  actorUserId: number | null
+  actorEmail: string
+  actorRole: string
+  action: string
+  entityType: string
+  entityId: string | null
+  summary: string
+  ip: string | null
+  statusCode: number
+  createdAt: string
+}
