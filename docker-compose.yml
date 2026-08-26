@@ -22,6 +22,12 @@ services:
     environment:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
       ASPNETCORE_ENVIRONMENT: Development
+      Jwt__Secret: ${JWT_SECRET}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
+      Jwt__AccessTokenMinutes: "15"
+      Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN}
+      InternalSecret: ${INTERNAL_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
@@ -34,6 +40,7 @@ services:
       NUXT_PUBLIC_API_BASE: ""
       NUXT_API_BASE_INTERNAL: "http://api:8080"
       NUXT_PUBLIC_SITE_URL: "http://localhost:3700"
+      NUXT_INTERNAL_SECRET: ${INTERNAL_SECRET}
     depends_on:
       - api
 

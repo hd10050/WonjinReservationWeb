@@ -5,7 +5,7 @@
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원
 - 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 0(스캐폴딩+DB) 구현 완료**(2026-08-26) — 컨테이너 기동·마이그레이션·인덱스·타임존 전건 실측 검증. Phase 1(인증)부터는 사용자 지시 대기
+- 현재 상태: **Phase 1(인증) 구현 완료**(2026-08-26) — 로그인·갱신·로그아웃·정지즉시차단·F5(랜딩 미호출) 전건 브라우저 실측 검증. Phase 2(랜딩)부터는 사용자 지시 대기
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -16,6 +16,7 @@
 | 인증 | 자체 JWT(AT 15분, 쿠키 `wj_at`) + RT(7일, SHA-256, 쿠키 `wj_rt`) — **소셜 로그인·회원가입 없음** |
 | UI | **shadcn-vue**(`shadcn-nuxt`, style `new-york`) + `reka-ui` 프리미티브 + `class-variance-authority`(D19, 구 D11 대체) |
 | 팔레트 | **Olive Garden Feast**(D20) — `#606C38`올리브(primary)·`#283618`짙은산림녹(foreground)·`#FEFAE0`크림(background)·`#DDA15E`탄(secondary)·`#BC6C25`번트오렌지(destructive), OKLCH 변환 후 shadcn CSS 변수에 적용 |
+| 언어 버전 고정 | **TypeScript 5.9.3 고정**(devDependency) — 7.x(네이티브 재작성판)는 `@vue/compiler-sfc`의 `ts.sys` 타입 해석과 비호환이라 reka-ui 기반 shadcn 컴포넌트 컴파일이 깨짐(11-7절) |
 | 배포 | 프론트 Cloudflare Workers / 백엔드·DB Render |
 | 로컬 | `docker compose up` — frontend:3700 / api:5200 / postgres:5435 |
 
@@ -76,8 +77,13 @@
 - **robots `disallow`는 트레일링 슬래시 필수**(`/admin/`) — 슬래시 없이 쓰면 prefix 매칭으로 다른 경로까지 막히고 sitemap exclude에도 적용돼 동적 URL이 원인불명으로 누락(5-5절)
 - **검색 입력을 반응형 쿼리에 직접 바인딩 금지** — 매 키입력마다 API 재호출됨. URL 쿼리를 `computed`로 감싸 제출 시에만 반응하게 할 것(12-4절)
 - **shadcn-vue 컴포넌트 추가 시 `app/lib/utils.ts`가 자동생성 안 됨** — `components.json`을 수동 작성했기 때문에 CLI가 `cn()` 헬퍼를 안 만듦. 컴포넌트 추가 전 직접 작성 필요(11-7절)
-- **reka-ui 기반 컴포넌트의 `interface Props extends PrimitiveProps`가 Vite 500 에러**(`Failed to resolve extends base type`) — `extends /* @vue-ignore */ PrimitiveProps`로 우회. Dialog·Select·Accordion 등 reka-ui 쓰는 모든 shadcn 컴포넌트에서 재발함. 근본 원인 `[미확인]`(11-7절)
+- **shadcn-vue add 실행 전 `.nuxt/` 존재 확인 필수** — 없으면 CLI가 `resolvedPaths: Required...`로 즉시 실패. `npx nuxi prepare` 먼저 실행(11-7절)
+- 🔴 **reka-ui 기반 컴포넌트의 `interface Props extends PrimitiveProps` Vite 에러는 `/* @vue-ignore */`로 우회하지 말 것 — 정정.** 근본 원인은 `typescript@7.x`(네이티브판)와 `@vue/compiler-sfc`의 `ts.sys` 비호환. **해결은 `typescript`를 5.x로 다운그레이드하는 것**(위 기술 스택 표). `/* @vue-ignore */`를 쓰면 `as` prop의 `withDefaults` 기본값이 인스턴스에 반영 안 돼 `<button>`이 `<div>`로 렌더링되고 `type="submit"` 폼 제출이 조용히 깨진다 — 실측으로 확인된 실제 장애(11-7절, "실사용에 영향 없음"이라던 Phase 0 기록은 오판이었음)
 - **shadcn CLI의 tsconfig alias 인식 실패를 `tsconfig.json` 수정으로 고치지 말 것** — Nuxt의 실제 타입 해석(`.nuxt/tsconfig.*.json` 참조)이 깨짐. `components.json`을 손으로 작성해 우회할 것(11-7절)
+- **`app.vue`에 `<NuxtPage />`가 없으면 `pages/` 디렉토리를 아무리 만들어도 전부 404** — `pages/`를 처음 쓰는 순간부터 `app.vue`는 `<NuxtLayout><NuxtPage /></NuxtLayout>` 셸이어야 함. 기존 콘텐츠는 `pages/index.vue`로 이동
+- 🔴 **C# record의 검증 애노테이션은 `[property: ...]`가 아니라 파라미터에 직접 붙일 것** — `[property: Required]`는 컴파일은 통과하지만 그 record를 실제로 모델 바인딩하는 첫 요청에서 500(`InvalidOperationException`)을 던짐. `[Required] string Email`처럼 타겟 지정자 없이 쓸 것(11-8절)
+- **`useOpsLocale()`은 `locale.value = code` 직접 대입 금지, 반드시 `await setLocale(code)`** — 직접 대입은 lazy 로케일 메시지 로드를 트리거 안 해 `t()`가 raw key를 반환함. 호출부(로그인 페이지·admin 레이아웃)도 `await useOpsLocale()`로 SSR 완료를 기다릴 것(5-4절)
+- **`refresh` rate limit 파티션은 사용자 ID가 아니라 RT 쿠키 해시로 구현**(설계 원문과 의도적 편차, 7-2절) — DB 조회 없이 동기 콜백에서 즉시 얻을 수 있어 세션 단위로 더 세밀하게 격리됨
 
 ## 절대 원칙 이행 (루트 CLAUDE.md)
 - **화면 깜빡임 금지** — 데이터 페이지는 `<script setup>` 최상위 `await useApi(...)` SSR 프리로드. `onMounted`+client fetch 금지. 전환 오버레이는 `<Transition>` 금지, 항상 마운트 + `pointer-events`를 상태값에 직접 클래스 바인딩
@@ -88,12 +94,13 @@
 
 ## TODO
 ### 다음 세션 최우선
-- [ ] **Phase 1(인증+`AccountStateFilter`+동일출처 프록시) 착수** — Phase 0 완료, 착수는 사용자 지시 대기
+- [ ] **Phase 2(랜딩 4언어+예약 폼+유입경로 수집) 착수** — Phase 1 완료, 착수는 사용자 지시 대기
+- [ ] **M11 로그인 시 locale 자동 반영 방식 결정** — 지금은 `PATCH /api/auth/me/locale` 수동 변경만 동작(design.md 20장)
 ### Phase 계획 — 완료기준 포함 (design.md 19장과 동일, 상세 코드는 그쪽 참고)
 | # | 내용 | 완료기준 |
 |---|---|---|
 | 0 | ✅ 스캐폴딩 + DB 마이그레이션(2026-08-26 완료) | 컨테이너 기동+마이그레이션+인덱스 확인 + `Asia/Seoul` 타임존 조회 성공 — 전건 실측 검증 완료 |
-| 1 | 인증 + `AccountStateFilter` + 동일출처 프록시 | 로그인~정지차단 E2E + 랜딩에서 `/api/auth/me` 미호출 확인(F5) |
+| 1 | ✅ 인증 + `AccountStateFilter` + 동일출처 프록시(2026-08-26 완료) | 로그인~정지차단 E2E + 랜딩에서 `/api/auth/me` 미호출 확인(F5) — 전건 실측 검증 완료(design.md 19-2절) |
 | 2 | 랜딩 4언어 + 예약 폼 + **개인정보 처리방침** + 유입경로 수집 | 4언어 폼 제출→DB적재+UTM보존 + landing-visit 시크릿없이 404(F11) + 연락희망시각 `time` 저장 확인(D10) |
 | 3 | 예약 대시보드·상세·상담기록 누적·상태머신·소프트삭제 | 상태전이 동시성409 + 코드동시생성 중복없음(F4) + 삭제조건409(D15) + **미배정 400 차단**(D17). 🔴 **동시성 재현 스크립트 3종 필수**(코드생성·소프트삭제·상태전이 — 19-1절, curl+xargs -P) |
 | 4 | 실장(`consultants`)·시술 관리 | 4언어 탭 CRUD + 비활성실장 배정·KPI 제외/과거예약 유지(D13) |
@@ -108,6 +115,7 @@
 - [ ] **M10 로고 이미지**(favicon·사이드바·OG) — Phase 2
 - [ ] **M6 랜딩 히어로·소개 콘텐츠**(4개 언어) — Phase 2 이후
 - [ ] **M2 도메인·Cloudflare 계정** — Phase 9
+- [ ] **M11 로그인 시 locale 자동 반영 방식**(7-2절) — `users.locale`이 `NOT NULL DEFAULT`라 "비어있을 때만 채운다" 원문 구현 불가, 별도 컬럼 추가 여부 결정 필요
 > 최초 어드민 계정은 **사용자가 DB에 직접 삽입**(시딩 코드 없음). 실장·시술 마스터도 사용자가 관리 화면에서 직접 등록
 > **설계 공백은 2026-08-26 전건 해소** — U2 제출완료(폼 자리 인라인 교체) / U3 error.vue 단일화 / U8 환경변수표(4-3절) / U10 RouteMap 매핑표(14-1절) / U11 i18n 키 규칙(5-6절) / U13 rate limit 통합표(7-5절) / U16 테스트 전략(19-1절)
 
@@ -123,11 +131,10 @@
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고)
+- **2026-08-26 (11) — Phase 1(인증) 구현 완료 + 근본 원인 2건 규명**: 로그인/갱신/로그아웃/`AccountStateFilter`/동일출처 프록시(`server/api/[...].ts`)/`useAuth`·`useAuthFetch`·`useTokenRefresh`·`useOpsLocale` 컴포저블/`admin.ts` 미들웨어/로그인 화면·최소 admin 셸을 design.md 6~7장 그대로 구현. 실측 중 신규 결함 4건 발견·전건 수정: ①**TypeScript 7.x 근본 원인 규명**(Phase 0의 `[미확인]` 해소) — 네이티브 재작성판이 `@vue/compiler-sfc`의 `ts.sys` 타입 해석과 비호환. `typescript@^5.9.3`으로 다운그레이드가 진짜 해결책이고, **기존 `/* @vue-ignore */` 우회는 철회** — 이 우회 때문에 `as` prop 기본값이 깨져 로그인 버튼이 `<button>` 대신 `<div>`로 렌더링되어 폼 제출이 조용히 안 되고 있었음(Phase 0 "실사용에 영향 없음" 기록이 틀렸음을 정정) ②`app.vue`에 `<NuxtPage />` 누락 발견 — `pages/` 신설 시 전 라우트가 404 ③C# record `[property: Required]`가 런타임 500(모델 바인딩 시점에만 드러남) — 파라미터 직접 부착으로 수정 ④`useOpsLocale`이 `locale.value` 직접 대입 방식이라 로케일 메시지 lazy 로드가 안 걸려 로그인 화면에 raw i18n key 노출 → `await setLocale()`로 수정. **F5 완료기준 4개 경로 전건 실측**(로그인/갱신/로그아웃 4가지 방법/정지 즉시차단 — design.md 19-2절 표) 후 테스트 계정(`test-admin@wonjin.local`, DB 직접 삽입)으로 검증 완료. design.md에 11-7·11-8절 신설, M11(로그인 locale 자동반영 보류) 신규 등록
 - **2026-08-26 (10) — Phase 0 구현 완료 + shadcn-vue·팔레트 신규 요구사항 반영**: 사용자 승인("Phase 0(스캐폴딩·DB) 구현 시작")으로 구현 착수. `dotnet new webapi`(ASP.NET Core 10)·`nuxi init`(Nuxt 4)로 `api/`·`frontend/` 스캐폴딩, design.md 8장 그대로 11개 엔티티+`AppDbContext`(Fluent API 전량: CHECK 6개·부분인덱스·복합인덱스·소프트삭제 전역 쿼리 필터) 작성 후 `dotnet ef migrations add`로 InitialCreate 생성, 적용 전 파일 전체를 직접 읽어 스키마 대조(불필요한 DropIndex 없음 확인). Docker Compose로 postgres:16-alpine+api+frontend 기동, 실제 컨테이너 안에서 `psql`로 12테이블·34인덱스·6 CHECK 존재 확인 + 제약 위반 테스트로 CHECK 동작 실측 + `Asia/Seoul` 타임존 로그로 `[미확인]` 해소. 진행 중 사용자가 신규 요구사항 2건 추가: **UI 라이브러리 shadcn-vue 도입**(D19, Context7로 최신 설치 문서 확인) + **팔레트를 참고 화면 대신 coolors.co/palettes/trending 실측값으로 확정**(D20 — playwright-cli로 직접 순회). 이 과정에서 이름 없는(좋아요 1개) 항목을 "Teal Harmony"라는 이름으로 지어내 제시한 **명백한 날조**를 사용자가 즉시 지적 → 원본 데이터 재확인해 날조를 인정하고 철회, 실존 검증된 2개 팔레트만 재제시 → **Olive Garden Feast** 확정. shadcn-vue 통합 중 실측한 함정 3건(수동 `components.json` 사용 시 `app/lib/utils.ts` 미생성 / `reka-ui` `PrimitiveProps` 확장이 Vite 500 에러 → `/* @vue-ignore */`로 우회, 근본원인은 `[미확인]` / CLI의 tsconfig alias 인식 실패는 `tsconfig.json`이 아니라 `components.json` 수동 작성으로 해결)를 design.md 11-7절에 기록. Button 컴포넌트를 실제 브라우저에서 4개 variant 전부 OKLCH 계산값이 팔레트와 정확히 일치함을 검증 완료. **날조 재발 방지**: 외부 서비스의 이름·수치는 반드시 원본을 직접 확인한 것만 말하고, 확인 안 된 것은 자리표시자로도 만들지 말 것(루트 CLAUDE.md "추측을 팩트처럼 말하지 말 것" 원칙의 실제 위반 사례로 기록)
 - **2026-08-26 (9) — TODO/마일스톤 4갈래 병렬감사 후 공백 5건 수정**: Phase계획·확정결정·미결정·경고목록 4갈래로 병렬 교차검증(내용 오류는 0건 확인). 완전성 공백 5건 발견해 전건 수정: ①TODO의 Phase 계획에 design.md 19장의 **완료기준**이 빠져 있어 표 형식으로 편입(Phase별 실측 테스트 명시) ②D17(미배정 예약 400 차단)이 "확정 설계 결정" 나열에만 있고 구현 시 놓치기 쉬운 것을 모으는 "특히 주의할 것" 경고 목록엔 없어 승격 ③design.md에 🔴 표시됐지만 경고 목록에 없던 6건 추가(로그인 rate limit 공유IP·GroupBy record 생성자 금지·RouteMap 정렬규칙·detectBrowserLanguage:false·robots disallow 트레일링슬래시·검색입력 반응형바인딩 금지) ④19-1절 동시성 재현 스크립트 3종 요구를 Phase 3 완료기준에 명시 ⑤Phase 2 요약에 빠졌던 개인정보 처리방침 추가. design.md 19장에도 D17·D10 실측 조건을 함께 추가(Phase 2에 연락희망시각 time저장 확인, Phase 3에 미배정 400차단 실측). **사용자에게 명확히 고지**: 이 수정은 이번 감사에서 찾은 공백만 해소하는 것이며, 구현 착수 전까지는 설계가 "완전하다"고 보장할 수 없음(이번 세션에서만 감사 3회, 매회 새 문제 발견)
 - **2026-08-26 (8) — 연락 희망 시각을 요구사항대로 직접 입력으로 환원**: 요구사항 2번은 "연락 받고자 하는 시간을 **입력**한다"인데 초안에서 오전/오후/저녁/무관 4지선다(D10)로 임의 변경했던 것을 철회. `<input type="time">` 직접 입력 + `preferred_contact_time`을 `varchar(20)` CHECK → **`time` 컬럼**으로 변경(KST 벽시계 시각, `visit_time`과 동일 취급). 폼 라벨에 "한국 시간" 병기. **요구사항 동사("입력한다")를 임의로 다른 입력 방식으로 바꾸지 말 것** — 같은 세션에서 `consultants.team`(참고 화면 예시를 요구사항으로 착각), 시각 범위 하드코딩에 이어 세 번째로 지적받은 임의 확장
 - **2026-08-26 (7) — 시키지 않은 설계 요소 제거 + 남은 결정사항 정리**: 🔴 **`consultants.team`(실장 팀) 컬럼 제거** — 참고 화면 `reservation-desk_1.html`에 "室長 / A팀"이 있어 넣었으나 **사용자가 요구한 적 없는 필드**였음(요구사항 8번은 "담당 실장을 관리하는 [실장 관리]"뿐). 참고 화면의 예시 데이터를 요구사항으로 착각한 것이 원인. 🔴 **연락 희망 시간대의 구체적 시각 범위(09:00~12:00 등) 제거** — 이 역시 제가 임의로 붙인 값이고, 병원 상담 운영시간이 바뀔 때마다 4개 언어 번역을 고쳐야 하며 실제와 어긋나면 고객이 빈 시간대를 고르게 됨. "오전(한국 시간)"처럼 기준 시간대만 표기. **어드민 시딩 코드 제거**(사용자가 DB에 직접 삽입). 남은 결정사항을 M8(병원 정식정보)·M9(중화권 브랜드 표기)·M10(로고 이미지)로 TODO 등록
 - **2026-08-26 (6) — 최종 감사 결함 10건 전건 수정 + M3·M5 확정**: design.md 전문(1378줄) 재독 + 요구사항·절대원칙 대조 감사로 결함 10건 발견·전건 수정. 🔴**A1 라우트 충돌**(`/reservations/summary`·`/calendar`가 `{id}`로 매칭돼 대시보드가 안 뜸 → `{id:int}` 제약 + 고정경로 선언순서) 🔴**A4 `stat_date` 타임존 미정의**(UTC로 넣으면 매일 KST 00~09시 방문·예약이 다른 날짜 칸에 들어가 전환율이 조용히 틀어짐 → KST 명시) **A2** 사용처 없는 공개 API `GET /api/procedures` 삭제 **A3** 16장 "원시 SQL 금지"와 11-4 raw SQL 모순 해소(허용 3곳 명시 + raw SQL엔 전역 필터 미적용 경고) **A5** 소프트 삭제를 `reservation_logs`에도 기록 **A6** 상태전이 예시코드에 전이별 컬럼 교체 주석 **A7** 파라미터명 `includeInactive` 통일 **A8** D번호 순서 정렬 **A9** error.vue 표기 정정. 함께 **M3 확정**(예약코드 `YYYYMMDD`+4자리 일별리셋, `reservation_code_counters` 원자적 증가 — 8-11절 신설), **M5 확정**(D17 — 실장 배정 수동, 미배정 예약은 배정·삭제·조회만 가능하고 나머지는 400 차단, 담당변경 처리이력 필수). 남은 미결정은 M2·M6뿐
 - **2026-08-26 (5) — 남은 설계 공백 7건 자율 결정·반영**: 사용자가 "알아서 하라"고 위임한 U2·U3·U8·U10·U11·U13·U16을 전부 결정해 문서화. **U2** 별도 완료 페이지 없이 폼 자리를 완료 안내로 교체(예약 코드 + 위챗ID 재확인 표시 — 위챗ID 오타는 연락 수단 자체를 잃는 유일한 치명 오류라 눈으로 확인시키는 게 마지막 방어선) **U3** `error.vue` 하나로 404/500 통합(관리자 전용 에러 페이지 안 만듦) **U8** 환경변수표 신설(4-3절, 시크릿 🔑 표시 — `NUXT_INTERNAL_SECRET`에 `NUXT_PUBLIC_` 접두사 금지 경고 포함) **U10** RouteMap 초기 매핑표 11행(14-1절 — `/notes`·`/status`가 상위 경로와 동시 매치되므로 구체성 정렬이 필수인 실제 사례) **U11** i18n 키 3단계 규칙(5-6절, `status`·`errors`는 코드값을 키로 그대로 사용해 매핑 함수 제거) **U13** rate limit 통합표(7-5절) **U16** 테스트 프레임워크 미도입 + **동시성 결함 3종만 재현 스크립트 필수**(19-1절 — 수동 클릭으로는 재현 불가한 종류)
-- **2026-08-26 (4) — 미완료 설계 16건 확인 후 지시분 반영**: design.md 전문 + 요구사항 원문 대조로 빈 곳 16건(U1~U16) 식별. 사용자 지시로 **U4·U5(비밀번호 복구)·U14·U15는 범위 외 확정**, U6(평균 응대시간) 미구현 확정, U7 통계 단위를 **주(일~토)**로 확정(D16), U12는 **중복 신청 허용 + 상담기록 0건 예약의 실장 소프트 삭제**로 확정(D15). U9는 질문 자체가 오류였음 — [시술·수술 관리] 메뉴가 요구사항에 이미 있으므로 시딩 없이 그 화면에서 등록하는 게 처음부터 정답이었음. 함께 U1 재분류로 발견한 **미들웨어 무한 리다이렉트 버그**(로그인 페이지가 자기 자신으로 계속 리다이렉트) 수정, 로그인 화면 언어 규칙(쿠키→한국어) 명시, **공유 IP rate limit 문제**(단일 병원이라 직원 전원이 같은 IP → 정상 로그인이 429로 막힘) 이메일+IP 파티션으로 수정
-- **2026-08-25 (3) — 자체검토 결함 11건 전건 수정 + 실장 모델 정정 + 훅 버그 수정**: ①**🔴 D8 오설계 정정** — 실장을 `users.role='Consultant'`에 얹었던 것을 `consultants` 독립 테이블로 분리(계정과 1:1 아님, FK 연결 없음). 사용자 지적으로 발견 ②하드 삭제 전면 제거(D13) — 실장·시술·계정·상담기록 전부 비활성화/정지로만, 비활성 실장 노출 규칙 표로 명문화 ③상담 기록 누적화(D14, `reservation_notes` 신설) ④**타임존 정책 신설**(9-2절) — 전 시각 KST 고정, `Intl.DateTimeFormat`에 `timeZone` 명시로 하이드레이션 mismatch 차단, KST 월초를 UTC로 환산하는 집계 규칙 ⑤예약 코드 시퀀스 발급(F4) ⑥달력 `Confirmed`+`Visited`(F1) ⑦4카드 조건부 집계(F2) ⑧인증 초기화 `/admin` 한정(F5) ⑨방문 기록 fire-and-forget + 내부 시크릿 헤더 전용 404(F6·F11) ⑩유입경로 인덱스 `created_at` 선행으로 정정(F10) ⑪실장 간 예약 접근 전면 허용 명문화(F8, 이력으로 추적). 함께 루트 `.claude/settings.json`의 PostToolUse `.cs` 빌드검사 버그 수정(부모 폴더에서 하위로만 `.csproj`를 찾아 `Controllers/` 등 하위 폴더 저장 시 조용히 스킵되던 문제 → 상위 탐색 루프로 교체, 실제 동작·무한루프 방지 검증 완료. 백업: `settings.json.bak`)

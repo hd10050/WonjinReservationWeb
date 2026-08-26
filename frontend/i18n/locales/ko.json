@@ -1,5 +1,23 @@
 {
   "common": {
     "appName": "WonJin"
+  },
+  "admin": {
+    "common": {
+      "logout": "로그아웃"
+    },
+    "login": {
+      "title": "관리자 로그인",
+      "email": "이메일",
+      "password": "비밀번호",
+      "submit": "로그인"
+    },
+    "index": {
+      "welcome": "환영합니다"
+    }
+  },
+  "errors": {
+    "INVALID_CREDENTIALS": "이메일 또는 비밀번호가 올바르지 않습니다.",
+    "ACCOUNT_SUSPENDED": "정지된 계정입니다. 관리자에게 문의하세요."
   }
 }

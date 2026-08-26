@@ -1,5 +1,23 @@
 {
   "common": {
     "appName": "WonJin"
+  },
+  "admin": {
+    "common": {
+      "logout": "登出"
+    },
+    "login": {
+      "title": "管理員登入",
+      "email": "電子郵件",
+      "password": "密碼",
+      "submit": "登入"
+    },
+    "index": {
+      "welcome": "歡迎"
+    }
+  },
+  "errors": {
+    "INVALID_CREDENTIALS": "電子郵件或密碼不正確。",
+    "ACCOUNT_SUSPENDED": "該帳號已被停用，請聯絡管理員。"
   }
 }

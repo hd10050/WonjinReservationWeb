@@ -3,7 +3,7 @@
 > 원진성형외과 외국인 고객 예약·상담 관리 시스템의 **단일 진실 공급원(SSOT)**.
 > 설계 결정이 바뀌면 코드보다 이 문서를 먼저 고칠 것.
 > 상위 규칙 상속: `C:\Users\jinho\Desktop\WebProject\CLAUDE.md`
-> 작성일: 2026-08-25 / 상태: **설계 확정 대기** (구현 착수 전)
+> 작성일: 2026-08-25 / 상태: **구현 진행 중 — Phase 0·1 완료**(2026-08-26), Phase 2부터 착수 대기
 
 ---
 
@@ -217,10 +217,11 @@ Cloudflare Workers (Nuxt/Nitro)
 ### 5-4. 계정 locale
 
 - `users.locale`에 계정별 선호 언어를 저장한다.
-- **최초 로그인 시** 클라이언트가 감지한 로케일(`wj_lang`)을 로그인 요청 body에 함께 보내, 서버는 `users.locale`이 비어 있을 때만 채운다(이미 값이 있으면 사용자의 명시적 선택이므로 덮어쓰지 않는다).
+- ~~최초 로그인 시 클라이언트가 감지한 로케일(`wj_lang`)을 로그인 요청 body에 함께 보내, 서버는 `users.locale`이 비어 있을 때만 채운다~~ **Phase 1에서 보류(M11, 20장)** — `users.locale`이 `NOT NULL DEFAULT`라 "비어있음"을 구분할 수 없어 원문 그대로 구현 불가능함을 발견. 지금은 `PATCH /api/auth/me/locale`로만 바뀐다.
 - 변경 전용 엔드포인트 `PATCH /api/auth/me/locale`을 두고, 저장 성공 시 `wj_lang` 쿠키도 같은 값으로 즉시 동기화한다.
 - 관리자 화면은 `definePageMeta({ i18n: false })`로 URL 프리픽스 라우팅에서 제외하되, **화면 언어 자체는 계정 locale을 따른다**(전용 컴포저블 `useOpsLocale()` 하나로 통일).
 - 🔴 **로그인 화면만 예외** — 로그인 전에는 계정 locale을 알 수 없다. `wj_lang` 쿠키가 있으면 그 값을, 없으면 **한국어**를 기본으로 표시한다(실장·병원관리자가 한국에서 근무하는 전제). 로그인 성공 직후 계정 locale로 전환된다.
+- 🔴 **`useOpsLocale()` 구현 시 `locale.value = code` 직접 대입 금지 — 반드시 `setLocale(code)`를 쓰고, 그 호출은 `<script setup>` 최상위에서 `await`할 것**(Phase 1 실측 확인, 13-1절 SSR 프리로드 원칙과 동일 이유). `nuxt.config.ts`의 `i18n.lazy: true`로 로케일 메시지 파일이 지연 로딩되는데, 그 로딩을 실제로 트리거하는 함수가 `setLocale()`이다. `locale.value`에 직접 대입하면 로케일 값 자체는 바뀌지만 그 로케일의 메시지 파일이 로드되지 않아 `t()`가 raw key(`admin.login.title` 등)를 그대로 반환한다. 또한 `watch(..., {immediate:true})` 콜백 안에서 `setLocale()`을 fire-and-forget으로 호출하면(await 안 함) SSR 렌더링이 그 완료를 기다리지 않아 항상 기본 로케일(`zh-CN`)로 응답이 나가버린다 — 호출부(로그인 페이지·admin 레이아웃)가 `await useOpsLocale()`로 완료를 기다려야 한다.
 
 > ⚠️ `i18n: false` 화면에서 로케일 JSON을 직접 import해야 한다면 반드시 `import raw from '~/i18n/locales/ko.json?raw'` + `JSON.parse(raw)`를 쓸 것. `?raw` 없이 import하면 `@intlify/unplugin-vue-i18n`이 JSON을 vue-i18n 컴파일 AST로 변환해 SSR/클라이언트 하이드레이션 mismatch가 난다.
 
@@ -353,8 +354,8 @@ export default defineNuxtRouteMiddleware((to) => {
 
 | 메서드 | 경로 | 인증 | 비고 |
 |---|---|---|---|
-| POST | `/api/auth/login` | 익명 | rate limit `auth`(**이메일+IP 조합 파티션, 분당 20회** — 아래 주의), 정지 계정 차단, `locale` 동봉 가능 |
-| POST | `/api/auth/refresh` | 쿠키 | rate limit **전용 정책**(아래 주의), 정지 계정이면 RT 폐기 + 쿠키 삭제 후 401 |
+| POST | `/api/auth/login` | 익명 | rate limit `auth`(**이메일+IP 조합 파티션, 분당 20회** — 아래 주의), 정지 계정 차단. ~~`locale` 동봉 가능~~(Phase 1에서 보류, 아래 주의) |
+| POST | `/api/auth/refresh` | 쿠키 | rate limit **전용 정책**(아래 주의, Phase 1에서 사용자 ID 대신 RT 해시로 구현), 정지 계정이면 RT 폐기 + 쿠키 삭제 후 401 |
 | POST | `/api/auth/logout` | 쿠키 | RT 폐기 + 쿠키 삭제 |
 | GET | `/api/auth/me` | AT | `IsSuspended` 실시간 확인 |
 | PATCH | `/api/auth/me/password` | AT | 8~64자, 성공 시 `RevokeAllForUserAsync` + 현재 세션만 재발급 |
@@ -369,7 +370,11 @@ export default defineNuxtRouteMiddleware((to) => {
 > partitionKey: $"{email?.ToLowerInvariant() ?? "-"}|{clientIp}"
 > ```
 >
-> 이메일을 파티션 키에 쓰려면 요청 본문을 읽어야 하므로, ASP.NET Core rate limiter에서는 본문 버퍼링이 필요하다 — 구현 시 실제 동작을 확인할 것(확인 전까지 `[미확인]`). 어렵다면 IP 단독으로 두되 한도를 분당 30회 이상으로 올려 공유 IP 환경을 감안한다.
+> 이메일을 파티션 키에 쓰려면 요청 본문을 읽어야 하므로, ASP.NET Core rate limiter에서는 본문 버퍼링이 필요하다 — **Phase 1에서 실측 확인**(`[미확인]` 해소): `RateLimiter` 미들웨어보다 앞단에 별도 미들웨어를 두어 `/api/auth/login` 요청에서만 `Request.EnableBuffering()` → `StreamReader`로 body를 읽어 이메일을 파싱 → `Request.Body.Position = 0`으로 되감기 → `HttpContext.Items["AuthEmail"]`에 저장한다. `RateLimitPartition`의 파티션 키 획득 콜백은 동기 함수라 이 값을 미리 캐싱해두지 않으면 콜백 안에서 비동기로 body를 읽을 수 없다.
+>
+> 🔴 **`refresh` 파티션 키는 설계 원문(사용자 ID)과 다르게, RT 쿠키값의 SHA-256 해시로 구현했다**(Phase 1, 편차 명시). 사용자 ID를 쓰려면 파티션 키 획득 콜백(동기 함수) 안에서 RT를 DB로 조회해 사용자를 특정해야 하는데, 이는 매 refresh 요청마다 rate limiter 레이어에서 추가 DB 조회를 강제한다. RT는 사용자 1명에게 유일하게 귀속되므로 그 해시값 자체가 이미 "사용자보다 더 세밀한 세션 단위" 파티션 키로 기능한다 — 목적(다른 사용자/세션의 refresh가 서로의 한도를 침범하지 않는 것)은 동일하게 달성하면서 DB 조회가 없어 더 가볍다. 여러 탭을 쓰는 사용자는 탭마다 RT가 달라 한도를 탭 개수만큼 나눠 쓰는 셈이 되지만, 분당 10회 한도에서 실무상 문제되지 않는다.
+>
+> 🔴 **로그인 시 `locale` 자동 반영(5-4절 "비어있을 때만 채운다")은 Phase 1에서 구현하지 않았다 — 설계 공백 발견.** `users.locale`은 `NOT NULL DEFAULT 'ko'`라 "비어있는 상태"가 DB에 존재하지 않는다(항상 값이 있음). "비어있을 때만 채운다"는 원문 그대로는 구현이 불가능하고, "매 로그인마다 클라이언트 감지값으로 덮어쓴다"로 단순화하면 `PATCH /api/auth/me/locale`로 사용자가 명시적으로 선택해둔 값이 다음 로그인에서 브라우저 감지값으로 도로 덮어써지는 정반대 결과가 난다. **이 필드는 아직 확정되지 않아 `LoginRequest`에서 제외했다** — "값이 사용자의 명시적 선택인지"를 구분하는 별도 컬럼(예: `locale_set_manually`)을 추가할지, 아니면 이 자동 동기화 자체를 포기할지 사용자 결정이 필요하다(M11로 20장에 등록).
 
 > **회원가입 엔드포인트는 존재하지 않는다**(D6). 계정 생성 경로는 `POST /api/admin/users` 하나뿐이며 `[Authorize(Roles="Admin")]`으로 잠긴다. **최초 어드민 계정은 사용자가 DB에 직접 삽입한다**(2026-08-26 지시) — 시딩 코드를 만들지 않는다.
 
@@ -1037,9 +1042,9 @@ var items = raw.Select(x => new ConsultantKpiDto(
 
 ---
 
-## 11-7. 🔴 shadcn-vue 컴포넌트 추가 시 필수 함정 (D19, Phase 0에서 실측 확인)
+## 11-7. 🔴 shadcn-vue 컴포넌트 추가 시 필수 함정 (D19, Phase 0~1에서 실측 확인)
 
-**`npx shadcn-vue add <name>`으로 컴포넌트를 추가하면 매번 아래 2가지를 확인할 것.**
+**`npx shadcn-vue add <name>`으로 컴포넌트를 추가하면 매번 아래를 확인할 것.**
 
 1. **`app/lib/utils.ts`(`cn` 헬퍼)가 자동 생성되지 않는다.** `components.json`을 CLI 대화형 `init` 없이 수동으로 만든 경우 특히 그렇다 — 최초 1회만 아래 파일을 직접 만들면 이후 컴포넌트는 문제없이 이 파일을 재사용한다.
 
@@ -1053,20 +1058,33 @@ export function cn(...inputs: ClassValue[]) {
 }
 ```
 
-2. **`interface Props extends PrimitiveProps`(reka-ui) 패턴에서 Vite 500 에러가 난다**: `Failed to resolve extends base type.` — `@vue/compiler-sfc`가 `reka-ui`(외부 패키지)에서 가져온 타입의 `extends`를 정적으로 못 풀어서 발생한다. Button에서 실측 확인했고, `PrimitiveProps`를 상속하는 다른 컴포넌트(Dialog·Select·Accordion·Tooltip 등 reka-ui 기반 전부)에서 **동일하게 재발한다.**
+2. **`.nuxt/` 디렉토리가 없으면 CLI가 `Validation failed: resolvedPaths: Required,Required,...`로 즉시 실패한다**(Phase 1에서 신규 실측). `components.json`의 alias(`components`/`composables`/`utils`/`ui`/`lib`, 정확히 5개)를 실제 경로로 해석하려면 `.nuxt/tsconfig.*.json`이 필요한데, 이 파일은 `nuxt prepare`(또는 `nuxt dev`/`build`)를 최소 1회 실행해야 생성된다. **컴포넌트를 추가하기 전에 먼저 `npx nuxi prepare`를 실행**해 `.nuxt/`가 존재하는지 확인할 것 — 새 클론·컨테이너 재빌드 직후에는 없을 수 있다.
 
-   **해결— Vue 컴파일러가 직접 제시하는 공식 우회법**을 그 컴포넌트의 `.vue` 파일에 적용한다(CLI가 생성한 코드를 그대로 두면 안 됨):
-   ```ts
-   // 변경 전 (CLI 기본 생성 코드, 에러남)
-   interface Props extends PrimitiveProps {
-   // 변경 후
-   interface Props extends /* @vue-ignore */ PrimitiveProps {
-   ```
-   `@vue-ignore`가 붙은 프로퍼티들은 정적 추출 대신 런타임 fallthrough attrs로 처리된다 — 실사용에 영향 없음(Button 렌더링·클릭·variant 전부 정상 동작 확인).
+3. **🔴 `interface Props extends PrimitiveProps`(reka-ui) 패턴에서 Vite 에러가 난다 — 근본 원인 규명 완료(Phase 1).**
+   - 증상은 두 가지로 나타난다: `Failed to resolve extends base type.`(Button 등) 또는 `No fs option provided to compileScript in non-Node environment.`(Label 등, `LabelProps & {...}` 교차 타입에서도 재발 — `extends` 여부와 무관하게 **매크로 타입 인자에 reka-ui 등 외부 패키지 타입이 하나라도 들어가면** 발생).
+   - **근본 원인**: `@vue/compiler-sfc`의 매크로 타입 해석기는 `ts.sys`(Node의 TypeScript 파일시스템 API)로 폴백해 외부 타입을 정적으로 읽는데, 이 프로젝트에 설치된 `typescript@^7.0.2`는 TypeScript의 **네이티브(Go 재작성) 배포판**이라 전통적 `ts.sys` 형태를 그대로 노출하지 않는다. 그 결과 `loadTS()`가 사실상 무력화되어 `resolveFS()`가 `undefined`를 반환하고, 컴파일러가 "non-Node 환경"으로 오판해 이 에러를 던진다. Phase 0에서 "`typescript`를 devDependency로 추가해도 해소 안 됨"이라고 기록했던 것이 바로 이 TS7 자체가 devDependency였기 때문 — 버전이 문제였지 존재 여부가 문제가 아니었다.
+   - **해결(진짜 수정, 우회 아님)**: `typescript`를 **5.x 안정판으로 다운그레이드**한다(`package.json`: `"typescript": "^5.9.3"`). 이후 `npx npm@10.9.2 install --legacy-peer-deps`로 재설치하면 이 에러 자체가 사라진다(Button·Label·Input·Card 전부 `/* @vue-ignore */` 없이 정상 컴파일 확인).
+   - **🔴 기존 우회법(`/* @vue-ignore */`)은 철회한다 — "실사용에 영향 없음"이라던 Phase 0 기록은 틀렸다.** `@vue-ignore`는 그 프로퍼티를 정적 추출 대신 런타임 fallthrough attrs로 넘기는데, `withDefaults(defineProps<Props>(), { as: 'button' })`의 `as` 기본값이 이 경로에서는 컴포넌트 인스턴스에 전혀 반영되지 않는다. 실측 결과 `<Primitive :as="as">`가 `as=undefined`로 렌더링되어 **`<button>`이 아니라 `<div data-slot="button" type="submit">`으로 렌더링**됐다 — `<div>`는 `type="submit"`이 있어도 폼 제출을 트리거하지 않으므로 **로그인 폼의 제출 버튼이 조용히 작동하지 않는** 실제 장애였다(Phase 0 검증은 "버튼처럼 보이고 클릭 시 스타일이 바뀌는지"까지만 확인해 이 결함을 놓쳤다). **TypeScript 5.x로 내린 지금은 `/* @vue-ignore */`를 절대 새로 추가하지 말 것** — 정적 해석이 정상 작동하므로 CLI가 생성한 코드를 그대로 두는 것이 정답이다.
+   - **교훈**: 컴포넌트가 "화면에 보인다"는 것과 "실제 시맨틱 태그로 렌더링되어 폼 제출 등 브라우저 기본 동작이 작동한다"는 것은 별개의 검증 항목이다 — 렌더링된 실제 DOM 태그(`document.querySelector(...).tagName`)까지 확인하지 않으면 이런 결함은 시각적으로 감쪽같이 숨는다.
 
-   ⚠️ **원인은 아직 완전히 특정하지 못함** `[미확인]` — `typescript`를 devDependency로 추가해도 해소되지 않았고, `reka-ui` 중복 설치도 아니었다. Vite 8.2.2(최신)와 `@vue/compiler-sfc`/`reka-ui@2.10.4` 조합의 알려지지 않은 호환성 문제로 추정되나 근본 원인 확인 전이므로, 새 컴포넌트를 추가할 때마다 **매번 이 우회법을 먼저 적용**하고 시작할 것 — "이번엔 안 날 수도 있다"고 가정하지 말 것.
+4. **shadcn-vue CLI의 tsconfig 별칭 검사에 `tsconfig.json`을 직접 수정해 대응하지 말 것.** Nuxt 4의 루트 `tsconfig.json`은 `.nuxt/tsconfig.*.json`을 참조만 하는 순수 레퍼런스 파일인데, 여기에 `compilerOptions.paths`를 직접 추가하면 Nuxt가 생성하는 실제 타입 해석 설정과 충돌해 Vite 컴파일이 깨진다(Phase 0에서 실제로 겪음 — 겉보기엔 CLI 통과에 필요해 보이지만 아니다). **대신 `components.json`을 수동으로 직접 작성**해 CLI의 별칭 자동감지 단계 자체를 우회할 것(4-3절 스택과 무관, 이 프로젝트 `components.json` 실제 내용은 `frontend/components.json` 참고).
 
-3. **shadcn-vue CLI의 tsconfig 별칭 검사에 `tsconfig.json`을 직접 수정해 대응하지 말 것.** Nuxt 4의 루트 `tsconfig.json`은 `.nuxt/tsconfig.*.json`을 참조만 하는 순수 레퍼런스 파일인데, 여기에 `compilerOptions.paths`를 직접 추가하면 Nuxt가 생성하는 실제 타입 해석 설정과 충돌해 Vite 컴파일이 깨진다(Phase 0에서 실제로 겪음 — 겉보기엔 CLI 통과에 필요해 보이지만 아니다). **대신 `components.json`을 수동으로 직접 작성**해 CLI의 별칭 자동감지 단계 자체를 우회할 것(4-3절 스택과 무관, 이 프로젝트 `components.json` 실제 내용은 `frontend/components.json` 참고).
+> ⚠️ **버전 고정 추가**: `package.json`의 `typescript`는 반드시 **5.x**로 고정할 것 — `npm install typescript`를 별도 지시 없이 실행하면 최신 메이저(7.x, 네이티브판)가 설치되어 위 3번 문제가 재발한다(3-1절과 같은 종류의 "최신판이 항상 안전하지 않다" 사례).
+
+## 11-8. 🔴 record DTO의 검증 애노테이션 위치 (Phase 1에서 실측 확인)
+
+C# record의 주 생성자 파라미터에 데이터 검증 애노테이션을 붙일 때 **`[property: ...]` 타겟 지정자를 쓰면 안 된다.**
+
+```csharp
+// ❌ 500 InvalidOperationException: "has validation metadata defined on property 'Password'
+//    that will be ignored... validation metadata must be associated with the constructor parameter."
+public record LoginRequest([property: Required, MaxLength(254)] string Email, ...);
+
+// ✅ 파라미터에 직접 부착 — ASP.NET Core 공식 문서(model-binding.md)의 유일한 예시 형태
+public record LoginRequest([Required, MaxLength(254)] string Email, [Required, MaxLength(64)] string Password);
+```
+
+`[property: ...]`는 C# 컴파일러에게 "생성자 파라미터가 아니라 그로부터 만들어진 속성(property)에 이 애노테이션을 붙이라"고 지시하는 것인데, ASP.NET Core의 record 모델 바인딩·검증 시스템은 **파라미터에 직접 연결된 메타데이터만 인식**하고, 속성에만 연결된(파라미터와 안 이어진) 검증 메타데이터를 발견하면 "무시될 메타데이터가 있다"며 예외를 던진다. 겉보기엔 `[property: Required]`도 "검증 애노테이션을 붙였다"는 점에서 문제없어 보여 실제로 요청을 보내기 전까지는 컴파일 에러도, 마이그레이션 에러도 없이 조용히 통과한다 — **런타임에 그 record를 모델 바인딩하는 첫 요청에서만** 500으로 드러난다. 새 record DTO에 검증 애노테이션을 추가할 때마다 `[property: ...]`가 아니라 파라미터 앞에 직접 쓰는지 확인할 것.
 
 ## 12. 화면 설계
 
@@ -1450,8 +1468,8 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 
 | Phase | 내용 | 완료 기준 |
 |---|---|---|
-| 0 | 스캐폴딩(`api/` + `frontend/`), docker-compose, Tailwind v4, DB 마이그레이션(8장 전체) | 컨테이너 기동 + 마이그레이션 적용 + 인덱스 실제 생성 확인 + **컨테이너에서 `Asia/Seoul` 타임존 조회 성공**(9-2절 `[미확인]` 해소) |
-| 1 | 인증(로그인·갱신·로그아웃·me), `AccountStateFilter`, 동일 출처 프록시 | 로그인~정지 차단까지 실제 브라우저 E2E. 랜딩에서 `/api/auth/me`가 호출되지 않는지 확인(F5) |
+| 0 | ✅ 스캐폴딩(`api/` + `frontend/`), docker-compose, Tailwind v4, DB 마이그레이션(8장 전체) — **2026-08-26 완료** | 컨테이너 기동 + 마이그레이션 적용 + 인덱스 실제 생성 확인 + **컨테이너에서 `Asia/Seoul` 타임존 조회 성공**(9-2절 `[미확인]` 해소) — 전건 실측 완료 |
+| 1 | ✅ 인증(로그인·갱신·로그아웃·me), `AccountStateFilter`, 동일 출처 프록시 — **2026-08-26 완료** | 로그인~정지 차단까지 실제 브라우저 E2E. 랜딩에서 `/api/auth/me`가 호출되지 않는지 확인(F5) — 전건 실측 완료(19-2절 상세) |
 | 2 | 랜딩 4언어 + 예약 신청 폼 + 개인정보 처리방침 + 유입 경로 수집 | 4언어 폼 제출 → DB 적재 + UTM 보존 확인. **내부 시크릿 없이 `landing-visit` 호출 시 404 실측**(F11) + **연락 희망 시각이 `time` 컬럼으로 정확히 저장·표시되는지 확인**(D10) |
 | 3 | 예약 대시보드(4카드 + 목록/필터/페이징) + 예약 상세 + 상담 기록 누적 + 상태 머신 + 소프트 삭제 | 상태 전이 동시성(409) 실측 + **예약 코드 동시 생성 중복 없음 실측**(F4) + **상담 기록 있는 예약 삭제 시도 시 409 실측**(D15) + **미배정 예약에서 상담기록·상태전이·저장 시도 시 400 `RESERVATION_NOT_ASSIGNED` 실측 + 배정 즉시 해제 가능해지는지 확인**(D17) |
 | 4 | 실장 관리(`consultants` CRUD + 비활성화) / 시술·수술 관리 | 4언어 탭 CRUD + **비활성 실장이 배정 드롭다운·KPI에서 빠지고 과거 예약엔 남는지 실측**(D13) |
@@ -1475,6 +1493,20 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 
 이 3개는 **동시성 결함**이라 수동 클릭으로는 재현되지 않고, 운영에서 드물게 터지면 원인 추적이 거의 불가능하다. 스크립트는 `curl`·`xargs -P` 수준이면 충분하며 프레임워크가 필요 없다.
 
+### 19-2. Phase 1 완료 실측 기록 (2026-08-26)
+
+F5 완료 기준을 아래 4개 경로로 전건 실측했다.
+
+| 검증 항목 | 방법 | 결과 |
+|---|---|---|
+| 로그인 | 브라우저(실제 폼 입력+제출)로 테스트 계정 로그인 | `POST /api/auth/login → 200`, `/admin` 진입, SSR 재방문(새로고침)에도 세션 유지 확인 — D7 동일 출처 프록시 핵심 목표 실증 |
+| 갱신 | `curl`로 로그인 후 RT 쿠키만으로 `/api/auth/refresh` 직접 호출 | `200` + AT가 실제로 새 값으로 회전(rotation)됨을 토큰 문자열 비교로 확인 |
+| 로그아웃 | curl 직접(API 5200) / curl 프록시 경유(3701) / 브라우저 `fetch()` / 브라우저 `element.click()` 4가지 경로 | 전부 `Set-Cookie: wj_at=; expires=1970...` + `wj_rt=; expires=1970...` 확인, 재방문 시 `/admin/login`으로 이동 확인 |
+| 정지 즉시 차단 | `UPDATE users SET is_suspended=true`(AT 만료 전, RT 폐기 없이) 후 `/admin` 재방문 | 즉시 `/admin/login`으로 리다이렉트 — `AccountStateFilter`가 AT 만료(15분)를 기다리지 않고 매 요청 DB 재확인함을 실증 |
+| F5(랜딩 미호출) | `/` 방문 후 네트워크 요청 전수 확인 | `/api/auth/*` 요청 0건 |
+
+**⚠️ 자동화 도구 특이사항(코드 버그 아님, 참고용)**: 이 세션에서 쓴 브라우저 자동화 도구의 좌표 기반 클릭(`computer left_click`)은 로그아웃 버튼에서 `logout()`을 호출은 시켰으나(네트워크 요청 발생) `user.value = null` 반영이 화면에 관측되지 않는 현상이 있었다. 같은 버튼을 JS `element.click()`으로 호출하면 정상 작동했다 — curl 직접 호출까지 포함해 3가지 다른 경로로 서버·프론트 로직 자체는 정상임을 확인했으므로, 실제 사용자의 마우스 클릭에는 영향이 없을 것으로 판단(둘 다 표준 DOM `click` 이벤트를 발생시키므로). 원인은 `[미확인]`으로 남기되, 이 프로젝트 코드의 결함이 아니라 검증 도구 쪽 특이사항으로 분류한다.
+
 **코딩 규칙 (절대 원칙)**
 - 코드 중간 잘림 금지 — `// 나머지 동일`, `...` 생략 표현을 쓰지 않는다.
 - 파일 수정 전 반드시 그 파일 전체를 읽고 시작한다.
@@ -1492,6 +1524,7 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 | M6 | **랜딩 콘텐츠** — 히어로·소개 섹션 문구와 이미지(4개 언어). 사용자가 "추후 디자인" 명시 | Phase 2 이후 |
 | M8 | **병원 정식 정보** — 상호(사업자등록상 명칭)·주소·대표전화·사업자번호. 랜딩 푸터와 JSON-LD(`MedicalClinic`/`Organization`)에 들어간다 | Phase 2 |
 | M10 | **로고 이미지 파일** — favicon / 관리자 사이드바 / OG 공유 이미지 3곳에 사용. OG를 별도 제작할지 로고를 그대로 쓸지 포함 | Phase 2 |
+| M11 | **로그인 시 `locale` 자동 반영 방식**(7-2절 발견) — `users.locale`이 `NOT NULL DEFAULT`라 "비어있을 때만 채운다"는 원문을 그대로 구현할 수 없음. 별도 컬럼 추가 여부 또는 자동 동기화 포기 중 선택 필요 | Phase 1 완료 후 아무 때나(현재는 `PATCH /api/auth/me/locale` 수동 변경만 동작) |
 
 > **확정되어 이동한 항목**: M1(배포 브랜치 = `main`) → 4-4절 / M4(예약금 통화 = CNY/KRW, 기본 CNY) → D12 / **M3(예약 코드 = `YYYYMMDD`+4자리, 일별 리셋) → 8-11절** / **M5(실장 배정 = 수동, 미배정 시 작업 차단) → D17·10-1절** / M7(개인정보 보유기간) → 20-1절 범위 외 / **M9(중화권 브랜드 표기 = `WonJin`, 2026-08-26 Phase 0 진행 중 확정) → D18·5-6절**.
 >

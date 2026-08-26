@@ -1,5 +1,23 @@
 {
   "common": {
     "appName": "WonJin"
+  },
+  "admin": {
+    "common": {
+      "logout": "Log out"
+    },
+    "login": {
+      "title": "Admin Login",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Log in"
+    },
+    "index": {
+      "welcome": "Welcome"
+    }
+  },
+  "errors": {
+    "INVALID_CREDENTIALS": "Invalid email or password.",
+    "ACCOUNT_SUSPENDED": "This account has been suspended. Please contact an administrator."
   }
 }

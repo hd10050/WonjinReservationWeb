@@ -20,12 +20,13 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     // 서버 전용 — SSR→백엔드 직접 호출, 랜딩 방문 기록 내부 시크릿(4-3절)
-    apiBaseInternal: '',
-    internalSecret: '',
+    apiBaseInternal: process.env.NUXT_API_BASE_INTERNAL || '',
+    internalSecret: process.env.NUXT_INTERNAL_SECRET || '',
     public: {
-      // 동일 출처 프록시(D7) — 반드시 빈 문자열. 실제 프록시 핸들러는 Phase 1에서 구현.
-      apiBase: '',
-      siteUrl: 'https://example.com',
+      // 동일 출처 프록시(D7) — 반드시 빈 문자열(동일 출처).
+      // 🔴 ??로만 폴백할 것 — ||를 쓰면 ""가 falsy로 걸려 폴백 URL로 되돌아가 프록시가 무력화된다(4-1절).
+      apiBase: process.env.NUXT_PUBLIC_API_BASE ?? '',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://example.com',
     },
   },
 
