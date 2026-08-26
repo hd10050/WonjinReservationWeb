@@ -1,6 +1,9 @@
 {
   "common": {
-    "appName": "WonJin"
+    "appName": "WonJin",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading..."
   },
   "admin": {
     "common": {
@@ -12,12 +15,105 @@
       "password": "Password",
       "submit": "Log in"
     },
-    "index": {
-      "welcome": "Welcome"
+    "reservations": {
+      "title": "Reservation Dashboard",
+      "cardNew": "New",
+      "cardConsulting": "Consulting",
+      "cardConfirmed": "Confirmed",
+      "cardVisitedThisMonth": "Visited This Month",
+      "filterStatus": "Status",
+      "filterStatusAll": "All",
+      "filterConsultant": "Consultant",
+      "filterConsultantAll": "All",
+      "filterFrom": "From",
+      "filterTo": "To",
+      "filterSearch": "Search",
+      "filterSearchPlaceholder": "Name, WeChat ID, or code",
+      "filterApply": "Apply",
+      "filterReset": "Reset",
+      "colCode": "Code",
+      "colName": "Name",
+      "colWechatId": "WeChat ID",
+      "colStatus": "Status",
+      "colConsultant": "Consultant",
+      "colCreatedAt": "Received At",
+      "colVisitDate": "Visit Date",
+      "empty": "No reservations found.",
+      "unassigned": "Unassigned",
+      "pageInfo": "Page {page} of {total}",
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "reservationDetail": {
+      "backToList": "Back to list",
+      "notAssignedBanner": "Assign a consultant first. Notes, status changes, and saving are disabled until then.",
+      "customerInfo": "Customer Info",
+      "birthDate": "Birth Date",
+      "age": "y/o",
+      "gender": "Gender",
+      "genderFemale": "Female",
+      "genderMale": "Male",
+      "genderOther": "Other",
+      "wechatId": "WeChat ID",
+      "preferredContactTime": "Preferred Contact Time",
+      "preferredContactTimeHint": "Korea time",
+      "locale": "Applied Language",
+      "receivedAt": "Received At",
+      "referralSource": "Referral Source",
+      "consultant": "Consultant",
+      "consultantPlaceholder": "Select a consultant",
+      "inactive": "Inactive",
+      "assign": "Assign",
+      "notes": "Consultation Notes",
+      "notesEmpty": "No notes yet.",
+      "editNote": "Edit",
+      "edited": "edited",
+      "noteBodyLabel": "New note",
+      "noteBodyPlaceholder": "Enter consultation details",
+      "addNote": "Add Note",
+      "visitInfo": "Visit Reservation",
+      "visitDate": "Visit Date",
+      "visitTime": "Visit Time",
+      "procedures": "Procedures",
+      "depositCurrency": "Deposit Currency",
+      "depositAmount": "Deposit Amount",
+      "depositPaid": "Deposit Confirmed",
+      "logs": "Activity Log",
+      "actions": "Actions",
+      "markVisited": "Mark as Visited",
+      "cancelReservation": "Cancel Reservation",
+      "cancelReasonLabel": "Cancellation Reason",
+      "cancelReasonPlaceholder": "Enter the reason for cancellation",
+      "deleteReservation": "Delete Reservation",
+      "deleteConfirm": "Delete this reservation? It will be excluded from the list afterward."
     }
+  },
+  "status": {
+    "New": "New",
+    "Consulting": "Consulting",
+    "Confirmed": "Confirmed",
+    "Visited": "Visited",
+    "Cancelled": "Cancelled"
+  },
+  "reservationLogAction": {
+    "received": "Received",
+    "assigned": "Consultant changed",
+    "status_changed": "Status changed",
+    "note_added": "Note added",
+    "deposit_confirmed": "Deposit confirmed",
+    "cancelled": "Cancelled",
+    "deleted": "Deleted"
   },
   "errors": {
     "INVALID_CREDENTIALS": "Invalid email or password.",
-    "ACCOUNT_SUSPENDED": "This account has been suspended. Please contact an administrator."
+    "ACCOUNT_SUSPENDED": "This account has been suspended. Please contact an administrator.",
+    "RESERVATION_NOT_ASSIGNED": "This reservation has no consultant assigned. Assign one first.",
+    "RESERVATION_HAS_NOTES": "Reservations with notes cannot be deleted.",
+    "RESERVATION_STATE_CHANGED": "The status was already changed elsewhere. Refresh and try again.",
+    "CONSULTANT_NOT_FOUND": "Consultant not found.",
+    "INVALID_STATUS_TRANSITION": "This status change is not allowed.",
+    "CANCEL_REASON_REQUIRED": "Please enter a cancellation reason.",
+    "INVALID_DEPOSIT_CURRENCY": "Invalid deposit currency.",
+    "UNKNOWN": "An unknown error occurred."
   }
 }

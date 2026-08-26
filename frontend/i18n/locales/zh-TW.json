@@ -1,6 +1,9 @@
 {
   "common": {
-    "appName": "WonJin"
+    "appName": "WonJin",
+    "save": "儲存",
+    "cancel": "取消",
+    "loading": "載入中..."
   },
   "admin": {
     "common": {
@@ -12,12 +15,105 @@
       "password": "密碼",
       "submit": "登入"
     },
-    "index": {
-      "welcome": "歡迎"
+    "reservations": {
+      "title": "預約看板",
+      "cardNew": "新接收",
+      "cardConsulting": "諮詢中",
+      "cardConfirmed": "已確認",
+      "cardVisitedThisMonth": "本月已到店",
+      "filterStatus": "狀態",
+      "filterStatusAll": "全部",
+      "filterConsultant": "負責顧問",
+      "filterConsultantAll": "全部",
+      "filterFrom": "接收日期(起)",
+      "filterTo": "接收日期(訖)",
+      "filterSearch": "搜尋",
+      "filterSearchPlaceholder": "姓名·微信ID·預約碼",
+      "filterApply": "套用",
+      "filterReset": "重置",
+      "colCode": "預約碼",
+      "colName": "姓名",
+      "colWechatId": "微信ID",
+      "colStatus": "狀態",
+      "colConsultant": "負責顧問",
+      "colCreatedAt": "接收時間",
+      "colVisitDate": "預計到店日",
+      "empty": "暫無預約。",
+      "unassigned": "未分配",
+      "pageInfo": "第 {page} / {total} 頁",
+      "prev": "上一頁",
+      "next": "下一頁"
+    },
+    "reservationDetail": {
+      "backToList": "返回列表",
+      "notAssignedBanner": "請先分配負責顧問。分配前無法新增諮詢記錄、變更狀態或儲存資訊。",
+      "customerInfo": "客戶資訊",
+      "birthDate": "出生日期",
+      "age": "歲",
+      "gender": "性別",
+      "genderFemale": "女",
+      "genderMale": "男",
+      "genderOther": "其他",
+      "wechatId": "微信ID",
+      "preferredContactTime": "希望聯絡時間",
+      "preferredContactTimeHint": "韓國時間",
+      "locale": "申請語言",
+      "receivedAt": "接收時間",
+      "referralSource": "來源",
+      "consultant": "負責顧問",
+      "consultantPlaceholder": "請選擇負責顧問",
+      "inactive": "已停用",
+      "assign": "分配",
+      "notes": "諮詢記錄",
+      "notesEmpty": "尚無諮詢記錄。",
+      "editNote": "編輯",
+      "edited": "已編輯",
+      "noteBodyLabel": "新增諮詢記錄",
+      "noteBodyPlaceholder": "請輸入諮詢內容",
+      "addNote": "新增記錄",
+      "visitInfo": "到店預約",
+      "visitDate": "到店日期",
+      "visitTime": "到店時間",
+      "procedures": "療程/手術",
+      "depositCurrency": "訂金幣別",
+      "depositAmount": "訂金金額",
+      "depositPaid": "已確認入帳",
+      "logs": "處理紀錄",
+      "actions": "操作",
+      "markVisited": "確認到店",
+      "cancelReservation": "取消預約",
+      "cancelReasonLabel": "取消原因",
+      "cancelReasonPlaceholder": "請輸入取消原因",
+      "deleteReservation": "刪除預約",
+      "deleteConfirm": "確定要刪除此預約嗎？刪除後將從列表中排除。"
     }
+  },
+  "status": {
+    "New": "新接收",
+    "Consulting": "諮詢中",
+    "Confirmed": "已確認",
+    "Visited": "已到店",
+    "Cancelled": "已取消"
+  },
+  "reservationLogAction": {
+    "received": "已接收",
+    "assigned": "更改負責人",
+    "status_changed": "狀態變更",
+    "note_added": "新增諮詢記錄",
+    "deposit_confirmed": "確認訂金到帳",
+    "cancelled": "預約取消",
+    "deleted": "已刪除"
   },
   "errors": {
     "INVALID_CREDENTIALS": "電子郵件或密碼不正確。",
-    "ACCOUNT_SUSPENDED": "該帳號已被停用，請聯絡管理員。"
+    "ACCOUNT_SUSPENDED": "該帳號已被停用，請聯絡管理員。",
+    "RESERVATION_NOT_ASSIGNED": "此預約尚未分配負責顧問，請先分配。",
+    "RESERVATION_HAS_NOTES": "含有諮詢記錄的預約無法刪除。",
+    "RESERVATION_STATE_CHANGED": "狀態已在其他地方被變更，請重新整理後再試。",
+    "CONSULTANT_NOT_FOUND": "找不到該顧問。",
+    "INVALID_STATUS_TRANSITION": "不允許此狀態變更。",
+    "CANCEL_REASON_REQUIRED": "請輸入取消原因。",
+    "INVALID_DEPOSIT_CURRENCY": "訂金幣別不正確。",
+    "UNKNOWN": "發生未知錯誤。"
   }
 }
