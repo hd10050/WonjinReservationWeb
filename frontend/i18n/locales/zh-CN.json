@@ -157,7 +157,8 @@
       "edit": "编辑",
       "self": "本人",
       "suspendedLabel": "已停用",
-      "activeLabel": "启用中"
+      "activeLabel": "启用中",
+      "suspendConfirm": "确定要停用此账户吗？停用后所有登录会话将立即终止。"
     },
     "auditLogs": {
       "title": "审计日志",

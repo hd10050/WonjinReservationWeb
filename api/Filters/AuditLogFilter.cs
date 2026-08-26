@@ -66,6 +66,14 @@ public class AuditLogFilter(AppDbContext db, ILogger<AuditLogFilter> logger) : I
 
         try
         {
+            // 🔴 실측으로 발견: 컨트롤러의 SaveChangesAsync가 실패(500)하면 같은 요청 스코프의 DbContext
+            // ChangeTracker에 실패한 엔티티가 여전히 Added 상태로 남는다. Clear() 없이 여기서 AuditLog만
+            // 추가해 SaveChangesAsync를 다시 호출하면 그 실패한 엔티티까지 함께 재저장을 시도해 동일한
+            // DbUpdateException이 또 발생하고, catch에서 삼켜져 **감사 로그 자체가 통째로 유실**된다
+            // (20건 동시 요청 중 500이 된 요청은 감사 로그에 단 한 건도 안 남는 것을 실제로 확인).
+            // 컨트롤러 성공 여부와 무관하게 감사 로그 저장은 항상 깨끗한 상태에서 시작해야 한다.
+            db.ChangeTracker.Clear();
+
             var candidates = RouteMap.Where(r => r.Method == method && r.Segments.All(s => path.Contains(s)));
             var matched = candidates.OrderByDescending(r => r.Segments.Length).FirstOrDefault();
 

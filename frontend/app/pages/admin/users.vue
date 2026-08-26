@@ -189,18 +189,22 @@ async function submitCreate() {
 const editingId = ref<number | null>(null)
 const editRole = ref<AdminRole>('Consultant')
 const editSuspended = ref(false)
+const editOriginalSuspended = ref(false)
 const editError = ref('')
 
 function startEdit(u: AdminUser) {
   editingId.value = u.id
   editRole.value = u.role
   editSuspended.value = u.isSuspended
+  editOriginalSuspended.value = u.isSuspended
   editError.value = ''
   showCreateForm.value = false
 }
 
 async function submitEdit() {
   if (editingId.value === null) return
+  // 16장 보안 체크리스트 — 파괴적 액션(정지)에 확인 UI 필수. 활성→정지로 새로 전환하는 경우에만 확인.
+  if (editSuspended.value && !editOriginalSuspended.value && !confirm(t('admin.users.suspendConfirm'))) return
   editError.value = ''
   try {
     await authFetch(`/api/admin/users/${editingId.value}`, {

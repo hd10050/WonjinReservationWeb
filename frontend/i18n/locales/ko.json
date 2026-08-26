@@ -157,7 +157,8 @@
       "edit": "수정",
       "self": "본인",
       "suspendedLabel": "정지됨",
-      "activeLabel": "활성"
+      "activeLabel": "활성",
+      "suspendConfirm": "이 계정을 정지하시겠습니까? 정지 시 모든 세션이 즉시 종료됩니다."
     },
     "auditLogs": {
       "title": "로그 (감사)",

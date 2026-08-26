@@ -157,7 +157,8 @@
       "edit": "編輯",
       "self": "本人",
       "suspendedLabel": "已停用",
-      "activeLabel": "啟用中"
+      "activeLabel": "啟用中",
+      "suspendConfirm": "確定要停用此帳戶嗎？停用後所有登入階段將立即終止。"
     },
     "auditLogs": {
       "title": "稽核日誌",

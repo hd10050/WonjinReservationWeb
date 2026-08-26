@@ -157,7 +157,8 @@
       "edit": "Edit",
       "self": "You",
       "suspendedLabel": "Suspended",
-      "activeLabel": "Active"
+      "activeLabel": "Active",
+      "suspendConfirm": "Suspend this account? All sessions will be terminated immediately."
     },
     "auditLogs": {
       "title": "Audit Log",
