@@ -133,6 +133,51 @@
       "formSortOrderLabel": "排序",
       "formActiveLabel": "啟用狀態"
     },
+    "users": {
+      "title": "帳戶管理",
+      "addButton": "簽發帳戶",
+      "filterRoleLabel": "依角色篩選",
+      "filterRoleAll": "全部",
+      "roleAdmin": "管理員",
+      "roleHospitalManager": "醫院管理者",
+      "roleConsultant": "顧問",
+      "formTitleCreate": "簽發帳戶",
+      "formEmailLabel": "電子郵件",
+      "formPasswordLabel": "密碼(至少8位)",
+      "formNameLabel": "姓名",
+      "formRoleLabel": "角色",
+      "formTitleEdit": "編輯帳戶",
+      "formSuspendedLabel": "停用",
+      "colEmail": "電子郵件",
+      "colName": "姓名",
+      "colRole": "角色",
+      "colStatus": "狀態",
+      "colCreatedAt": "建立時間",
+      "empty": "尚無帳戶。",
+      "edit": "編輯",
+      "self": "本人",
+      "suspendedLabel": "已停用",
+      "activeLabel": "啟用中"
+    },
+    "auditLogs": {
+      "title": "稽核日誌",
+      "filterActorLabel": "操作者",
+      "filterActorAll": "全部",
+      "filterEntityTypeLabel": "對象類型",
+      "filterActionLabel": "操作",
+      "filterAll": "全部",
+      "filterFromLabel": "起始日期",
+      "filterToLabel": "結束日期",
+      "filterSearchLabel": "搜尋",
+      "colCreatedAt": "時間",
+      "colActor": "操作者",
+      "colAction": "操作",
+      "colEntity": "對象",
+      "colSummary": "摘要",
+      "colStatusCode": "狀態碼",
+      "colIp": "IP",
+      "empty": "尚無日誌記錄。"
+    },
     "kpi": {
       "title": "顧問KPI",
       "filterFrom": "起始日期",
@@ -244,6 +289,10 @@
     "INVALID_PROCEDURE_IDS": "所選項目中包含不存在的項目。",
     "PROCEDURE_CODE_DUPLICATE": "該療程編號已被使用。",
     "INTERNAL_ERROR": "伺服器發生暫時性錯誤，請稍後再試。",
-    "UNKNOWN": "發生未知錯誤。"
+    "UNKNOWN": "發生未知錯誤。",
+    "EMAIL_ALREADY_EXISTS": "此電子郵件已被使用。",
+    "INVALID_ROLE": "角色無效。",
+    "CANNOT_MODIFY_SELF": "無法修改本人帳戶。",
+    "NO_CHANGES": "沒有需要變更的內容。"
   }
 }

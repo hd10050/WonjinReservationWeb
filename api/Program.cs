@@ -21,9 +21,10 @@ var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get
 
 builder.Services.AddControllers(options =>
 {
-    // 정지·강등을 매 요청 즉시 반영(7-3절). Phase 7에서 AuditLogFilter를 추가할 때는
-    // 반드시 이 필터보다 뒤에 등록할 것 — 정지된 요청은 감사 로그까지 가지 않고 여기서 차단된다.
+    // 정지·강등을 매 요청 즉시 반영(7-3절). AuditLogFilter는 반드시 이 필터보다 뒤에 등록한다 —
+    // 정지된 요청은 AccountStateFilter가 next()를 호출하지 않고 여기서 먼저 차단해 감사 로그까지 가지 않는다.
     options.Filters.Add<AccountStateFilter>();
+    options.Filters.Add<AuditLogFilter>();
 });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

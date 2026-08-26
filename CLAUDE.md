@@ -5,7 +5,7 @@
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원
 - 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~6 전부 main 병합 완료**(2026-08-26). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제)·Phase 4(실장·시술 관리 CRUD, Phase 3 미해결 이슈 2건도 함께 해소)·Phase 5(예약 달력)·Phase 6(실장 KPI·예약 통계, 표+차트 D21, 담당 실장 축 포함)까지 진행. **사이드바 네비게이션(12-3절)은 각 Phase가 개별 구현하지 않고 병합 시점에 한 번에 정리하기로 사용자 결정**(2026-08-26) — 그 전까지 `/admin/consultants`·`/admin/procedures`·`/admin/calendar`·`/admin/kpi`·`/admin/stats`는 URL 직접 접근으로만 확인 가능. Phase 7부터는 사용자 지시 대기
+- 현재 상태: **Phase 1~6 main 병합 완료**(2026-08-26) + **Phase 7(계정 관리·감사 로그) `phase7-users-audit` 워크트리에서 구현·실측 완료, main 미병합**(2026-08-26, 병합은 사용자 지시 대기). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제)·Phase 4(실장·시술 관리 CRUD)·Phase 5(예약 달력)·Phase 6(실장 KPI·예약 통계)·Phase 7(계정 CRUD + 전역 `AuditLogFilter` + `/admin/users`·`/admin/audit-logs`)까지 진행. **사이드바 네비게이션(12-3절)은 각 Phase가 개별 구현하지 않고 병합 시점에 한 번에 정리하기로 사용자 결정**(2026-08-26) — 그 전까지 신규 관리자 화면은 URL 직접 접근으로만 확인 가능. Phase 8부터는 사용자 지시 대기
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -69,7 +69,7 @@
 - **`__EFMigrationsHistory` 스키마 명시 고정 필수** — `MigrationsHistoryTable("__EFMigrationsHistory", "wonjin")`. 미지정 시 `search_path` 규칙으로 위치가 달라져 마이그레이션 재실행 → `relation already exists` 재시작 루프
 - **`dotnet ef migrations add` 결과 파일은 적용 전 반드시 직접 읽을 것** — scaffolder가 새 부분/복합 인덱스를 이유로 기존 인덱스에 `DropIndex`를 자동 삽입하는 사고가 있었음
 - **`AccountStateFilter`는 `[Authorize]` 요구 여부를 먼저 확인** — 안 하면 정지된 유저가 공개 API에서도 401을 맞아 익명 방문자보다 못한 상태가 됨
-- **`AuditLogFilter`의 예외 처리** — 컨트롤러 예외는 `next()`가 throw하지 않고 `ActionExecutedContext.Exception`에 담겨 반환됨. 확인 안 하면 실패한 쓰기가 200(성공)으로 오기록됨
+- 🔴 **`AuditLogFilter`의 상태코드 기록 — `next()` 직후 `HttpContext.Response.StatusCode`를 읽으면 항상 200으로 오기록된다**(design.md 14장·admin-panel-pattern-reference.md 4-2절 원문 패턴이 실제로 이 버그를 가짐, Phase 7 curl 실측으로 발견). 액션 필터의 `next()`는 액션이 `IActionResult`를 반환하는 시점까지만 감싸고, 그 결과를 실제로 응답에 쓰는 결과 실행은 액션 필터 파이프라인 바깥의 더 뒤 단계에서 일어나 — `BadRequest()` 등을 반환해도 이 시점의 `Response.StatusCode`는 여전히 기본값(200)이다. 컨트롤러 예외(`ActionExecutedContext.Exception`)는 별개로 여전히 확인해야 하지만, **정상 반환된 400/404/401 등은 `(executed.Result as Microsoft.AspNetCore.Mvc.Infrastructure.IStatusCodeActionResult)?.StatusCode`로 읽어야 정확하다**(`AuditLogFilter.cs` 실제 구현 참고)
 - **관리자 로그인 진입점(푸터 저작권 링크) 숨김은 보안이 아님** — 실제 보호는 인증과 `[Authorize]`
 - `package-lock.json`은 **npm@10.9.2**로 생성 (npm 11은 Cloudflare CI `EBADPLATFORM`)
 - 로케일 JSON 값에 **순수 `@` 문자 금지** — vue-i18n이 linked message로 오인해 해당 로케일 컴파일이 깨짐(클라이언트 라우팅에서만 raw key 노출)
@@ -120,7 +120,7 @@
 | 4 | ✅ 실장(`consultants`)·시술 관리 CRUD(2026-08-26 완료, main 병합 완료) | 4언어 탭 CRUD(시술) + 3역할 권한 매트릭스 실측(Admin·HospitalManager 200 / Consultant 403 / 익명 401) + 비활성 토글·`includeInactive` 필터 브라우저 실측(한중일 텍스트 입력 포함) + 시술 코드 UNIQUE 위반 검증(생성·수정 시 본인 제외) curl 실측. 비활성실장 배정 드롭다운 제외·과거예약 유지(D13)는 Phase 3 로직 그대로(Phase 4에서 변경 없음). **사이드바 미구현 — 병합 시점 일괄 정리 예정** |
 | 5 | ✅ 예약 달력(2026-08-26 구현+실측+main 병합 완료) | 월범위 검증 + 부분인덱스 사용 확인 — EXPLAIN으로 Bitmap Index Scan 실사용 확인 |
 | 6 | ✅ 실장 KPI·예약 통계(2026-08-26 `session-work`에서 구현+실측 완료, **이 세션에서 main 병합**) — 표+차트(D21)+담당실장축 | 빈구간 0 채움 확인 — **전건 실측 완료**(빈 주·무실적 실장·비활성 실장 전부 0/제외 확인, 수동 계산치와 API 응답 전부 일치) |
-| 7 | 계정 관리·감사 로그 | 3역할 CRUD 전부 기록되는지 확인. `AuditLogFilter` 도입 시 RouteMap(14-1절)에 이미 등록된 consultants/procedures POST·PUT 행도 실제로 잡히는지 확인 |
+| 7 | ✅ 계정 관리·감사 로그(2026-08-26 `phase7-users-audit` 워크트리에서 구현+실측 완료, **main 미병합**) | Admin·HospitalManager 실제 쓰기 행위가 `audit_logs`에 기록됨을 curl 23건 + 브라우저 실측 확인(Consultant는 로직상 동일 분기라 코드 보장, 별도 쓰기 실측은 안 함). RouteMap 등록된 consultants POST가 실제로 잡히는 것도 확인(procedures는 동일 컨트롤러 패턴이라 재검증 생략) |
 | 8 | 유입 경로 분석 | 비어드민 접근 차단 실측 |
 | 9 | SEO·보안감사·배포 | 라이브 curl 검증 |
 
@@ -142,5 +142,5 @@
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고)
-- **2026-08-26 (20) — Phase 6 워크트리 → main 병합 + 세션 종료**: Phase 6 세션(신규 구현 → 4번째 구간 추가 → middleware 결함 발견·수정 → 동일 결함 main 직접 반영, 상세는 `docs/session-log.md` (18)·(19) 참고)을 마무리하며 사용자 지시로 `worktree-session-work` 브랜치를 `main`에 최종 병합. `git merge --no-ff` 충돌 7개 파일(`CLAUDE.md`·`docs/session-log.md`·`frontend/app/utils/datetime.ts`·로케일 4개) 전부 수동 해결 — `datetime.ts`는 Phase5의 `getKstToday()`와 Phase6의 `todayKst()`가 서로 다른 용도라 단순 병기, 로케일 4개는 Phase4의 `admin.consultants`/`admin.procedures`와 Phase6의 `admin.kpi`/`admin.stats`가 다른 네임스페이스라 합집합 병합(205키 4파일 동일 확인), `CLAUDE.md`·`session-log.md`는 두 세션이 각자 (16)~(18) 번호를 독립적으로 붙여 충돌한 것을 시간순으로 재번호(Phase6 쪽을 (18)·(19)로 이동, 이 항목을 (20)으로). 코드(`design.md`·`types/reservation.ts` 등)는 전부 자동 병합. 병합 후 `dotnet build`·`npm run build` 재검증 + 워크트리·브랜치 삭제로 세션 종료.
+- **2026-08-26 (21) — Phase 7(계정 관리·감사 로그) 워크트리 구현+실측**: `phase7-users-audit` 워크트리(main 대비 격리, 병합은 미진행)에서 구현. 백엔드 — `AdminUsersController`(계정 발급/역할변경/정지, 자기자신 조작 차단 + 역할변경·정지 시 RT 전량폐기), `AdminAuditLogsController`(actorId/entityType/action/from/to/search 필터), 전역 `AuditLogFilter`(14-1절 RouteMap, `AccountStateFilter` 뒤에 등록). 프론트 — `/admin/users`·`/admin/audit-logs` 신규 페이지, 4개 로케일 키 추가(250키 동일성 node로 검증). **실측 중 실제 버그 발견·수정**: `AuditLogFilter`가 `next()` 직후 `HttpContext.Response.StatusCode`를 읽어 400 응답을 200으로 오기록(design.md·admin-panel-pattern-reference.md 원문 패턴 자체의 결함, 위 주의사항 참고) — `IStatusCodeActionResult`로 수정 후 재검증. 격리 포트(`.env`·`docker-compose.override.yml`, 둘 다 gitignored)로 별도 스택 기동해 curl 23건(계정 CRUD·중복이메일 400·자기자신차단 400·3역할 접근권한·정지 즉시반영·역할변경 세션무효화·감사로그 필터 3종) + 브라우저 실측(라벨·SSR프리로드·생성/수정 폼 실동작)까지 전부 통과. 커밋은 이 브랜치에만, main 병합은 사용자 지시 대기.
 
