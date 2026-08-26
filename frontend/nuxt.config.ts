@@ -12,6 +12,11 @@ export default defineNuxtConfig({
 
   app: {
     head: {
+      link: [
+        // M10 — favicon.png(32x32) 명시 등록. 기존 favicon.ico는 그대로 두되(구형 브라우저 폴백),
+        // 이 <link>가 있으면 최신 브라우저는 이쪽을 우선한다.
+        { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+      ],
       script: [
         {
           // 5-3절 — detectBrowserLanguage(5-2절)를 끈 대신, 자동 감지는 <head> 동기 인라인

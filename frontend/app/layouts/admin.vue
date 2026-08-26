@@ -1,7 +1,10 @@
 <template>
   <div class="min-h-screen bg-background">
     <header class="flex items-center justify-between border-b bg-card px-6 py-3">
-      <span class="font-semibold text-foreground">{{ t('common.appName') }} Admin</span>
+      <div class="flex items-center gap-2">
+        <img src="/logo.svg" :alt="t('common.appName')" class="h-5 w-auto">
+        <span class="font-semibold text-foreground">Admin</span>
+      </div>
       <div v-if="user" class="flex items-center gap-3 text-sm text-muted-foreground">
         <span>{{ user.name }} · {{ user.role }}</span>
         <Button variant="outline" size="sm" @click="logout">{{ t('admin.common.logout') }}</Button>
