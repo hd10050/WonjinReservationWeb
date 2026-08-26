@@ -5,7 +5,7 @@
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원
 - 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~8 전부 main 병합 완료**(2026-08-26). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제)·Phase 4(실장·시술 관리 CRUD, Phase 3 미해결 이슈 2건도 함께 해소)·Phase 5(예약 달력)·Phase 6(실장 KPI·예약 통계, 표+차트 D21, 담당 실장 축 포함)·Phase 7(계정 CRUD + 전역 `AuditLogFilter` + `/admin/users`·`/admin/audit-logs`)·Phase 8(유입 경로 분석, `/admin/referrals` 어드민 전용)까지 진행. **사이드바 네비게이션(12-3절)은 각 Phase가 개별 구현하지 않고 병합 시점에 한 번에 정리하기로 사용자 결정**(2026-08-26) — 그 전까지 `/admin/consultants`·`/admin/procedures`·`/admin/calendar`·`/admin/kpi`·`/admin/stats`·`/admin/referrals`·`/admin/users`·`/admin/audit-logs`는 URL 직접 접근으로만 확인 가능. Phase 9부터는 사용자 지시 대기
+- 현재 상태: **Phase 1~8 전부 main 병합 완료 + 인프라 실배포 완료**(2026-08-26). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제)·Phase 4(실장·시술 관리 CRUD, Phase 3 미해결 이슈 2건도 함께 해소)·Phase 5(예약 달력)·Phase 6(실장 KPI·예약 통계, 표+차트 D21, 담당 실장 축 포함)·Phase 7(계정 CRUD + 전역 `AuditLogFilter` + `/admin/users`·`/admin/audit-logs`)·Phase 8(유입 경로 분석, `/admin/referrals` 어드민 전용)까지 진행. **프론트 Cloudflare Workers(`wonjinreservationweb.hd1005019.workers.dev`)·백엔드+DB Render(`wonjinreservationweb.onrender.com`) 실배포 완료**(2026-08-26). **사이드바 네비게이션(12-3절)은 각 Phase가 개별 구현하지 않고 병합 시점에 한 번에 정리하기로 사용자 결정**(2026-08-26) — 그 전까지 `/admin/consultants`·`/admin/procedures`·`/admin/calendar`·`/admin/kpi`·`/admin/stats`·`/admin/referrals`·`/admin/users`·`/admin/audit-logs`는 URL 직접 접근으로만 확인 가능. Phase 9(SEO·보안감사)부터는 사용자 지시 대기
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -18,7 +18,7 @@
 | 팔레트 | **Olive Garden Feast**(D20) — `#606C38`올리브(primary)·`#283618`짙은산림녹(foreground)·`#FEFAE0`크림(background)·`#DDA15E`탄(secondary)·`#BC6C25`번트오렌지(destructive), OKLCH 변환 후 shadcn CSS 변수에 적용 |
 | 시각화 | **vue-chartjs**(`^5.3.x`) + **chart.js**(`^4.5.x`)(D21) — 실장 KPI·예약 통계 표+차트 병행. Canvas 기반이라 SSR 불가, `<ClientOnly>` 필수. Chart.js 요소 등록은 `plugins/chartjs.client.ts` 한 곳에 집중 |
 | 언어 버전 고정 | **TypeScript 5.9.3 고정**(devDependency) — 7.x(네이티브 재작성판)는 `@vue/compiler-sfc`의 `ts.sys` 타입 해석과 비호환이라 reka-ui 기반 shadcn 컴포넌트 컴파일이 깨짐(11-7절) |
-| 배포 | 프론트 Cloudflare Workers / 백엔드·DB Render |
+| 배포 | 프론트 Cloudflare Workers(nitro `cloudflare_module`+`frontend/wrangler.toml`) / 백엔드·DB Render — **2026-08-26 실배포 완료** |
 | 로컬 | `docker compose up` — frontend:3700 / api:5200 / postgres:5435 |
 
 ## 확정 설계 결정 (2026-08-25 · 상세는 `docs/design.md` 2장)
@@ -98,6 +98,9 @@
 - 🔴 **Npgsql에 `timestamptz` 비교용 `DateTimeOffset`을 넘길 때 Offset은 반드시 0(UTC)이어야 함** — `TimeZoneInfo.ConvertTime(...)`으로 만든 KST(+09:00) 오프셋 `DateTimeOffset`을 쿼리 파라미터로 그대로 쓰면 `Cannot write DateTimeOffset with Offset=09:00:00 ... only offset 0 (UTC) is supported` 500(실측 확인). KST로 년/월만 뽑고 나면 반드시 `.ToUniversalTime()`을 거쳐서 쿼리에 넘길 것
 - 🔴 **`audit_logs`는 컨트롤러에서 직접 쓰지 말 것 — 전역 `AuditLogFilter`(Phase 7) 전용**(14장, `AuditLog.cs`·`Program.cs` 주석과 동일). Phase 3에서 `SoftDelete`에만 예외적으로 `db.AuditLogs.Add(...)`를 넣었던 것이 14장 원문 위반이자 6개 쓰기 액션 중 하나만 특별 대우하는 비일관 상태였음 — **Phase 4에서 제거 완료**(`reservation_logs` 삭제 기록·204 응답은 그대로 유지, curl로 `audit_logs` 행 수 불변 확인). Phase 7 전까지는 6개 쓰기 액션 전부 audit_logs 공백으로 일관됨(의도된 임시 상태)
 - **다중 role 컨트롤러에 쓰기 액션을 추가할 때는 액션 레벨 `[Authorize]`로 다시 좁힐 것(6-3절 원칙 1, Phase 4 실측)** — `AdminConsultantsController`·`AdminProceduresController`는 GET을 Consultant도 써야 해서(실장 재배정·시술선택 드롭다운) 클래스 레벨을 `Admin,HospitalManager,Consultant`로 열어뒀다. 여기에 POST/PUT을 그냥 추가하면 11-3절 "HospitalManager 이상" 요구와 달리 Consultant도 쓰기가 가능해진다 — 액션마다 `[Authorize(Roles="Admin,HospitalManager")]`를 다시 걸어야 한다. 실제 로그인으로 Admin·HospitalManager 200 / Consultant 403 / 익명 401 전부 실측 확인(Phase 5·6에서 같은 패턴의 컨트롤러를 열 때도 동일 점검 필요)
+- **Render Internal/External Database URL은 `postgresql://user:pass@host/db` 형식** — Npgsql `ConnectionStrings__DefaultConnection`은 `Host=...;Port=...;Database=...;Username=...;Password=...` 키=값 형식이 필요해 직접 변환해야 함(2026-08-26 실배포로 확인)
+- **Cloudflare Workers 배포는 `nuxt.config.ts`에 `nitro.preset: 'cloudflare_module'` 필수** — 없으면 `wrangler.toml`의 `main`이 가리키는 `.output/server/index.mjs` 자체가 안 만들어짐. `frontend/wrangler.toml`의 `[vars]`는 평문으로 git에 커밋되므로 `NUXT_INTERNAL_SECRET` 같은 진짜 시크릿은 넣지 말고 `npx wrangler secret put`으로 별도 등록
+- **Cloudflare Workers Builds(Git 연동)의 `npm ci`는 `package-lock.json`이 `package.json`과 조금이라도 어긋나면 즉시 실패** — nuxt 내부 의존 트리 변경(eslint 계열)만으로도 락파일이 stale해질 수 있음. `npx npm@10.9.2 install`로 재생성(74번째 줄 npm 버전 고정 원칙과 동일 이유) 후 커밋 필수(2026-08-26 실배포 중 실제 발생)
 
 ## 절대 원칙 이행 (루트 CLAUDE.md)
 - **화면 깜빡임 금지** — 데이터 페이지는 `<script setup>` 최상위 `await useApi(...)` SSR 프리로드. `onMounted`+client fetch 금지. 전환 오버레이는 `<Transition>` 금지, 항상 마운트 + `pointer-events`를 상태값에 직접 클래스 바인딩
@@ -123,7 +126,7 @@
 | 6 | ✅ 실장 KPI·예약 통계(2026-08-26 `session-work`에서 구현+실측 완료, **이 세션에서 main 병합**) — 표+차트(D21)+담당실장축 | 빈구간 0 채움 확인 — **전건 실측 완료**(빈 주·무실적 실장·비활성 실장 전부 0/제외 확인, 수동 계산치와 API 응답 전부 일치) |
 | 7 | ✅ 계정 관리·감사 로그(2026-08-26 `phase7-users-audit` 워크트리에서 구현+실측+미작업분 점검 **전건 완료**, main 병합 완료) | **3역할(Admin·HospitalManager·Consultant) 전부** 실제 쓰기 행위가 `audit_logs`에 정확히 기록됨을 curl+동시성 20건(200/400/500 전 상태코드 정확 기록)+브라우저 실측(JS 레벨 confirm() 오버라이드로 실제 클릭 이벤트 경로 확인 — 확인 시 PATCH 실행·화면 반영, 취소 시 PATCH 자체가 안 나가고 화면 불변까지 둘 다 확인)으로 전부 통과. RouteMap 등록 액션(notes/status/consultants create) 정확 분류 확인. 16장 체크리스트 재대조로 정지 확인 UI 누락·500 시 감사로그 유실 2건 발견·수정. **부가 발견(임의 수정 안 함, TODO 등록)**: `PATCH /{id}/consultant`(실장 배정)가 design.md 14-1절 RouteMap 표 자체에 없어 일반 `update`로 뭉뚱그려 기록됨 |
 | 8 | ✅ 유입 경로 분석(2026-08-26 구현+실측+main 병합 완료) | 비어드민 접근 차단 실측 — **완료**: curl 4종(Admin 200 / HospitalManager 403 / Consultant 403 / 익명 401) + 빈 결과 `200 []`·`to<from` 400 + 브라우저 3역할 전건(Admin만 진입, 나머지 `/admin` 리다이렉트) 확인 |
-| 9 | SEO·보안감사·배포 | 라이브 curl 검증 |
+| 9 | SEO·보안감사·배포 | 라이브 curl 검증 — **인프라 배포는 2026-08-26 완료**(Cloudflare Workers+Render), SEO·보안감사는 미착수 |
 
 ## 미결정 (상세: `docs/design.md` 20장)
 - [ ] **M12 OG 공유 이미지** — 현재 로고(`favicon.png` 32×32, `logo.svg`)는 소셜 미리보기용으로 부적합(해상도 낮음·SVG 다수 플랫폼 미지원). 1200×630 권장 PNG/JPG 별도 제작 필요, Phase 9
@@ -143,5 +146,4 @@
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고)
-- **2026-08-26 (23) — Phase 7 워크트리 → main 병합 + 세션 종료**: Phase 7(계정 관리·감사 로그) 세션(구현 → 미작업분 점검 1·2라운드, 상세는 `docs/session-log.md` (22) 참고 — `AuditLogFilter` 상태코드 조기판독·`ChangeTracker` 오염 2대 버그 발견·수정, Consultant 감사기록·confirm UI 실측 완료)을 마무리하며 사용자 지시로 `phase7-users-audit` 브랜치를 `main`에 최종 병합. `git merge --no-ff` 충돌 2개 파일(`CLAUDE.md`·`frontend/app/types/reservation.ts`) 수동 해결 — `types/reservation.ts`는 Phase8의 `ReferralStat`과 Phase7의 `AdminUser`/`AuditLogEntry`가 서로 다른 타입이라 단순 병기, `CLAUDE.md`는 두 세션이 각자 (21) 번호를 독립적으로 붙여 충돌한 것을 시간순 재번호(Phase8 (21)·Phase7 (22)로 `session-log.md` 이동, 이 항목을 (23)으로) + TODO/Phase표에 실장배정 RouteMap 미등록 항목 반영. `docs/session-log.md`·로케일 4개는 전부 자동 병합. 병합 후 `dotnet build`·`npm run build` 재검증 + 워크트리·브랜치 삭제로 세션 종료.
-
+- **2026-08-26 (24) — Cloudflare Workers + Render 실배포 완료**: 하네스 검증(루트 `.claude/settings.json`의 PostToolUse·PreToolUse 훅, `WebProject\memory\MEMORY.md` 경로 전부 정상 로드 확인) 후 배포 진행. Render는 완전 신규 — PostgreSQL·API Web Service 생성 지원하며 Internal Database URL(`postgresql://` 형식)을 Npgsql 키=값 형식(`Host=...;Port=...;Database=...;Username=...;Password=...`)으로 직접 변환, `Jwt__Secret`·`InternalSecret` 랜덤 시크릿 생성. 프론트는 `nuxt.config.ts`에 `nitro.preset: 'cloudflare_module'` 추가 + `frontend/wrangler.toml` 신규 작성(워커명·`NUXT_API_BASE_INTERNAL`·D7 동일출처 프록시 유지용 빈 `NUXT_PUBLIC_API_BASE`·`NUXT_PUBLIC_SITE_URL` 등록. 진짜 시크릿 `NUXT_INTERNAL_SECRET`은 `[vars]`에 평문 커밋되는 걸 피하려 `wrangler secret put`으로 분리). **Cloudflare Workers Builds(Git 연동) 1차 배포가 `npm ci`에서 실패** — `package.json`↔`package-lock.json` 불일치(eslint 의존 트리가 락파일에서 누락, 직접 의존성엔 없는데도 nuxt 내부 트리 변경만으로 stale해짐) → `npx npm@10.9.2 install`로 재생성(CLAUDE.md 74번째 줄 npm 버전 고정 원칙과 동일 이유), 로컬 `npm run build`로 `cloudflare_module` 빌드 성공 확인 후 커밋(`6c81175`)·push. 재배포로 프론트·백엔드·DB 전부 배포 완료(사용자 확인). **세션 종료 시점에 다른 세션이 `phase7-users-audit`→`main` 병합을 동시 진행 중인 것을 발견**(`CLAUDE.md`·`types/reservation.ts` 충돌 mid-resolution) — 병합 주체를 확인 없이 임의로 커밋하지 않고 사용자에게 상태를 보고·확인 후 그대로 완료되길 대기, 이 세션은 배포 커밋만 별도로 관리해 병합과 섞이지 않게 함.
