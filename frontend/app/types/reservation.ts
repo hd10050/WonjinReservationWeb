@@ -86,6 +86,7 @@ export interface ConsultantLookup {
 
 export interface ProcedureLookup {
   id: number
+  code: string
   nameZhCn: string
   nameZhTw: string
   nameEn: string

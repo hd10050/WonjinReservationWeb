@@ -88,6 +88,42 @@
       "cancelReasonPlaceholder": "Enter the reason for cancellation",
       "deleteReservation": "Delete Reservation",
       "deleteConfirm": "Delete this reservation? It will be excluded from the list afterward."
+    },
+    "consultants": {
+      "title": "Consultants",
+      "addButton": "Add Consultant",
+      "includeInactive": "Include inactive",
+      "colName": "Name",
+      "colSortOrder": "Sort Order",
+      "colActive": "Status",
+      "activeLabel": "Active",
+      "inactiveLabel": "Inactive",
+      "edit": "Edit",
+      "empty": "No consultants registered.",
+      "formTitleCreate": "Add Consultant",
+      "formTitleEdit": "Edit Consultant",
+      "formNameLabel": "Consultant Name",
+      "formSortOrderLabel": "Sort Order",
+      "formActiveLabel": "Active"
+    },
+    "procedures": {
+      "title": "Procedures",
+      "addButton": "Add Procedure",
+      "includeInactive": "Include inactive",
+      "colCode": "Code",
+      "colName": "Procedure Name",
+      "colSortOrder": "Sort Order",
+      "colActive": "Status",
+      "activeLabel": "Active",
+      "inactiveLabel": "Inactive",
+      "edit": "Edit",
+      "empty": "No procedures registered.",
+      "formTitleCreate": "Add Procedure",
+      "formTitleEdit": "Edit Procedure",
+      "formCodeLabel": "Procedure Code",
+      "formNameLabel": "Procedure Name",
+      "formSortOrderLabel": "Sort Order",
+      "formActiveLabel": "Active"
     }
   },
   "landing": {
@@ -166,6 +202,7 @@
     "CANCEL_REASON_REQUIRED": "Please enter a cancellation reason.",
     "INVALID_DEPOSIT_CURRENCY": "Invalid deposit currency.",
     "INVALID_PROCEDURE_IDS": "One or more selected procedures do not exist.",
+    "PROCEDURE_CODE_DUPLICATE": "This procedure code is already in use.",
     "INTERNAL_ERROR": "A temporary server error occurred. Please try again in a moment.",
     "UNKNOWN": "An unknown error occurred."
   }

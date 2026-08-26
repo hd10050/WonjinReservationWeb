@@ -898,7 +898,7 @@ public record PagedResult<T>(IEnumerable<T> Items, int Total, int Page, int Page
 |---|---|---|---|
 | 메서드 | 경로 | 권한 | 비고 |
 |---|---|---|---|
-| GET | `/api/admin/reservations` | 전 역할 | 필터: `status`, `consultantId`, `from`, `to`, `search`, `includeInactive` / 정렬: `created_at DESC` |
+| GET | `/api/admin/reservations` | 전 역할 | 필터: `status`, `consultantId`, `from`, `to`, `search` / 정렬: `created_at DESC` |
 | GET | `/api/admin/reservations/summary` | 전 역할 | 상단 4개 카드 — 조건부 집계 1회(아래) |
 | GET | `/api/admin/reservations/calendar` | 전 역할 | `year`·`month` 필수, **최대 1개월 범위 검증**(무제한 범위 조회 차단). `status IN ('Confirmed','Visited')` |
 | GET | `/api/admin/reservations/{id:int}` | 전 역할 | 상세 + 시술 + 상담 기록 + 처리 이력 |
@@ -909,6 +909,8 @@ public record PagedResult<T>(IEnumerable<T> Items, int Total, int Page, int Page
 | PATCH | `/api/admin/reservations/{id:int}/notes/{noteId:int}` | 작성자 본인, Admin | 상담 기록 수정. 삭제 엔드포인트는 만들지 않는다 |
 | DELETE | `/api/admin/reservations/{id:int}` | Consultant, Admin | **소프트 삭제**(D15) — 상담 기록 0건일 때만. 미배정이어도 허용(D17) |
 
+> **`includeInactive`는 이 엔드포인트에 없다(Phase 4 재확인, 이전 버전 문서의 표기 오류를 정정).** 8-4절·12-4절의 "비활성 실장 포함" 대시보드 필터는 `/api/admin/consultants?includeInactive=`(11-3절)만으로 이미 완전히 구현된다 — 담당 실장 필터 드롭다운에 비활성 실장을 노출할지 여부만 결정하면 되고, `consultantId`로 특정 실장을 선택해 조회하는 동작 자체는 그 실장의 활성 상태와 무관하게 항상 동작하기 때문이다. 이 엔드포인트에 별도 파라미터를 추가할 필요가 없다(Phase 3 재감사 미해결 이슈② — 실제 구현을 근거로 종결).
+>
 > 🔴 **라우트 파라미터에 `{id:int}` 제약을 반드시 붙이고, 고정 경로(`summary`·`calendar`)를 `{id}` 라우트보다 먼저 선언한다.** 제약이 없으면 ASP.NET Core가 `/api/admin/reservations/summary`의 `"summary"`를 `{id}`로 매칭하려다 실패해 **대시보드 첫 화면이 뜨지 않는다.** 경로를 추가할 때마다 "이 고정 세그먼트가 `{id}`와 겹치지 않는가"를 확인할 것.
 >
 > **담당 실장 배정을 `PATCH /{id}`에 섞지 않고 전용 경로로 분리한 이유**(D17): 배정은 ①미배정 상태에서도 허용되는 **유일한 쓰기**이고 ②처리 이력 기록이 **필수**다. 일반 저장과 한 엔드포인트에 두면 "미배정이면 차단" 규칙과 "배정은 허용" 규칙이 같은 핸들러 안에서 충돌해, 조건문이 꼬이면서 차단이 뚫리기 쉽다.

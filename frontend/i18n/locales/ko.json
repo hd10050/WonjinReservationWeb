@@ -88,6 +88,42 @@
       "cancelReasonPlaceholder": "취소 사유를 입력하세요",
       "deleteReservation": "예약 삭제",
       "deleteConfirm": "이 예약을 삭제하시겠습니까? 삭제 후에는 목록에서 제외됩니다."
+    },
+    "consultants": {
+      "title": "실장 관리",
+      "addButton": "실장 추가",
+      "includeInactive": "비활성 포함 보기",
+      "colName": "이름",
+      "colSortOrder": "정렬순서",
+      "colActive": "상태",
+      "activeLabel": "활성",
+      "inactiveLabel": "비활성",
+      "edit": "수정",
+      "empty": "등록된 실장이 없습니다.",
+      "formTitleCreate": "실장 추가",
+      "formTitleEdit": "실장 수정",
+      "formNameLabel": "실장 이름",
+      "formSortOrderLabel": "정렬순서",
+      "formActiveLabel": "활성 상태"
+    },
+    "procedures": {
+      "title": "시술·수술 관리",
+      "addButton": "시술 추가",
+      "includeInactive": "비활성 포함 보기",
+      "colCode": "코드",
+      "colName": "시술명",
+      "colSortOrder": "정렬순서",
+      "colActive": "상태",
+      "activeLabel": "활성",
+      "inactiveLabel": "비활성",
+      "edit": "수정",
+      "empty": "등록된 시술이 없습니다.",
+      "formTitleCreate": "시술 추가",
+      "formTitleEdit": "시술 수정",
+      "formCodeLabel": "시술 코드",
+      "formNameLabel": "시술명",
+      "formSortOrderLabel": "정렬순서",
+      "formActiveLabel": "활성 상태"
     }
   },
   "landing": {
@@ -166,6 +202,7 @@
     "CANCEL_REASON_REQUIRED": "취소 사유를 입력하세요.",
     "INVALID_DEPOSIT_CURRENCY": "예약금 통화가 올바르지 않습니다.",
     "INVALID_PROCEDURE_IDS": "존재하지 않는 시술이 포함되어 있습니다.",
+    "PROCEDURE_CODE_DUPLICATE": "이미 사용 중인 시술 코드입니다.",
     "INTERNAL_ERROR": "서버에 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
     "UNKNOWN": "알 수 없는 오류가 발생했습니다."
   }

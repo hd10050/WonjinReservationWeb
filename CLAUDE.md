@@ -5,7 +5,7 @@
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원
 - 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~3 구현 완료, main 병합 완료**(2026-08-26). Phase 1(인증)·Phase 2(랜딩+예약폼+유입경로)·Phase 3(예약 대시보드·상세·상담기록·상태머신·소프트삭제, `session-work` 워크트리에서 구현+3차 감사 후 병합)까지 진행. **Phase 3 설계서 대비 최종 감사에서 미해결 이슈 2건 발견 — 아래 TODO 참고**. Phase 4부터는 사용자 지시 대기
+- 현재 상태: **Phase 1~3 구현 완료·main 병합 완료**(2026-08-26). **Phase 4(실장·시술 관리 CRUD) 구현+실측 완료**(2026-08-26) — 단 **워크트리 브랜치 `worktree-phase4-consultants-procedures`에 커밋 완료 상태이며 main 미병합, 병합은 사용자 지시 대기**. 동시에 Phase 5(예약 달력)·Phase 6(실장 KPI·예약 통계)이 각각 별도 워크트리에서 병렬 진행 중 — 3개 브랜치 병합 시 `frontend/i18n/locales/*.json` 4파일과 `layouts/admin.vue`(현재 사이드바 없음, 로고+로그아웃 헤더만)가 충돌 가능 지점. Phase 7부터는 사용자 지시 대기
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -91,7 +91,8 @@
 - **honeypot 필드가 채워진 요청은 400이 아니라 200으로 조용히 흘려보내고 DB에 저장하지 않을 것** — 실패 응답을 주면 봇이 실패 패턴을 학습해 우회를 시도할 여지를 준다(11-1절)
 - 🔴 **한 요청 안에서 `ExecuteUpdateAsync`/`ExecuteDeleteAsync`를 여러 번 쓰거나 그 뒤에 별도 `SaveChangesAsync`로 로그를 남긴다면 반드시 `BeginTransactionAsync()`로 묶을 것** — 묶지 않으면 앞 단계들은 각각 즉시 커밋되고 마지막 단계만 실패해도 "응답은 500인데 일부 변경은 이미 반영된" 부분 커밋이 된다(실측 확인 — `UpdateReservation`에 존재하지 않는 `procedureId`를 보내면 스칼라 필드·자동 Confirmed 전이는 저장되고 시술 목록만 삭제된 채 로그 없이 500이 났음). `audit_logs`처럼 "실패해도 본 작업을 막으면 안 되는" 부가 기록만 트랜잭션 밖에서 별도 try/catch로 베스트에포트 처리
 - 🔴 **Npgsql에 `timestamptz` 비교용 `DateTimeOffset`을 넘길 때 Offset은 반드시 0(UTC)이어야 함** — `TimeZoneInfo.ConvertTime(...)`으로 만든 KST(+09:00) 오프셋 `DateTimeOffset`을 쿼리 파라미터로 그대로 쓰면 `Cannot write DateTimeOffset with Offset=09:00:00 ... only offset 0 (UTC) is supported` 500(실측 확인). KST로 년/월만 뽑고 나면 반드시 `.ToUniversalTime()`을 거쳐서 쿼리에 넘길 것
-- 🔴 **`audit_logs`는 컨트롤러에서 직접 쓰지 말 것 — 전역 `AuditLogFilter`(Phase 7) 전용**(14장 "컨트롤러마다 로그 저장 코드를 넣지 않는다", `AuditLog.cs`·`Program.cs` 자체 주석도 동일하게 명시). Phase 3 재감사에서 16장 "감사로그 실패격리" 취지로 `SoftDelete`에만 예외적으로 `db.AuditLogs.Add(...)`를 추가했다가, 최종 감사에서 이게 14장 원문 위반이고 6개 쓰기 액션 중 하나만 특별 대우하는 비일관 상태라는 걸 발견(미수정 상태로 병합 — 아래 TODO)
+- 🔴 **`audit_logs`는 컨트롤러에서 직접 쓰지 말 것 — 전역 `AuditLogFilter`(Phase 7) 전용**(14장, `AuditLog.cs`·`Program.cs` 주석과 동일). Phase 3에서 `SoftDelete`에만 예외적으로 `db.AuditLogs.Add(...)`를 넣었던 것이 14장 원문 위반이자 6개 쓰기 액션 중 하나만 특별 대우하는 비일관 상태였음 — **Phase 4에서 제거 완료**(`reservation_logs` 삭제 기록·204 응답은 그대로 유지, curl로 `audit_logs` 행 수 불변 확인). Phase 7 전까지는 6개 쓰기 액션 전부 audit_logs 공백으로 일관됨(의도된 임시 상태)
+- **다중 role 컨트롤러에 쓰기 액션을 추가할 때는 액션 레벨 `[Authorize]`로 다시 좁힐 것(6-3절 원칙 1, Phase 4 실측)** — `AdminConsultantsController`·`AdminProceduresController`는 GET을 Consultant도 써야 해서(실장 재배정·시술선택 드롭다운) 클래스 레벨을 `Admin,HospitalManager,Consultant`로 열어뒀다. 여기에 POST/PUT을 그냥 추가하면 11-3절 "HospitalManager 이상" 요구와 달리 Consultant도 쓰기가 가능해진다 — 액션마다 `[Authorize(Roles="Admin,HospitalManager")]`를 다시 걸어야 한다. 실제 로그인으로 Admin·HospitalManager 200 / Consultant 403 / 익명 401 전부 실측 확인(Phase 5·6에서 같은 패턴의 컨트롤러를 열 때도 동일 점검 필요)
 
 ## 절대 원칙 이행 (루트 CLAUDE.md)
 - **화면 깜빡임 금지** — 데이터 페이지는 `<script setup>` 최상위 `await useApi(...)` SSR 프리로드. `onMounted`+client fetch 금지. 전환 오버레이는 `<Transition>` 금지, 항상 마운트 + `pointer-events`를 상태값에 직접 클래스 바인딩
@@ -102,11 +103,8 @@
 
 ## TODO
 ### 다음 세션 최우선
-- [ ] **🔴 Phase 3 최종 감사 미해결 이슈 2건 판단 필요**(2026-08-26 발견, 의도적으로 미수정) — ①`AdminReservationsController.SoftDelete`가 `audit_logs`를 컨트롤러에서 직접 기록(위 주의사항 참고 — 제거하고 Phase 7 `AuditLogFilter`까지 대기 권장) ②`GET /api/admin/reservations` 목록 API에 `includeInactive` 파라미터 없음 — design.md 11-2절 표는 이 엔드포인트 자체의 필터로 명시하나 8-4절은 "필터 드롭다운" 의미로도 읽혀, 실제로는 실장 룩업 API(`AdminConsultantsController`)에만 구현함(문서 내 두 절이 서로 다르게 읽힘 — 최종 해석 확정 필요)
-- [ ] **테스트 데이터 처리 여부 결정** — `test-admin@wonjin.local`(Phase1) + `test-manager@wonjin.local`·`test-consultant@wonjin.local`(Phase3, 동일 비번 `TestPassword123!`) 계정 3개 + 실장 2명(`김테스트`·`박테스트`) + 시술 1개(`test_botox`), 전부 DB 직접 INSERT. 운영 데이터 아님 — Phase 4(실장·시술 관리 화면 완성 후) 사용자 확인 대기
-- [ ] **로컬 DB 테스트 더미 예약 정리 여부 확인** — Phase 2 실측 검증 중 생성된 더미 `reservations` 약 30건이 로컬 dev DB에 남아있음. 실서비스 데이터 아님
-- [ ] **관리자 헤더 로고(`layouts/admin.vue`) 시각 미검증** — 코드는 배포됨(빌드 성공 확인)이나 브라우저 자동화 도구의 로그인 클릭이 반응하지 않아 화면 실측은 못 함. 다음 접속 시 육안 확인 권장
-- [ ] **Phase 4 착수 시 참고** — `GET /api/admin/consultants`·`GET /api/admin/procedures`(조회 전용)는 Phase 3에서 배정·시술선택 드롭다운용으로 이미 추가됨. Phase 4는 POST/PUT(등록·수정·비활성화)만 추가하면 됨
+- [ ] **테스트 데이터 처리 여부 결정** — `test-admin@wonjin.local`(현재 DB엔 이 계정 1개만 실존 확인, Phase3 문서상 언급된 manager/consultant 테스트 계정은 현재 DB에 없음) + 실장·시술 테스트 데이터. 운영 데이터 아님 — Phase 4 화면 완성으로 전제조건은 충족됨, 여전히 사용자 확인 대기(나중에 정리)
+- [ ] **로컬 DB 테스트 더미 예약 정리 여부 확인** — Phase 2~4 실측 검증 중 생성된 더미 `reservations`가 로컬 dev DB에 계속 누적 중(30건+). 실서비스 데이터 아님(나중에 정리)
 - [ ] **M11 로그인 시 locale 자동 반영 방식 결정** — 지금은 `PATCH /api/auth/me/locale` 수동 변경만 동작(design.md 20장)
 ### Phase 계획 — 완료기준 포함 (design.md 19장과 동일, 상세 코드는 그쪽 참고)
 | # | 내용 | 완료기준 |
@@ -115,10 +113,10 @@
 | 1 | ✅ 인증 + `AccountStateFilter` + 동일출처 프록시(2026-08-26 완료) | 로그인~정지차단 E2E + 랜딩에서 `/api/auth/me` 미호출 확인(F5) — 전건 실측 검증 완료 |
 | 2 | ✅ 랜딩 4언어 + 예약 폼 + 개인정보 처리방침 + 유입경로 수집(2026-08-26 완료) | 4언어 폼 제출→DB적재+UTM보존 + landing-visit 시크릿없이 404(F11) + 연락희망시각 `time` 저장 확인(D10) — 전건 실측 완료 |
 | 3 | ✅ 예약 대시보드·상세·상담기록 누적·상태머신·소프트삭제(2026-08-26 완료, main 병합 완료) | 상태전이 동시성409 + 코드동시생성 중복없음(F4) + 삭제조건409(D15) + **미배정 400 차단**(D17). 동시성 재현 스크립트 3종(`scripts/phase3-concurrency/`) 전건 통과. **설계서 대비 최종 감사 완료, 미해결 2건은 위 TODO 참고** |
-| 4 | 실장(`consultants`)·시술 관리 | 4언어 탭 CRUD + 비활성실장 배정·KPI 제외/과거예약 유지(D13) |
+| 4 | ✅ 실장(`consultants`)·시술 관리 CRUD(2026-08-26 완료, 브랜치 `worktree-phase4-consultants-procedures` — **main 미병합**) | 4언어 탭 CRUD(시술) + 3역할 권한 매트릭스 실측(Admin·HospitalManager 200 / Consultant 403 / 익명 401) + 비활성 토글·`includeInactive` 필터 브라우저 실측(한중일 텍스트 입력 포함) + 시술 코드 UNIQUE 위반 검증(생성·수정 시 본인 제외) curl 실측. 비활성실장 배정 드롭다운 제외·과거예약 유지(D13)는 Phase 3 로직 그대로(Phase 4에서 변경 없음) |
 | 5 | 예약 달력 | 월범위 검증 + 부분인덱스 사용 확인 |
 | 6 | 실장 KPI·예약 통계 | 빈구간 0 채움 확인 |
-| 7 | 계정 관리·감사 로그 | 3역할 CRUD 전부 기록되는지 확인. **`AuditLogFilter` 도입 시 위 TODO 미해결 이슈①도 같이 정리할 것** |
+| 7 | 계정 관리·감사 로그 | 3역할 CRUD 전부 기록되는지 확인. `AuditLogFilter` 도입 시 RouteMap(14-1절)에 이미 등록된 consultants/procedures POST·PUT 행도 실제로 잡히는지 확인 |
 | 8 | 유입 경로 분석 | 비어드민 접근 차단 실측 |
 | 9 | SEO·보안감사·배포 | 라이브 curl 검증 |
 
@@ -141,5 +139,5 @@
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고)
-- **2026-08-26 (15) — Phase 3 설계서 대비 최종 감사 + Phase 2·3 main 병합 + 세션 정리**: design.md 전문(1~1549줄) 재독 + 구현 파일 전체 재Read + 핵심 심볼 grep 교차검증(`AuditLogs.Add`·`includeInactive`·`ExecuteUpdateAsync`·`CancelReason` 등, 결과 파일이 전부 읽은 목록에 있는지 대조)으로 "설계서에 있는데 구현 안 된 것"만 별도 감사. **실제 DB에 psql 직접 접속해 8-5절 인덱스 5종 실재 확인**(부분 인덱스 `WHERE status IN ('Confirmed','Visited')` 조건까지 일치) — 코드만 보고 판단하지 않음. 신규 미구현 항목은 없었으나 **미해결 이슈 2건 발견**(위 TODO·주의사항 참고, "확인해" 요청이라 의도적으로 미수정): ①`audit_logs` 컨트롤러 직접기록이 14장 원문·자체 코드 주석과 불일치 ②목록 API `includeInactive` 파라미터가 11-2절 문언과 불일치. 이후 `session-work` 브랜치(Phase3 구현·재감사6건·error.vue·전면재감사7건 등 커밋 5개)를 `main`(Phase2 구현 완료 상태)에 병합. **충돌 8개 파일**(`CLAUDE.md`·`api/DTOs/ReservationDto.cs`·`docs/session-log.md`·`frontend/app/error.vue`·로케일 4개)을 전부 수동 해결 — `ReservationDto.cs`는 공개 예약신청 record(Phase2)와 관리자 DTO(Phase3)가 이름 안 겹쳐 단순 연결, 로케일 4개는 `landing.*`/`privacy.*`(Phase2)와 `admin.*`/`status.*`/`errors.*`(Phase3)가 서로 다른 네임스페이스라 합집합으로 병합, `error.vue`는 두 세션이 각각 새로 만든 add/add 충돌이라 design.md 12-1절에 더 충실하고 4언어+관리자경로까지 실측 검증된 Phase3 버전을 채택(Phase2 버전의 `error.*` i18n 키 3개는 다른 곳에서 참조 없음을 grep 확인 후 폐기, `admin.index.welcome` 죽은 키도 함께 정리). 병합 후 `dotnet build`·i18n 4파일 키 대조로 회귀 없음 확인.
+- **2026-08-26 (16) — 워크트리 격리 하에 Phase 3 미해결 이슈 2건 해소 + Phase 4(실장·시술 관리) 구현·실측**: Phase 5·6과 동시 진행 중이라 `worktree-phase4-consultants-procedures` 워크트리에서 격리 작업(main·다른 두 워크트리 미접촉 확인). design.md 전문(1570줄) 재독 후 **이슈①**(SoftDelete의 `audit_logs` 직접기록)은 코드에서 제거(14장 원칙대로 Phase 7 `AuditLogFilter` 대기로 통일). **이슈②**(`includeInactive` 문서 불일치)는 기존 프론트 코드(대시보드가 `/api/admin/consultants?includeInactive=`만으로 "비활성 포함" 필터를 이미 완전히 구현 중인 것을 확인)를 근거로 "이 파라미터는 애초에 필요 없었다"고 판단, design.md 11-2절 표를 정정. Phase 4 구현: `AdminConsultantsController`·`AdminProceduresController`에 POST/PUT 추가(액션 레벨 Authorize로 Consultant 쓰기 차단, 6-3절 원칙 1), 시술 코드 UNIQUE 사전검증(`PROCEDURE_CODE_DUPLICATE`), 프론트 `/admin/consultants`·`/admin/procedures` 신규(시술은 4언어 탭, shadcn Tabs 미도입 상태라 네이티브 버튼+`v-show`로 구현). **실측**: 로컬에 격리된 dotnet/nuxt 프로세스(포트 5257/3710, 다른 두 세션의 공유 docker 스택은 건드리지 않음)로 shared postgres(5535)에 연결해 curl+실제 브라우저로 검증 — 3역할 권한 매트릭스(Admin·HospitalManager 쓰기 200, Consultant 403, 익명 401, 테스트 계정 role을 SQL로 임시 변경 후 원복하는 방식으로 확인) + 한중일 텍스트 실제 입력(curl은 Windows Git Bash UTF-8 인코딩 문제로 실패, 브라우저는 정상 — 도구 특이사항으로 기록) + 중복 코드 에러 메시지 실제 렌더 확인. **실수 1건 자체 발견·즉시 정정**: docs/design.md를 워크트리가 아닌 main 체크아웃 경로에 잘못 편집(사용자 지적으로 발견) — `git diff`로 영향 범위가 그 파일 1개뿐임을 확인 후 `git checkout --`으로 원복, 워크트리 쪽에 동일 수정 재적용. i18n 4파일 171키 동일 확인(node 스크립트 직접 대조). 병합은 미실행 — 사용자 지시 대기.
 

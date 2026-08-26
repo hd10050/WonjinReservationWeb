@@ -88,6 +88,42 @@
       "cancelReasonPlaceholder": "請輸入取消原因",
       "deleteReservation": "刪除預約",
       "deleteConfirm": "確定要刪除此預約嗎？刪除後將從列表中排除。"
+    },
+    "consultants": {
+      "title": "顧問管理",
+      "addButton": "新增顧問",
+      "includeInactive": "包含已停用",
+      "colName": "姓名",
+      "colSortOrder": "排序",
+      "colActive": "狀態",
+      "activeLabel": "啟用",
+      "inactiveLabel": "已停用",
+      "edit": "編輯",
+      "empty": "尚無顧問。",
+      "formTitleCreate": "新增顧問",
+      "formTitleEdit": "編輯顧問",
+      "formNameLabel": "顧問姓名",
+      "formSortOrderLabel": "排序",
+      "formActiveLabel": "啟用狀態"
+    },
+    "procedures": {
+      "title": "療程管理",
+      "addButton": "新增療程",
+      "includeInactive": "包含已停用",
+      "colCode": "編號",
+      "colName": "療程名稱",
+      "colSortOrder": "排序",
+      "colActive": "狀態",
+      "activeLabel": "啟用",
+      "inactiveLabel": "已停用",
+      "edit": "編輯",
+      "empty": "尚無療程。",
+      "formTitleCreate": "新增療程",
+      "formTitleEdit": "編輯療程",
+      "formCodeLabel": "療程編號",
+      "formNameLabel": "療程名稱",
+      "formSortOrderLabel": "排序",
+      "formActiveLabel": "啟用狀態"
     }
   },
   "landing": {
@@ -166,6 +202,7 @@
     "CANCEL_REASON_REQUIRED": "請輸入取消原因。",
     "INVALID_DEPOSIT_CURRENCY": "訂金幣別不正確。",
     "INVALID_PROCEDURE_IDS": "所選項目中包含不存在的項目。",
+    "PROCEDURE_CODE_DUPLICATE": "該療程編號已被使用。",
     "INTERNAL_ERROR": "伺服器發生暫時性錯誤，請稍後再試。",
     "UNKNOWN": "發生未知錯誤。"
   }

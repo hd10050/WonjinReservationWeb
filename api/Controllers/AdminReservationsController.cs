@@ -13,7 +13,7 @@ namespace WonjinApi.Controllers;
 [ApiController]
 [Route("api/admin/reservations")]
 [Authorize(Roles = "Admin,HospitalManager,Consultant")]
-public class AdminReservationsController(AppDbContext db, ILogger<AdminReservationsController> logger) : ControllerBase
+public class AdminReservationsController(AppDbContext db) : ControllerBase
 {
     private static readonly TimeZoneInfo Kst = TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul");
 
@@ -397,32 +397,9 @@ public class AdminReservationsController(AppDbContext db, ILogger<AdminReservati
             await tx.CommitAsync();
         }
 
-        // 🔴 audit_logs는 위 트랜잭션과 의도적으로 분리한 베스트에포트 기록이다 — 삭제 자체(위)는 이미
-        // 커밋 완료됐으므로, 감사 로그 저장이 실패해도 그 실패가 이미 끝난 삭제를 실패로 보이게 하지
-        // 않는다(16장 체크리스트 "감사 로그 저장 실패가 본 작업을 실패시키지 않도록 격리"의 원래 취지 —
-        // reservation_logs처럼 삭제 자체와 함께 롤백돼야 하는 것과는 반대로, 이건 원래도 "실패해도 무방한" 부가 기록).
-        try
-        {
-            var actor = await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => new { u.Email, u.Role }).FirstOrDefaultAsync();
-            db.AuditLogs.Add(new AuditLog
-            {
-                ActorUserId = userId,
-                ActorEmail = actor?.Email ?? "SYSTEM",
-                ActorRole = actor?.Role ?? "",
-                Action = "soft_delete",
-                EntityType = "reservation",
-                EntityId = id.ToString(),
-                Summary = $"예약 #{id} 소프트 삭제(상담 기록 0건)",
-                StatusCode = 204,
-                CreatedAt = now,
-            });
-            await db.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "소프트 삭제 감사 로그 기록 실패: reservationId={ReservationId}", id);
-        }
-
+        // audit_logs는 컨트롤러에서 직접 쓰지 않는다 — 전역 AuditLogFilter(Phase 7) 전용(14장,
+        // AuditLog.cs·Program.cs 주석과 동일). 그 전까지는 다른 5개 쓰기 액션과 마찬가지로
+        // reservation_logs(위)만 남기고 audit_logs는 Phase 7에서 일괄 커버한다.
         return NoContent();
     }
 

@@ -88,6 +88,42 @@
       "cancelReasonPlaceholder": "请输入取消原因",
       "deleteReservation": "删除预约",
       "deleteConfirm": "确定要删除此预约吗？删除后将从列表中排除。"
+    },
+    "consultants": {
+      "title": "顾问管理",
+      "addButton": "添加顾问",
+      "includeInactive": "包含已停用",
+      "colName": "姓名",
+      "colSortOrder": "排序",
+      "colActive": "状态",
+      "activeLabel": "启用",
+      "inactiveLabel": "已停用",
+      "edit": "编辑",
+      "empty": "暂无顾问。",
+      "formTitleCreate": "添加顾问",
+      "formTitleEdit": "编辑顾问",
+      "formNameLabel": "顾问姓名",
+      "formSortOrderLabel": "排序",
+      "formActiveLabel": "启用状态"
+    },
+    "procedures": {
+      "title": "项目管理",
+      "addButton": "添加项目",
+      "includeInactive": "包含已停用",
+      "colCode": "编号",
+      "colName": "项目名称",
+      "colSortOrder": "排序",
+      "colActive": "状态",
+      "activeLabel": "启用",
+      "inactiveLabel": "已停用",
+      "edit": "编辑",
+      "empty": "暂无项目。",
+      "formTitleCreate": "添加项目",
+      "formTitleEdit": "编辑项目",
+      "formCodeLabel": "项目编号",
+      "formNameLabel": "项目名称",
+      "formSortOrderLabel": "排序",
+      "formActiveLabel": "启用状态"
     }
   },
   "landing": {
@@ -166,6 +202,7 @@
     "CANCEL_REASON_REQUIRED": "请输入取消原因。",
     "INVALID_DEPOSIT_CURRENCY": "定金币种不正确。",
     "INVALID_PROCEDURE_IDS": "所选项目中包含不存在的项目。",
+    "PROCEDURE_CODE_DUPLICATE": "该项目编号已被使用。",
     "INTERNAL_ERROR": "服务器发生临时错误，请稍后重试。",
     "UNKNOWN": "发生未知错误。"
   }

@@ -68,8 +68,8 @@ public record AddNoteRequest([Required, MaxLength(2000)] string Body);
 
 public record UpdateNoteRequest([Required, MaxLength(2000)] string Body);
 
-// Phase 4 CRUD 이전 최소 조회 전용 — 배정/시술선택 드롭다운을 채우기 위한 룩업.
+// 배정 드롭다운(예약 상세)·시술 선택 체크박스·Phase 4 관리 화면 목록이 공유하는 룩업 DTO.
 public record ConsultantLookupDto(int Id, string Name, bool IsActive, int SortOrder);
 
 public record ProcedureLookupDto(
-    int Id, string NameZhCn, string NameZhTw, string NameEn, string NameKo, bool IsActive, int SortOrder);
+    int Id, string Code, string NameZhCn, string NameZhTw, string NameEn, string NameKo, bool IsActive, int SortOrder);
