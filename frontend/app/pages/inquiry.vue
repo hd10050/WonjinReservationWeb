@@ -71,7 +71,7 @@
             <TimePicker id="contactTime" v-model="contactTime" :locale="inputLang" :disabled="contactIndifferent" :invalid="errors.contactTime" />
             <p v-if="errors.contactTime" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
             <label class="flex items-center gap-2 text-sm">
-              <Checkbox v-model="contactIndifferent" @update:model-value="onToggleContactIndifferent" />
+              <Checkbox :model-value="contactIndifferent" @update:model-value="onToggleContactIndifferent" />
               {{ t('landing.form.contactTimeIndifferent') }}
             </label>
           </div>
@@ -143,9 +143,11 @@ const wechatId = ref('')
 const contactDate = ref('')
 const contactTime = ref('')
 const contactIndifferent = ref(false)
-// 체크 시 값은 지우기만 한다 — 전송하지 않는다는 사실은 submit()에서 ContactTimeIndifferent 플래그로
-// 표현하고, 필드 자체는 disabled로만 막는다(D26).
+// reka-ui Checkbox는 v-model 대신 :model-value+@update:model-value로 직접 반영한다(다른 커스텀
+// 체크박스 — [id].vue의 toggleProcedure 등 — 와 동일 패턴). 체크 시 값은 지우기만 하고, 전송하지
+// 않는다는 사실은 submit()에서 ContactTimeIndifferent 플래그로 표현한다(D26).
 function onToggleContactIndifferent(checked: boolean | 'indeterminate') {
+  contactIndifferent.value = !!checked
   if (checked) {
     contactDate.value = ''
     contactTime.value = ''
