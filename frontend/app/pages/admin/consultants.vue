@@ -137,17 +137,22 @@ const route = useRoute()
 
 // 6-2절 메뉴 매트릭스로 이미 Admin/HospitalManager만 이 경로에 도달한다(middleware/admin.ts) — 화면 안에서
 // 역할별 버튼을 다시 가릴 필요가 없다. 실제 방어선은 컨트롤러 액션 레벨 Authorize(11-3절).
-const showInactive = ref(false)
-
+//
 // 🔴 검색 입력을 반응형 query에 직접 물리지 말 것(12-4절) — URL 쿼리를 computed로 감싸 제출 시에만 반응.
-// page는 URL 쿼리로(북마크·뒤로가기 지원, index.vue·users.vue와 동일 패턴), includeInactive는 체크박스
-// 즉시 반응(기존 동작 유지) — 값이 바뀌면 아래 watch가 1페이지로 되돌린다.
+// includeInactive도 page와 함께 URL 쿼리로 둔다(로컬 ref + 별도 watch로 "1페이지로 되돌리기"를 하면,
+// ref 변경 시 useApi 쿼리 watcher와 그 watch가 서로 다른 타이밍에 반응해 "이전 페이지 값으로 1번 →
+// 되돌린 1페이지 값으로 1번" 낭비 요청이 실제로 중복 발생한다(실측 확인). 토글을 이 computed
+// getter/setter로 route.query에 직접 반영하면 navigateTo 1회 = 요청 1회로 끝난다.
 const query = computed(() => ({
   page: Number(route.query.page) || 1,
   pageSize: 20,
-  includeInactive: showInactive.value,
+  includeInactive: route.query.includeInactive === '1',
   search: (route.query.search as string) || undefined,
 }))
+const showInactive = computed({
+  get: () => query.value.includeInactive,
+  set: (v: boolean) => navigateTo({ query: { ...route.query, page: 1, includeInactive: v ? '1' : undefined } }),
+})
 
 const { data: consultantsPaged, refresh } = await useApi<PagedResult<ConsultantLookup>>('/api/admin/consultants', { query })
 
@@ -162,8 +167,6 @@ function applySearch() {
 function goPage(p: number) {
   navigateTo({ query: { ...route.query, page: p } })
 }
-// 비활성 포함 토글은 목록 크기가 바뀌므로 현재 페이지가 범위를 벗어날 수 있다 — 1페이지로 되돌린다.
-watch(showInactive, () => { if (page.value !== 1) navigateTo({ query: { ...route.query, page: 1 } }) })
 
 const editingId = ref<number | null>(null)
 const formName = ref('')
