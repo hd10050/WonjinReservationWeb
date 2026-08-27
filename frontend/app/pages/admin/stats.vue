@@ -6,11 +6,11 @@
       <CardContent class="flex flex-wrap items-end gap-4 pt-6">
         <div class="flex flex-col gap-1.5">
           <Label for="f-from">{{ t('admin.stats.filterFrom') }}</Label>
-          <Input id="f-from" v-model="formFrom" type="date" class="w-40" />
+          <DatePicker id="f-from" v-model="formFrom" :locale="inputLang" class="w-40" />
         </div>
         <div class="flex flex-col gap-1.5">
           <Label for="f-to">{{ t('admin.stats.filterTo') }}</Label>
-          <Input id="f-to" v-model="formTo" type="date" class="w-40" />
+          <DatePicker id="f-to" v-model="formTo" :locale="inputLang" class="w-40" />
         </div>
         <Button @click="applyFilters">{{ t('admin.stats.filterApply') }}</Button>
       </CardContent>
@@ -174,6 +174,8 @@ useHead({ title: '예약 통계 | Admin', meta: [{ name: 'robots', content: 'noi
 
 const { t, locale } = useI18n()
 const route = useRoute()
+// layouts/admin.vue가 useOpsLocale()을 이미 호출해 locale이 계정 값으로 맞춰져 있다 — 여기선 재사용만.
+const inputLang = useInputLang()
 
 const defaultFrom = `${todayKst().slice(0, 7)}-01`
 const defaultTo = todayKst()

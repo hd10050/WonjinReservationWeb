@@ -3,7 +3,10 @@
     "appName": "WonJin",
     "save": "保存",
     "cancel": "取消",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "pickDate": "选择日期",
+    "clear": "清除",
+    "fieldRequired": "请填写此项。"
   },
   "admin": {
     "common": {
@@ -26,7 +29,8 @@
       "title": "管理员登录",
       "email": "邮箱",
       "password": "密码",
-      "submit": "登录"
+      "submit": "登录",
+      "invalidEmail": "请输入正确的邮箱地址。"
     },
     "reservations": {
       "title": "预约看板",

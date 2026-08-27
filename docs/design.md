@@ -72,7 +72,7 @@
 | D9 | **시술명은 언어별 컬럼 4개** | `procedures` 테이블에 `name_zh_cn`/`name_zh_tw`/`name_en`/`name_ko`. 조인 없음 + DB 레벨 길이 제약(9장) 확보. 언어 추가 시 마이그레이션 필요(수용) |
 | D10 | **연락 희망 시각은 고객이 직접 입력한다** | 요구사항 2번이 "연락 받고자 하는 시간을 **입력**한다"이므로 `<input type="time">`으로 시각을 그대로 받는다(`time` 컬럼). 초안에서 오전/오후/저녁 4지선다로 바꿨던 것은 **요구되지 않은 임의 변경이라 2026-08-26 철회**했다. 자유 텍스트가 아니라 `time` 타입이므로 언어와 무관하게 해석이 명확하다 |
 | D11 | **~~UI 컴포넌트 라이브러리 미도입~~ → shadcn-vue로 정정(D19)** | 2026-08-26 사용자 지시로 철회. 아래 D19 참고 |
-| D19 | **UI 컴포넌트 라이브러리 = shadcn-vue**(D11 대체, 2026-08-26) | `shadcn-nuxt` 모듈(`npx nuxi module add shadcn-nuxt`)로 통합. 컴포넌트는 npm 의존성이 아니라 `npx shadcn-vue add <name>`으로 소스를 프로젝트에 직접 복사하는 방식(shadcn 고유 철학) — `components/ui/`에 쌓인다. 날짜 입력·예약 달력은 여전히 네이티브/자체 구현 유지(D11의 그 부분은 유효) |
+| D19 | **UI 컴포넌트 라이브러리 = shadcn-vue**(D11 대체, 2026-08-26) | `shadcn-nuxt` 모듈(`npx nuxi module add shadcn-nuxt`)로 통합. 컴포넌트는 npm 의존성이 아니라 `npx shadcn-vue add <name>`으로 소스를 프로젝트에 직접 복사하는 방식(shadcn 고유 철학) — `components/ui/`에 쌓인다. 날짜 입력은 D23으로 대체(커스텀 DatePicker/TimePicker) — 예약 달력은 여전히 자체 구현 유지 |
 | D20 | **브랜드 팔레트 = "Olive Garden Feast"**(coolors.co 트렌딩, 9.76만 좋아요, 2026-08-26 확정) | `#606C38`(올리브, primary) · `#283618`(짙은 산림녹, foreground/dark) · `#FEFAE0`(따뜻한 크림, background) · `#DDA15E`(탄, secondary accent) · `#BC6C25`(번트오렌지, 강조/경고). `reservation-desk_1.html`의 팔레트(딥틸 #0B6152 계열)를 **대체**한다 — 참고 화면은 레이아웃·톤(세리프 헤딩, 4개 상태 카드 등)만 채택하고 색상 자체는 이 팔레트로 새로 정의 |
 | D12 | **예약금 통화는 CNY / KRW 선택, 기본값 CNY** | 실장이 실제로 받은 통화를 그대로 기록한다. **환율 환산은 하지 않는다** — 환산하려면 "언제 시점의 환율인가"를 정하고 환율 소스를 붙여야 하는데, 입금 시점과 조회 시점 환율이 달라 금액이 계속 변하는 지표가 되기 때문. 나중에 통계에 예약금 합계를 넣게 되면 **통화별로 분리 집계**하고 서로 다른 통화를 절대 합산하지 않는다 |
 | D13 | **실장은 하드 삭제 불가 — `is_active=false` 비활성화만** | 삭제하면 그 실장이 담당했던 과거 예약의 담당자 정보와 KPI 이력이 통째로 사라진다. 비활성 실장은 **신규 배정 드롭다운·실장 KPI·예약 통계에서 제외**되지만, 이미 그 실장이 담당한 예약의 상세 화면과 처리 이력에는 이름이 그대로 남는다 |
@@ -83,6 +83,7 @@
 | D18 | **중화권 브랜드 표기 = `WonJin`**(M9 확정, 2026-08-26) | 검색 노출용 통일 토큰. `<title>` 접미사·`og:site_name`·JSON-LD `name`에 **전부 이 값 그대로** 들어간다. 4개 로케일 모두 번역하지 않고 브랜드 토큰만은 동일하게 유지(5-6절 원칙 — 브랜드 토큰이 언어마다 갈리면 검색 노출이 분산된다) |
 | D21 | **실장 KPI·예약 통계 = 표 + 차트 병행, 차트는 `vue-chartjs` + `chart.js`**(Phase 6, 2026-08-26) | 완료기준(빈 구간 0 채움)은 표만으로도 충족되지만 추이 파악 편의를 위해 사용자 지시로 차트를 병행한다. **Canvas 기반이라 SSR을 타지 않는다** — `<ClientOnly>`로 감싸 클라이언트 마운트 후에만 그린다. 13장 SSR 프리로드 원칙은 **데이터** 프리로드에 대한 것이라 위반이 아니다(표는 SSR로 데이터와 함께 즉시 표시되고, 차트만 하이드레이션 후 한 박자 늦게 그려진다 — 레이아웃 시프트 방지를 위해 차트 컨테이너에 고정 높이를 둔다). 차트 색상은 새 팔레트를 만들지 않고 **D20 Olive Garden Feast를 그대로 재사용**한다 |
 | D22 | **🔴 푸터 주소는 로케일별로 다른 문구 — 12-1-1절 "번역 안 함" 원칙의 예외**(2026-08-26) | 상호·사업자등록번호는 여전히 원문 고정(번역 금지 원칙 유지)이지만, **주소만 사용자 지시로 로케일별 표기를 분리**: ko는 등록원문("서울시 서초구 강남대로 419 파고다타워 12-18층") 유지, zh-CN은 `首尔市 瑞草区 江南大路419 PAGODA 12-18楼`, zh-TW·en은 영문 주소 `PAGODA tower 17th floor 1306~6 Seocho-dong Seocho-gu, SEOUL`(사용자가 zh-TW도 영문 표기를 명시적으로 선택). JSON-LD `PostalAddress`도 이 영문 주소 형식으로 함께 갱신(`streetAddress: "PAGODA Tower 17F, 1306-6 Seocho-dong"` 등). `landing.vue`의 `ADDRESS_BY_LOCALE` 상수로 구현(i18n JSON 키 아님 — 사업자 정보는 언어별 "번역"이 아니라 "다른 표기"이므로 기존 `BUSINESS_NAME`/`BUSINESS_REG_NO`와 같은 패턴 유지) |
+| D23 | **날짜·시간 입력 = 커스텀 `DatePicker`/`TimePicker`(D11 날짜입력 부분 대체, 2026-08-27)** | shadcn Popover+Calendar(reka-ui 기반)로 `DatePicker`, reka-ui `TimeField`로 `TimePicker` 구현(`components/ui/date-picker`·`components/ui/time-picker`). v-model은 기존 네이티브 input과 동일하게 `"YYYY-MM-DD"`/`"HH:mm"` 문자열(빈 문자열=미입력)이라 제출 로직·API 계약은 불변. `locale` prop에 각 페이지의 BCP-47 태그(`useInputLang()` 공용 컴포저블)를 그대로 전달해 팝업 캘린더 요일·월 이름까지 코드로 제어된다(9-2절① 잔여 한계 해소). 시간은 24시간제로 고정(로케일별 오전/오후 표기 차이 제거). 신규 npm 의존성은 `@internationalized/date`(reka-ui의 기존 전이 의존성을 직접 의존성으로 승격) 하나뿐 — CSS 테마는 shadcn 변수를 자동 상속. 예약 달력(`admin/calendar.vue`, 12-6절)은 애초에 네이티브 위젯이 아니라 자체 그리드라 이 결정과 무관 — 범위에서 제외(사용자 확인, 재론 불필요). **같은 세션에서 폼 필수 필드의 브라우저 기본 검증 팝업 문제도 함께 해소** — 브라우저 기본 검증 메시지가 페이지 로케일이 아니라 브라우저/OS 언어를 따라 표시되는 것을 사용자가 재현 보고(날짜 위젯과 근본 원인 동일: 네이티브 브라우저 UI가 앱 로케일을 안 따름). `<form novalidate>` + 커스텀 `validate()`(필드별 인라인 에러 텍스트 + `aria-invalid`)로 대체(랜딩 폼·어드민 로그인 2곳, `required` 사용처 전수 grep으로 확인한 범위). 신규 i18n 키: `common.pickDate`·`common.clear`·`common.fieldRequired`·`admin.login.invalidEmail`(4개 로케일 파일 키 집합 동일 확인 완료) |
 
 ---
 
@@ -770,7 +771,7 @@ var kstDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcN
 
 - 저장은 `time`(타임존 없는 벽시계 시각). `visit_time`과 같은 취급이며 타임존 변환을 적용하지 않는다.
 - **이 값의 유일한 용도는 실장이 "이 고객에게 언제 위챗을 보낼지" 판단하는 것**이다(12-5절 예약 상세에 표시). 필터·정렬·통계·자동화 어디에도 쓰지 않는다.
-- 🔴 **`<input type="date">`/`<input type="time">`의 표시 형식(연월일 순서·오전/오후 표기)은 `<html lang>`만으로는 개별 입력 요소까지 항상 이어지지 않아, 각 `<input>`에 `:lang="..."`(현재 로케일의 BCP-47 태그, `nuxt.config.ts`의 `locales[].language`)을 직접 지정한다**(2026-08-26 실측 — 다국어로 폼을 조작하면 생년월일·연락희망시각 입력 UI가 한국어로 나온다는 사용자 재현 보고로 발견). 단, **팝업 달력 자체(요일·월 이름)는 이 속성과 무관하게 브라우저/OS 자체 언어를 따르는 네이티브 위젯**이라 웹페이지 코드로는 제어 불가 — 이 프로젝트는 D11에 따라 별도 JS 날짜선택 라이브러리를 쓰지 않기로 했으므로 이 잔여 한계는 감수한다(브라우저별 정확한 동작은 `[미확인]`, 실브라우저 재확인 권장).
+- 🔴 **날짜·시간 입력은 D23의 커스텀 `DatePicker`/`TimePicker`를 쓴다**(2026-08-27, D11 날짜입력 부분 대체). 과거엔 네이티브 `<input type="date">`/`<input type="time">`에 `:lang`(BCP-47)을 지정해도 팝업 달력 자체(요일·월 이름)는 브라우저/OS 자체 언어를 따르는 잔여 한계가 있었다(2026-08-26 실측 — 다국어로 폼을 조작하면 생년월일·연락희망시각 입력 UI가 한국어로 나온다는 사용자 재현 보고로 발견). D23의 `locale` prop이 팝업 캘린더까지 완전히 코드로 제어해 이 한계를 해소했다.
 
 **② 🔴 관리자 화면의 시각 표시는 브라우저 타임존을 쓰지 말 것.**
 
@@ -1116,10 +1117,10 @@ public record LoginRequest([Required, MaxLength(254)] string Email, [Required, M
 | 필드 | 입력 방식 | 필수 |
 |---|---|---|
 | 이름 | text | ✅ |
-| 생년월일 | `<input type="date">` | ✅ |
+| 생년월일 | `DatePicker`(D23) | ✅ |
 | 성별 | radio (여성/남성/기타) | ✅ |
 | 위챗 ID | text | ✅ |
-| 연락 희망 시각 | `<input type="time">` (라벨에 "한국 시간" 병기) | ✅ |
+| 연락 희망 시각 | `TimePicker`(D23, 라벨에 "한국 시간" 병기) | ✅ |
 | 개인정보 수집·이용 동의 | checkbox + 처리방침 링크 | ✅ |
 | (honeypot) | 숨김 필드 | — |
 

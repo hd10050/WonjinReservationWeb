@@ -37,11 +37,11 @@
         </div>
         <div class="flex flex-col gap-1.5">
           <Label for="f-from">{{ t('admin.reservations.filterFrom') }}</Label>
-          <Input id="f-from" v-model="formFrom" type="date" class="w-40" />
+          <DatePicker id="f-from" v-model="formFrom" :locale="inputLang" class="w-40" />
         </div>
         <div class="flex flex-col gap-1.5">
           <Label for="f-to">{{ t('admin.reservations.filterTo') }}</Label>
-          <Input id="f-to" v-model="formTo" type="date" class="w-40" />
+          <DatePicker id="f-to" v-model="formTo" :locale="inputLang" class="w-40" />
         </div>
         <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
           <Label for="f-search">{{ t('admin.reservations.filterSearch') }}</Label>
@@ -106,6 +106,8 @@ useHead({ title: '예약 대시보드 | Admin', meta: [{ name: 'robots', content
 
 const { t } = useI18n()
 const route = useRoute()
+// layouts/admin.vue가 useOpsLocale()을 이미 호출해 locale이 계정 값으로 맞춰져 있다 — 여기선 재사용만.
+const inputLang = useInputLang()
 
 const STATUSES: string[] = ['New', 'Consulting', 'Confirmed', 'Visited', 'Cancelled']
 

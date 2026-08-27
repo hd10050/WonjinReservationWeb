@@ -3,7 +3,10 @@
     "appName": "WonJin",
     "save": "Save",
     "cancel": "Cancel",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "pickDate": "Pick a date",
+    "clear": "Clear",
+    "fieldRequired": "Please fill in this field."
   },
   "admin": {
     "common": {
@@ -26,7 +29,8 @@
       "title": "Admin Login",
       "email": "Email",
       "password": "Password",
-      "submit": "Log in"
+      "submit": "Log in",
+      "invalidEmail": "Please enter a valid email address."
     },
     "reservations": {
       "title": "Reservation Dashboard",

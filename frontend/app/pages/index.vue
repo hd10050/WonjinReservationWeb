@@ -21,15 +21,18 @@
           </p>
         </div>
 
-        <form v-else class="flex flex-col gap-4" @submit.prevent="submit">
+        <!-- novalidate — 브라우저 기본 검증 팝업(브라우저/OS 언어를 따름)을 끄고 아래 커스텀 검증으로 대체한다. -->
+        <form v-else class="flex flex-col gap-4" novalidate @submit.prevent="submit">
           <div class="flex flex-col gap-2">
             <Label for="name">{{ t('landing.form.name') }}</Label>
-            <Input id="name" v-model="name" type="text" maxlength="50" required autocomplete="name" />
+            <Input id="name" v-model="name" type="text" maxlength="50" required autocomplete="name" :aria-invalid="errors.name" />
+            <p v-if="errors.name" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
           </div>
 
           <div class="flex flex-col gap-2">
             <Label for="birthDate">{{ t('landing.form.birthDate') }}</Label>
-            <Input id="birthDate" v-model="birthDate" type="date" required :lang="inputLang" />
+            <DatePicker id="birthDate" v-model="birthDate" :locale="inputLang" :invalid="errors.birthDate" />
+            <p v-if="errors.birthDate" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
           </div>
 
           <div class="flex flex-col gap-2">
@@ -48,16 +51,19 @@
                 {{ t('landing.form.genderOther') }}
               </label>
             </div>
+            <p v-if="errors.gender" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
           </div>
 
           <div class="flex flex-col gap-2">
             <Label for="wechatId">{{ t('landing.form.wechatId') }}</Label>
-            <Input id="wechatId" v-model="wechatId" type="text" maxlength="50" required autocomplete="off" />
+            <Input id="wechatId" v-model="wechatId" type="text" maxlength="50" required autocomplete="off" :aria-invalid="errors.wechatId" />
+            <p v-if="errors.wechatId" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
           </div>
 
           <div class="flex flex-col gap-2">
             <Label for="contactTime">{{ t('landing.form.contactTime') }}</Label>
-            <Input id="contactTime" v-model="contactTime" type="time" required :lang="inputLang" />
+            <TimePicker id="contactTime" v-model="contactTime" :locale="inputLang" :invalid="errors.contactTime" />
+            <p v-if="errors.contactTime" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
           </div>
 
           <!-- honeypot(12-1절) — 사람에게는 보이지 않는 필드. 채워지면 봇으로 간주한다. -->
@@ -66,12 +72,15 @@
             <input id="hpField" v-model="honeypot" type="text" tabindex="-1" autocomplete="off">
           </div>
 
-          <label class="flex items-start gap-2 text-sm">
-            <input v-model="consent" type="checkbox" class="mt-1 accent-primary" required>
-            <!-- 🔴 태그 사이 줄바꿈이 공백 하나로 렌더링되어 "처리방침 에"처럼 어색한 공백이
-                 생긴다(실측 확인) — 세 조각을 한 줄로 이어붙여 불필요한 공백을 없앤다. -->
-            <span>{{ t('landing.form.consentPrefix') }}<NuxtLink :to="localePath('privacy')" class="underline" target="_blank">{{ t('landing.form.consentLink') }}</NuxtLink>{{ t('landing.form.consentSuffix') }}</span>
-          </label>
+          <div class="flex flex-col gap-1">
+            <label class="flex items-start gap-2 text-sm">
+              <input v-model="consent" type="checkbox" class="mt-1 accent-primary" required>
+              <!-- 🔴 태그 사이 줄바꿈이 공백 하나로 렌더링되어 "처리방침 에"처럼 어색한 공백이
+                   생긴다(실측 확인) — 세 조각을 한 줄로 이어붙여 불필요한 공백을 없앤다. -->
+              <span>{{ t('landing.form.consentPrefix') }}<NuxtLink :to="localePath('privacy')" class="underline" target="_blank">{{ t('landing.form.consentLink') }}</NuxtLink>{{ t('landing.form.consentSuffix') }}</span>
+            </label>
+            <p v-if="errors.consent" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
+          </div>
 
           <p v-if="errorMessage" class="text-sm text-destructive">{{ errorMessage }}</p>
 
@@ -87,18 +96,13 @@
 // 히어로 문구는 최소 기능 설명이며, 실제 마케팅 카피·이미지(M6)는 범위 외(20장)로 보류된 상태다.
 definePageMeta({ layout: 'landing' })
 
-const { t, locale, locales } = useI18n()
+const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const route = useRoute()
 const config = useRuntimeConfig()
 
-// 🔴 네이티브 <input type="date">/<input type="time">의 표시 형식(연월일 순서·오전/오후 표기)은
-// 브라우저가 이 lang 속성으로 판단한다(<html lang>만으로는 개별 입력 요소까지 안 이어지는
-// 경우가 있어 명시적으로 지정) — nuxt.config.ts의 locales[].language(BCP-47 태그)를 그대로 쓴다.
-// 단, 팝업 달력 자체의 요일·월 이름은 이 속성과 무관하게 브라우저/OS 자체 언어를 따르는
-// 네이티브 위젯이라 웹페이지 코드로 제어할 수 없다(브라우저 공통의 잘 알려진 한계 — 이 프로젝트는
-// D11에 따라 별도 JS 날짜선택 라이브러리를 쓰지 않기로 했으므로 이 잔여 한계는 감수한다).
-const inputLang = computed(() => locales.value.find(l => l.code === locale.value)?.language ?? locale.value)
+// DatePicker/TimePicker(9-2절①, D11 대체) — 팝업 캘린더 요일·월 이름까지 이 값으로 제어된다.
+const inputLang = useInputLang()
 
 useSeo({
   title: () => t('landing.hero.title'),
@@ -135,8 +139,30 @@ if (import.meta.server) {
   }).catch(() => {})
 }
 
+// 브라우저 기본 검증(novalidate로 비활성화, 위 템플릿 참고)을 대체하는 커스텀 검증 —
+// 브라우저 기본 팝업은 페이지 로케일이 아니라 브라우저/OS 언어를 따라 메시지가 나오는 문제가 있었다.
+const errors = reactive({
+  name: false,
+  birthDate: false,
+  gender: false,
+  wechatId: false,
+  contactTime: false,
+  consent: false,
+})
+
+function validate(): boolean {
+  errors.name = !name.value.trim()
+  errors.birthDate = !birthDate.value
+  errors.gender = !gender.value
+  errors.wechatId = !wechatId.value.trim()
+  errors.contactTime = !contactTime.value
+  errors.consent = !consent.value
+  return !Object.values(errors).some(Boolean)
+}
+
 async function submit() {
   errorMessage.value = ''
+  if (!validate()) return
   submitting.value = true
   try {
     const res = await $fetch<{ code: string; wechatId: string }>('/api/reservations', {

@@ -4,7 +4,7 @@
 ## 개요
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원 · 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO(`useSeo`·hreflang·OG이미지), 보안감사 1라운드(High2·Medium5) + **재감사**(원본 Low 12건 목록 유실 발견 → 재감사로 신규 9건 발견·전부 수정). 운영 DB 최초 부트스트랩 계정 3개 생성 완료. 어드민 사이드바·로그인 페이지 언어전환·로고 2배·배경색 조정·`AssignConsultant` RowVersion 동시성까지 반영(상세는 세션 요약). **남은 건 CSP 도입 여부·날짜시간 피커 D11 재검토 사용자 결정, 실배포 도메인 라이브 curl 검증(design.md Phase 9 완료기준)뿐** — git 상태 clean, origin과 완전 동기화 확인 후 세션 종료
+- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO(`useSeo`·hreflang·OG이미지), 보안감사 1라운드(High2·Medium5) + **재감사**(원본 Low 12건 목록 유실 발견 → 재감사로 신규 9건 발견·전부 수정). 운영 DB 최초 부트스트랩 계정 3개 생성 완료. 어드민 사이드바·로그인 페이지 언어전환·로고 2배·배경색 조정·`AssignConsultant` RowVersion 동시성까지 반영(상세는 세션 요약). **날짜·시간 피커는 D11을 뒤집고 커스텀 라이브러리로 교체 완료**(D23, 2026-08-27 — 세션 요약 참고). **남은 건 CSP 도입 여부 결정, 실배포 도메인 라이브 curl 검증(design.md Phase 9 완료기준)뿐**
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -13,7 +13,7 @@
 | SEO | `@nuxtjs/sitemap` + `@nuxtjs/robots` |
 | 백엔드/DB | ASP.NET Core 10 + EF Core(`EFCore.NamingConventions` 스네이크케이스) / PostgreSQL 16 (스키마 `wonjin`) |
 | 인증 | 자체 JWT(AT 15분, 쿠키 `wj_at`) + RT(7일, SHA-256, 쿠키 `wj_rt`) — **소셜 로그인·회원가입 없음** |
-| UI | **shadcn-vue**(`shadcn-nuxt`, style `new-york`) + `reka-ui` 프리미티브 + `class-variance-authority`(D19, 구 D11 대체) |
+| UI | **shadcn-vue**(`shadcn-nuxt`, style `new-york`) + `reka-ui` 프리미티브 + `class-variance-authority`(D19, 구 D11 대체) + 커스텀 `DatePicker`/`TimePicker` + `@internationalized/date`(D23) |
 | 팔레트 | **Olive Garden Feast**(D20) — `#606C38`올리브(primary)·`#283618`짙은산림녹(foreground)·`#FEFDF7`크림(background, 2026-08-27 채도 낮춤)·`#DDA15E`탄(secondary)·`#BC6C25`번트오렌지(destructive), OKLCH 변환 후 shadcn CSS 변수에 적용 |
 | 시각화 | **vue-chartjs**(`^5.3.x`) + **chart.js**(`^4.5.x`)(D21) — 실장 KPI·예약 통계 표+차트 병행. Canvas 기반이라 SSR 불가, `<ClientOnly>` 필수. Chart.js 요소 등록은 `plugins/chartjs.client.ts` 한 곳에 집중 |
 | 언어 버전 고정 | **TypeScript 5.9.3 고정**(devDependency) — 7.x(네이티브 재작성판)는 `@vue/compiler-sfc`의 `ts.sys` 타입 해석과 비호환이라 reka-ui 기반 shadcn 컴포넌트 컴파일이 깨짐(11-7절) |
@@ -36,7 +36,7 @@
 - 🔴 **실장 배정은 수동, 미배정 예약은 배정·삭제·조회만 가능**(D17) — 상담기록·상태전이·저장 전부 400 차단. 담당 변경은 예외 없이 처리 이력 기록
 - **예약 코드 = `YYYYMMDD`+4자리 일별 리셋**(M3, 예 `202608260001`) — `reservation_code_counters` 원자적 증가로 발급
 - **모든 시각은 KST 고정** — 브라우저 타임존 사용 금지. `stat_date`·예약코드 날짜도 KST
-- 시술명은 언어별 컬럼 4개(`name_zh_cn` 등), **연락 희망 시각은 `<input type="time">` 직접 입력**(`time` 컬럼, 한국 시간 기준) — 선택지로 바꾸지 말 것
+- 시술명은 언어별 컬럼 4개(`name_zh_cn` 등), **연락 희망 시각은 직접 입력**(`TimePicker`, `time` 컬럼, 한국 시간 기준) — 선택지로 바꾸지 말 것
 - **중화권 브랜드 표기 = `WonJin`**(D18, 2026-08-26) — 4개 로케일 전부 이 토큰 그대로 사용(번역 안 함). title 접미사·og:site_name·JSON-LD name 전부 통일
 - **UI 라이브러리 = shadcn-vue**(D19, 2026-08-26) — 구 D11(라이브러리 미도입) 대체, Context7로 최신 설치 문서 확인 후 도입. `components.json`은 CLI 자동생성 대신 수동 작성(11-7절)
 - **팔레트 = Olive Garden Feast**(D20, 2026-08-26) — 참고 화면(`reservation-desk_1.html`)의 청록색 팔레트를 대체. coolors.co/palettes/trending을 playwright-cli로 실측 검증해 이름·좋아요 수 확인된 팔레트만 채택(발명 절대 금지 — 실제 발생했던 사고). 🔴 **`--background`만 2026-08-27 사용자 피드백("탁하다")으로 채도 낮춤**(`#FEFAE0`→`#FEFDF7`, OKLCH 계산으로 같은 색조·명도만 조정 — 새 색 발명 아님) — 나머지 4색은 원본 그대로
@@ -102,6 +102,7 @@
 - **로컬 dev docker 컨테이너는 소스 바인드마운트가 없음**(`docker-compose.yml`, `build:`만 지정) — 코드 수정 후 반드시 `docker compose up -d --build`로 재빌드해야 반영됨. `restart`만으로는 이미지가 그대로라 안 바뀜(2026-08-27 세션 중 여러 차례 재확인)
 - **PostgreSQL 시스템 컬럼(`xmin` 등)을 EF Core `IsRowVersion()`으로 매핑하면 마이그레이션 파일엔 `AddColumn`이 생성되지만 실제 적용 시 DDL이 안 나가는 게 정상** — Npgsql이 시스템 컬럼명을 인식해 건너뛰도록 설계됨(`AssignConsultant` 동시성에 이 패턴 도입, 2026-08-27)
 - 🔴 **새 SSR 직접 백엔드 호출(프록시 안 거치는 경로)엔 반드시 `X-Internal-Secret` 헤더를 실을 것** — CSRF 미들웨어가 Origin 없는 요청을 이 시크릿으로만 통과시킴(재감사 2026-08-27 강화). **새 관리자 쓰기 API 추가 시 `[EnableRateLimiting("admin-write")]`도 함께 걸 것** — RouteMap 등록과 별개라 놓치기 쉬움
+- 🔴 **reka-ui `TimeFieldRoot`의 `hour-cycle`은 반드시 문자열 `"h23"`/`"h12"`로 쓸 것 — 숫자 바인딩(`:hour-cycle="24"`) 금지**(D23, 2026-08-27 실측). 공식 props 참조 문서엔 타입이 `12 | 24`(숫자)로 표기돼 있지만 실제로 그렇게 넘기면 `aria-valuetext`가 "14 AM"처럼 12/24시간제가 뒤섞인 값을 냄 — 실제 동작하는 예제 코드가 쓰는 문자열 enum이 맞다. `aria-valuemax`가 `23`인지로 24시간제 적용 여부를 실측 확인할 것
 
 ## 절대 원칙 이행 (루트 CLAUDE.md)
 - **화면 깜빡임 금지** — 데이터 페이지는 `<script setup>` 최상위 `await useApi(...)` SSR 프리로드. `onMounted`+client fetch 금지. 전환 오버레이는 `<Transition>` 금지, 항상 마운트 + `pointer-events`를 상태값에 직접 클래스 바인딩
@@ -112,8 +113,8 @@
 
 ## TODO
 ### 다음 세션 최우선
-- [ ] **🔴 예약 폼 날짜·시간 팝업 캘린더 언어 — 코드로 수정 불가능함을 사용자 실측으로 확인**(2026-08-27) — `index.vue` 95~100행에 이미 문서화된 D11 트레이드오프(네이티브 `<input>`의 팝업 캘린더·빈값 표시 형식은 `lang` 속성과 무관하게 브라우저/OS 자체 언어를 따르는 네이티브 위젯이라 웹페이지 코드로 제어 불가)가 실제로 재현됨. `lang` 속성 자체는 이미 로케일별로 정확히 바인딩돼 있어(11-7절 무관, 코드 결함 아님) 더 손댈 곳이 없음 — 고치려면 D11을 뒤집고 커스텀 JS 날짜선택 라이브러리를 도입해야 하는 큰 작업이라 사용자 결정 대기
 - [ ] **프론트 Content-Security-Policy 미적용 — 의도적 보류**(보안감사 재감사 2026-08-27) — X-Content-Type-Options 등 4개 헤더는 적용 완료했으나 CSP만 보류. `landing.vue`의 JSON-LD 인라인 스크립트가 예약마다 내용이 달라 정적 해시 지정이 안 통하고, nonce 방식은 Nuxt 통합이 더 큰 작업이라 섣불리 걸면 스크립트가 깨질 위험 — nonce 도입 여부 결정 필요
+- [ ] **🔴 Popover(DatePicker) 닫힘 애니메이션이 자동화 도구 환경(`document.hidden=true`)에서 미완료로 관측 — 실브라우저 재확인 필요**(2026-08-27) — `data-state`는 `closed`로 바뀌지만 `opacity`/`pointer-events`가 안 풀림. 19-2절 Chart.js rAF와 동일 범주 추정(코드는 순정 shadcn 생성 그대로), 실사용자 브라우저 재현 여부만 확인하면 됨
 ### Phase 계획 — 완료기준 포함 (design.md 19장과 동일, 상세 코드는 그쪽 참고)
 | # | 내용 | 완료기준 |
 |---|---|---|
@@ -144,5 +145,5 @@
 `docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종)
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
-## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (32)까지 이동 완료)
-- **2026-08-27 (29)~(32) 이 세션 통합 요약** — 전부 완료, 상세 시행착오는 `docs/session-log.md` (29)~(32) 참고. 순서대로 진행: ①하네스(메모리·훅) 정상 확인 ②푸터 카피라이트 4로케일 보강 ③운영 DB에 최초 부트스트랩 계정 3개(Admin/HospitalManager/Consultant) 직접 SQL 부트스트랩(앱과 동일 BCrypt로 해시 생성, 로그인 실측 확인) ④어드민 로그인 페이지 언어 전환 select 추가(기존엔 로그인 이후 페이지에만 있었음) ⑤로컬 dev 테스트 데이터 전량 삭제 ⑥로고 2배 확대 ⑦배경색 채도 낮춤(`#FEFAE0`→`#FEFDF7`) ⑧`PATCH /consultant` RouteMap 세분화 + `emitRouteChunkError` 추가 ⑨`AssignConsultant`에 `xmin` 기반 RowVersion 낙관적 동시성 도입(SQL 레벨 실측 증명) ⑩모바일 사이드바 애니메이션 사용자 확인으로 TODO 종결 ⑪날짜·시간 피커 언어는 D11 트레이드오프로 코드 수정 불가 확인(사용자 결정 대기로 전환) ⑫M12 OG 이미지 임시본을 최종본으로 확정 ⑬**보안감사 Low 12건 원본 목록 유실 발견 → 1~21절 전체 재감사 → 신규 9건 발견·전부 수정**(로그인 타이밍 사이드채널·X-Forwarded-For 전체신뢰·admin-write rate limit 누락·CSRF Origin-없음 무검증·EscapeLike 중복·비활성 실장 배정 미차단·모델검증 응답포맷 불일치·프론트 보안헤더 전무·언어감지 오픈리다이렉트). 전 항목 `dotnet build`/`npm run build` + curl·브라우저 실측 확인 후 커밋 8건 전부 origin/main push 완료(해시는 session-log.md 참고).
+## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (33)까지 이동 완료)
+- **2026-08-27 (33) — 날짜·시간 피커 커스텀 라이브러리 도입(D23) + 폼 검증 메시지 로케일 버그 동시 수정**: 사용자 지시로 D11("네이티브 위젯이라 제어 불가")을 뒤집기로 결정. Context7로 shadcn Date Picker(Popover+Calendar, reka-ui 기반)·reka-ui TimeField 조사 후 채택(이미 설치된 reka-ui 재활용, 신규 의존성은 `@internationalized/date` 1개뿐). `components/ui/date-picker`·`time-picker` 신규(v-model은 기존과 동일한 `YYYY-MM-DD`/`HH:mm` 문자열 계약이라 API 불변) + `useInputLang()` 공용 컴포저블로 7개 파일(랜딩 폼, 어드민 대시보드·감사로그·KPI·유입경로·통계 필터, 예약상세) 10곳 전 교체. **같은 근본원인(네이티브 브라우저 UI가 앱 로케일 대신 브라우저/OS 언어를 따름)의 두 번째 증상 — 폼 필수 필드 미입력 시 브라우저 기본 검증 팝업이 로케일과 무관하게 뜨던 문제도 함께 해소**: `<form novalidate>` + 커스텀 `validate()`(필드별 인라인 에러+`aria-invalid`)로 대체(랜딩 폼·어드민 로그인, `required` 사용처 전수 grep 확인). **실측 중 버그 발견·수정**: `hour-cycle`에 문서 타입표(`12|24`)대로 숫자 `24`를 넘기면 "14 AM"처럼 깨져 문자열 `"h23"`으로 정정(`aria-valuemax=23`으로 재검증). 4언어 팝업 캘린더+검증 메시지 브라우저 실측, DatePicker/TimePicker→DB 값(`birth_date`/`preferred_contact_time`) 정확 저장까지 전 구간 실측(테스트 데이터 삭제 완료). `npm run build` 성공. **미확인**: 자동화 도구 환경(`document.hidden=true`)에서 Popover 닫힘 애니메이션 미완료 관측 — 19-2절 Chart.js rAF와 동일 범주 추정, 실브라우저 재확인 권장(위 TODO 참고). design.md D23 신설 + 9-2절①·12-1절 표 갱신.

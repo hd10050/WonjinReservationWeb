@@ -3,7 +3,10 @@
     "appName": "WonJin",
     "save": "저장",
     "cancel": "취소",
-    "loading": "불러오는 중..."
+    "loading": "불러오는 중...",
+    "pickDate": "날짜 선택",
+    "clear": "지우기",
+    "fieldRequired": "이 항목을 입력해주세요."
   },
   "admin": {
     "common": {
@@ -26,7 +29,8 @@
       "title": "관리자 로그인",
       "email": "이메일",
       "password": "비밀번호",
-      "submit": "로그인"
+      "submit": "로그인",
+      "invalidEmail": "올바른 이메일 형식이 아닙니다."
     },
     "reservations": {
       "title": "예약 대시보드",

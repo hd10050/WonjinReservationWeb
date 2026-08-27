@@ -21,14 +21,18 @@
         </div>
       </CardHeader>
       <CardContent>
-        <form class="flex flex-col gap-4" @submit.prevent="submit">
+        <!-- novalidate — 브라우저 기본 검증 팝업(브라우저/OS 언어를 따름)을 끄고 아래 커스텀 검증으로 대체한다. -->
+        <form class="flex flex-col gap-4" novalidate @submit.prevent="submit">
           <div class="flex flex-col gap-2">
             <Label for="email">{{ t('admin.login.email') }}</Label>
-            <Input id="email" v-model="email" type="email" maxlength="254" required autocomplete="username" />
+            <Input id="email" v-model="email" type="email" maxlength="254" required autocomplete="username" :aria-invalid="errors.email || errors.emailFormat" />
+            <p v-if="errors.email" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
+            <p v-else-if="errors.emailFormat" class="text-sm text-destructive">{{ t('admin.login.invalidEmail') }}</p>
           </div>
           <div class="flex flex-col gap-2">
             <Label for="password">{{ t('admin.login.password') }}</Label>
-            <Input id="password" v-model="password" type="password" maxlength="64" required autocomplete="current-password" />
+            <Input id="password" v-model="password" type="password" maxlength="64" required autocomplete="current-password" :aria-invalid="errors.password" />
+            <p v-if="errors.password" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
           </div>
           <p v-if="errorMessage" class="text-sm text-destructive">{{ errorMessage }}</p>
           <Button type="submit" :disabled="submitting">{{ t('admin.login.submit') }}</Button>
@@ -66,8 +70,20 @@ onMounted(() => {
   if (user.value) navigateTo('/admin')
 })
 
+// 브라우저 기본 검증(novalidate로 비활성화, 위 템플릿 참고)을 대체하는 커스텀 검증.
+const errors = reactive({ email: false, emailFormat: false, password: false })
+
+function validate(): boolean {
+  const emailTrimmed = email.value.trim()
+  errors.email = !emailTrimmed
+  errors.emailFormat = !errors.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)
+  errors.password = !password.value
+  return !errors.email && !errors.emailFormat && !errors.password
+}
+
 async function submit() {
   errorMessage.value = ''
+  if (!validate()) return
   submitting.value = true
   try {
     await login(email.value, password.value)
