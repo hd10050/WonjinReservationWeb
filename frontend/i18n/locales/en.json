@@ -298,7 +298,15 @@
       }
     }
   },
+  "procedures": {
+    "concernHeading": "What concerns you about {category}?",
+    "otherHeading": "Other Procedures",
+    "inquireCta": "Inquire Now",
+    "comingSoon": "Details coming soon."
+  },
   "landing": {
+    "nav": { "home": "Home", "procedures": "Procedures", "inquiry": "Inquiry", "inquiryFab": "Inquire" },
+    "home": { "heroTitle": "WJ WonJin Plastic Surgery", "heroSubtitle": "Beauty completed through precise diagnosis and consultation", "categoriesHeading": "Procedure Categories", "introHeading": "About WJ WonJin", "introBody": "Hospital introduction content coming soon." },
     "hero": {
       "title": "Book a Consultation",
       "subtitle": "Fill out the form below and our consultant will contact you via WeChat."
@@ -330,6 +338,10 @@
       "businessRegNo": "Business Registration No.",
       "address": "Address"
     }
+  },
+  "inquiry": {
+    "seoTitle": "Book a Consultation",
+    "seoDescription": "Fill out the form below and our consultant will contact you via WeChat."
   },
   "privacy": {
     "title": "Privacy Policy",

@@ -298,7 +298,15 @@
       }
     }
   },
+  "procedures": {
+    "concernHeading": "{category}有什麼困擾嗎？",
+    "otherHeading": "其他項目",
+    "inquireCta": "立即諮詢",
+    "comingSoon": "詳細內容準備中。"
+  },
   "landing": {
+    "nav": { "home": "首頁", "procedures": "項目介紹", "inquiry": "諮詢預約", "inquiryFab": "諮詢" },
+    "home": { "heroTitle": "WJ原辰整形外科", "heroSubtitle": "以精密診斷和諮詢完成的美麗", "categoriesHeading": "項目分類", "introHeading": "WJ原辰介紹", "introBody": "醫院介紹內容準備中。" },
     "hero": {
       "title": "預約諮詢",
       "subtitle": "請填寫以下資訊，我們的顧問將透過微信與您聯繫。"
@@ -330,6 +338,10 @@
       "businessRegNo": "營業執照號",
       "address": "地址"
     }
+  },
+  "inquiry": {
+    "seoTitle": "預約諮詢",
+    "seoDescription": "請填寫以下資訊，我們的顧問將透過微信與您聯繫。"
   },
   "privacy": {
     "title": "隱私政策",
