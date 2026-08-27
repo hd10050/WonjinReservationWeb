@@ -33,6 +33,10 @@ public record ReservationCalendarItemDto(
     int Id, string Code, string Name, string Status,
     DateOnly VisitDate, TimeOnly? VisitTime, string? ConsultantName);
 
+// 🔴 성능(2026-08-27) — 달력 그리드는 42일 전체 예약을 미리 다 받아왔었다(날짜 클릭 전에도).
+// 그리드 배지("이 날짜에 N건")는 건수만 있으면 되므로, 상세 목록과 분리해 건수만 반환한다.
+public record ReservationCalendarDayCountDto(DateOnly VisitDate, int Count);
+
 public record ReservationNoteDto(
     int Id, string Body, int? AuthorUserId, string AuthorName,
     DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, bool IsEdited);

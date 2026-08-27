@@ -1279,7 +1279,9 @@ function submitSearch(value: string) {
   > 🔴 `Confirmed`만 조회하면 **고객이 실제로 내원해 `Visited`가 되는 순간 그 날짜가 달력에서 사라진다**(F1). 실장이 "지난주에 누가 왔었지"를 달력에서 확인할 수 없게 되므로, 확정과 방문완료를 함께 표시하고 배지 색으로 구분한다. 8-5의 부분 인덱스 조건도 이와 동일하게 맞춰야 한다(불일치 시 인덱스를 못 탄다).
 - 월 이동은 이전/다음 달 버튼 + **연도·월 드롭다운**(빠른 이동, 2026-08-27 추가)으로 가능하다. 어느 쪽이든 `year`·`month` 쿼리로만 재조회한다.
   > 🔴 **서버가 실제로 조회하는 범위는 그 달의 리터럴 1일~말일이 아니라 화면 그리드 전체(6주=42일, 일요일 시작)다**(2026-08-27). 그리드에는 이전달 말주·다음달 초주 셀도 함께 보이는데, 리터럴 월 범위만 조회하면 그 셀들의 예약이 있어도 표시되지 않는 결함이 있었다(실사용 재현·수정). `gridStart = monthStart - monthStart.DayOfWeek`, `gridEnd = gridStart + 42일` — 프론트 `calendar.vue`의 `gridCells` 계산과 반드시 동일해야 한다. `year`·`month`가 계산의 유일한 입력이라 범위는 여전히 고정 42일로 결정론적이며, **최대 1개월 범위 검증**(클라이언트가 임의 범위를 보내 전체 스캔을 유발하지 못하게 하는 목적)의 취지는 그대로 유지된다.
-- 새로고침 버튼(아이콘)으로 그리드·선택일 목록을 동시에 강제 재조회할 수 있다(2026-08-27 추가) — 별도 API 없이 기존 `useApi`의 `refresh()` 재호출.
+  > 🔴 **API는 2단계로 분리한다**(2026-08-27, "날짜 클릭 전인데 왜 42일치 상세가 다 로드돼있냐" 사용자 지적으로 재설계). ①`GET /calendar?year=&month=` — 그리드 배지("이 날짜에 N건")용으로 42일 범위를 `visit_date`로 `GroupBy`해 **날짜별 건수만** 반환(`GroupBy(...).Select(g => new Dto(...))` 직결 금지 함정은 익명 타입 선집계로 우회, 11-6절과 동일 패턴). ②`GET /calendar/day?date=` — 날짜를 클릭한 시점에만 그 하루치 상세 목록을 반환. 둘 다 같은 부분 인덱스 `ix_reservations_visit_date`를 탄다(②는 단일 날짜라 조건이 더 좁을 뿐 필터 조건 자체는 동일). 최초 진입 시 선택된 날짜(오늘 또는 1일)의 ②는 SSR 시점에 ①과 함께 프리로드해 화면 깜빡임 금지 원칙을 지키고, 이후 날짜 클릭·월 이동으로 `selectedDate`가 바뀔 때만 `useApi`의 반응형 쿼리 추적으로 ②가 재조회된다(클릭 핸들러가 직접 fetch를 부르지 않음).
+- 새로고침 버튼(아이콘)으로 그리드 배지·선택일 목록을 동시에 강제 재조회할 수 있다(2026-08-27 추가) — 별도 API 없이 기존 `useApi`의 `refresh()`+`refreshDay()` 재호출.
+- 우측 "선택한 날짜의 예약 목록" 카드는 `max-h-[70vh] overflow-y-auto`로 감싼다(2026-08-27) — 하루에 예약이 몰려도 카드가 무한정 늘어나지 않고 그 안에서 스크롤된다.
 - 날짜에 예약이 없으면 "이 날짜에는 예약이 없습니다"를 표시한다(데이터 없음 안내는 허용 — 13장 참고).
 - 라이브러리 없이 자체 월간 그리드로 구현한다(D11).
 
@@ -1507,7 +1509,8 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 |---|---|---|
 | 대시보드 목록 | `WHERE status=? ORDER BY created_at DESC LIMIT 20` | `ix_reservations_status_created_at` |
 | 상단 4개 카드 | `GROUP BY status` (+이번 달 `visited_at`) | `ix_reservations_status_created_at` |
-| 예약 달력 | `WHERE status IN ('Confirmed','Visited') AND visit_date BETWEEN ? AND ?` | `ix_reservations_visit_date` (부분 — **필터 조건이 쿼리와 정확히 일치해야 탄다**) |
+| 예약 달력(그리드 배지) | `WHERE status IN ('Confirmed','Visited') AND visit_date BETWEEN ? AND ? GROUP BY visit_date`(2026-08-27, 건수만) | `ix_reservations_visit_date` (부분 — **필터 조건이 쿼리와 정확히 일치해야 탄다**) |
+| 예약 달력(선택일 상세) | `WHERE status IN ('Confirmed','Visited') AND visit_date=?`(2026-08-27, 클릭 시에만) | `ix_reservations_visit_date` (동일 부분 인덱스) |
 | 실장 KPI | `WHERE created_at >= ? GROUP BY consultant_id` | `ix_reservations_consultant_id_status` + `ix_reservations_created_at` |
 | 유입 경로 | `WHERE created_at BETWEEN ? AND ? GROUP BY referral_code, utm_*` | `ix_reservations_created_at` (F10 — 코드 선행 인덱스는 이 쿼리를 못 탄다) |
 | 감사 로그 | `ORDER BY created_at DESC LIMIT 20` | `ix_audit_logs_created_at` |
