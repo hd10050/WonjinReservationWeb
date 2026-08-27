@@ -10,23 +10,25 @@
         <CardTitle>{{ t('admin.referrals.influencerLinks.title') }}</CardTitle>
       </CardHeader>
       <CardContent class="space-y-4">
-        <div class="flex flex-wrap items-end justify-between gap-4">
-          <div class="flex flex-wrap items-end gap-4">
-            <div class="flex items-center gap-1.5">
-              <Checkbox id="f-il-show-inactive" :model-value="linksFilters.includeInactive" @update:model-value="onToggleShowInactive" />
-              <Label for="f-il-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.consultants.includeInactive') }}</Label>
+        <div class="flex flex-col gap-3">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div class="flex flex-wrap items-end gap-4">
+              <div class="flex min-w-[200px] flex-col gap-1.5">
+                <Label for="f-il-search">{{ t('admin.referrals.influencerLinks.filterSearch') }}</Label>
+                <Input
+                  id="f-il-search" v-model="formLinksSearch" maxlength="200"
+                  :placeholder="t('admin.referrals.influencerLinks.filterSearchPlaceholder')"
+                  @keyup.enter="applyLinksSearch"
+                />
+              </div>
+              <Button @click="applyLinksSearch">{{ t('admin.reservations.filterApply') }}</Button>
             </div>
-            <div class="flex min-w-[200px] flex-col gap-1.5">
-              <Label for="f-il-search">{{ t('admin.referrals.influencerLinks.filterSearch') }}</Label>
-              <Input
-                id="f-il-search" v-model="formLinksSearch" maxlength="200"
-                :placeholder="t('admin.referrals.influencerLinks.filterSearchPlaceholder')"
-                @keyup.enter="applyLinksSearch"
-              />
-            </div>
-            <Button @click="applyLinksSearch">{{ t('admin.reservations.filterApply') }}</Button>
+            <Button @click="startCreate">{{ t('admin.referrals.influencerLinks.addButton') }}</Button>
           </div>
-          <Button @click="startCreate">{{ t('admin.referrals.influencerLinks.addButton') }}</Button>
+          <div class="flex items-center gap-1.5">
+            <Checkbox id="f-il-show-inactive" :model-value="linksFilters.includeInactive" @update:model-value="onToggleShowInactive" />
+            <Label for="f-il-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.consultants.includeInactive') }}</Label>
+          </div>
         </div>
 
         <Card v-if="showForm">
@@ -125,6 +127,14 @@
           <Label for="f-to">{{ t('admin.referrals.filterTo') }}</Label>
           <DatePicker id="f-to" v-model="formTo" :locale="inputLang" :min-value="toMinValue" />
         </div>
+        <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
+          <Label for="f-search">{{ t('admin.referrals.filterSearchLabel') }}</Label>
+          <Input
+            id="f-search" v-model="formSearch" maxlength="200"
+            :placeholder="t('admin.referrals.filterSearchPlaceholder')"
+            @keyup.enter="applyFilters"
+          />
+        </div>
         <Button :disabled="rangeTooLong" @click="applyFilters">{{ t('admin.referrals.filterApply') }}</Button>
         <p v-if="rangeTooLong" class="w-full text-sm text-destructive">{{ t('admin.common.filterRangeError') }}</p>
       </CardContent>
@@ -191,18 +201,23 @@ const defaultTo = todayKst()
 // 폼을 거치지 않아 그 방어를 우회한다. 실제 조회에 쓰는 이 query 자체에서 clamp해 우회를 막는다.
 const query = computed(() => {
   const from = (route.query.from as string) || defaultFrom
-  return { from, to: clampDateRangeEnd(from, (route.query.to as string) || defaultTo) }
+  return {
+    from,
+    to: clampDateRangeEnd(from, (route.query.to as string) || defaultTo),
+    search: (route.query.search as string) || undefined,
+  }
 })
 
 const { data } = await useApi<ReferralStat[]>('/api/admin/stats/referrals', { query })
 
 const formFrom = ref(query.value.from)
 const formTo = ref(query.value.to)
+const formSearch = ref(query.value.search ?? '')
 const { toMinValue, rangeTooLong } = useDateRangeFilter(formFrom, formTo)
 
 function applyFilters() {
   if (rangeTooLong.value) return
-  navigateTo({ query: { from: formFrom.value, to: formTo.value } })
+  navigateTo({ query: { from: formFrom.value, to: formTo.value, search: formSearch.value || undefined } })
 }
 
 // 인플루언서 링크 관리(B안, 2026-08-27 신설) — 짧은 URL(/go/{code}) 매핑 CRUD. consultants.vue의

@@ -2,44 +2,46 @@
   <div class="space-y-6">
     <h1 class="text-xl font-semibold text-foreground">{{ t('admin.auditLogs.title') }}</h1>
 
-    <div class="flex flex-wrap items-end gap-4 rounded-md border border-border p-4">
-      <div class="flex flex-col gap-1.5">
-        <Label for="f-actor">{{ t('admin.auditLogs.filterActorLabel') }}</Label>
-        <NativeSelect id="f-actor" v-model="formActorId" class="w-56">
-          <NativeSelectOption value="">{{ t('admin.auditLogs.filterActorAll') }}</NativeSelectOption>
-          <NativeSelectOption v-for="u in actors?.items" :key="u.id" :value="String(u.id)">{{ u.email }}</NativeSelectOption>
-        </NativeSelect>
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <Label for="f-entity-type">{{ t('admin.auditLogs.filterEntityTypeLabel') }}</Label>
-        <NativeSelect id="f-entity-type" v-model="formEntityType" class="w-44">
-          <NativeSelectOption value="">{{ t('admin.auditLogs.filterAll') }}</NativeSelectOption>
-          <NativeSelectOption v-for="et in ENTITY_TYPES" :key="et" :value="et">{{ et }}</NativeSelectOption>
-        </NativeSelect>
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <Label for="f-action">{{ t('admin.auditLogs.filterActionLabel') }}</Label>
-        <NativeSelect id="f-action" v-model="formAction" class="w-44">
-          <NativeSelectOption value="">{{ t('admin.auditLogs.filterAll') }}</NativeSelectOption>
-          <NativeSelectOption v-for="a in ACTIONS" :key="a" :value="a">{{ a }}</NativeSelectOption>
-        </NativeSelect>
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <Label for="f-from">{{ t('admin.auditLogs.filterFromLabel') }}</Label>
-        <DatePicker id="f-from" v-model="formFrom" :locale="inputLang" />
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <Label for="f-to">{{ t('admin.auditLogs.filterToLabel') }}</Label>
-        <DatePicker id="f-to" v-model="formTo" :locale="inputLang" :min-value="toMinValue" />
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <Label for="f-search">{{ t('admin.auditLogs.filterSearchLabel') }}</Label>
-        <Input id="f-search" v-model="formSearch" maxlength="200" class="w-56" />
-      </div>
-      <Button size="sm" :disabled="rangeTooLong" @click="applyFilters">{{ t('admin.reservations.filterApply') }}</Button>
-      <Button size="sm" variant="outline" @click="resetFilters">{{ t('admin.reservations.filterReset') }}</Button>
-      <p v-if="rangeTooLong" class="w-full text-sm text-destructive">{{ t('admin.common.filterRangeError') }}</p>
-    </div>
+    <Card>
+      <CardContent class="flex flex-wrap items-end gap-4">
+        <div class="flex flex-col gap-1.5">
+          <Label for="f-actor">{{ t('admin.auditLogs.filterActorLabel') }}</Label>
+          <NativeSelect id="f-actor" v-model="formActorId" class="w-56">
+            <NativeSelectOption value="">{{ t('admin.auditLogs.filterActorAll') }}</NativeSelectOption>
+            <NativeSelectOption v-for="u in actors?.items" :key="u.id" :value="String(u.id)">{{ u.email }}</NativeSelectOption>
+          </NativeSelect>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <Label for="f-entity-type">{{ t('admin.auditLogs.filterEntityTypeLabel') }}</Label>
+          <NativeSelect id="f-entity-type" v-model="formEntityType" class="w-44">
+            <NativeSelectOption value="">{{ t('admin.auditLogs.filterAll') }}</NativeSelectOption>
+            <NativeSelectOption v-for="et in ENTITY_TYPES" :key="et" :value="et">{{ et }}</NativeSelectOption>
+          </NativeSelect>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <Label for="f-action">{{ t('admin.auditLogs.filterActionLabel') }}</Label>
+          <NativeSelect id="f-action" v-model="formAction" class="w-44">
+            <NativeSelectOption value="">{{ t('admin.auditLogs.filterAll') }}</NativeSelectOption>
+            <NativeSelectOption v-for="a in ACTIONS" :key="a" :value="a">{{ a }}</NativeSelectOption>
+          </NativeSelect>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <Label for="f-from">{{ t('admin.auditLogs.filterFromLabel') }}</Label>
+          <DatePicker id="f-from" v-model="formFrom" :locale="inputLang" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <Label for="f-to">{{ t('admin.auditLogs.filterToLabel') }}</Label>
+          <DatePicker id="f-to" v-model="formTo" :locale="inputLang" :min-value="toMinValue" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <Label for="f-search">{{ t('admin.auditLogs.filterSearchLabel') }}</Label>
+          <Input id="f-search" v-model="formSearch" maxlength="200" class="w-56" />
+        </div>
+        <Button size="sm" :disabled="rangeTooLong" @click="applyFilters">{{ t('admin.reservations.filterApply') }}</Button>
+        <Button size="sm" variant="outline" @click="resetFilters">{{ t('admin.reservations.filterReset') }}</Button>
+        <p v-if="rangeTooLong" class="w-full text-sm text-destructive">{{ t('admin.common.filterRangeError') }}</p>
+      </CardContent>
+    </Card>
 
     <div class="overflow-x-auto rounded-md border border-border">
       <table class="w-full text-sm">

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WonjinApi.Data;
 using WonjinApi.DTOs;
+using WonjinApi.Utils;
 
 namespace WonjinApi.Controllers;
 
@@ -127,7 +128,8 @@ public class AdminStatsController(AppDbContext db) : ControllerBase
     // 좁힌다(6-3절 원칙1과 동일 기법 — 컨트롤러 공유는 재사용, 노출 범위만 재선언).
     [HttpGet("referrals")]
     [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<List<ReferralStatDto>>> GetReferralStats([FromQuery] DateOnly from, [FromQuery] DateOnly to)
+    public async Task<ActionResult<List<ReferralStatDto>>> GetReferralStats(
+        [FromQuery] DateOnly from, [FromQuery] DateOnly to, [FromQuery] string? search = null)
     {
         // 🔴 [ApiController]는 DateOnly 미지정 시 400이 아니라 default로 조용히 바인딩한다(실측 확인,
         // GetConsultantKpi와 동일 사유).
@@ -138,8 +140,19 @@ public class AdminStatsController(AppDbContext db) : ControllerBase
 
         // 1단계 — landing_daily_stats를 조합별로 집계. stat_date는 이미 KST 기준 date 컬럼이라(8-10절)
         // DateOnly로 직접 비교하면 되고 reservations처럼 UTC 환산이 필요 없다.
-        var visits = await db.LandingDailyStats
-            .Where(s => s.StatDate >= from && s.StatDate <= to)
+        var visitsQuery = db.LandingDailyStats.Where(s => s.StatDate >= from && s.StatDate <= to);
+        // 검색(2026-08-28) — ix_landing_daily_stats_stat_date로 이미 좁혀진 결과 위에 거는 자유 텍스트
+        // OR 필터라 procedures/consultants 검색과 동일한 패턴(전용 인덱스 없이 ILIKE, 관리자 전용 소규모 테이블).
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var keyword = LikeEscape.Escape(search.Trim());
+            visitsQuery = visitsQuery.Where(s =>
+                EF.Functions.ILike(s.ReferralCode, $"%{keyword}%", "\\")
+                || EF.Functions.ILike(s.UtmSource, $"%{keyword}%", "\\")
+                || EF.Functions.ILike(s.UtmMedium, $"%{keyword}%", "\\")
+                || EF.Functions.ILike(s.UtmCampaign, $"%{keyword}%", "\\"));
+        }
+        var visits = await visitsQuery
             .GroupBy(s => new { s.ReferralCode, s.UtmSource, s.UtmMedium, s.UtmCampaign })
             .Select(g => new
             {

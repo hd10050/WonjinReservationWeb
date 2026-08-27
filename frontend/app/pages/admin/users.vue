@@ -5,15 +5,19 @@
       <Button @click="startCreate">{{ t('admin.users.addButton') }}</Button>
     </div>
 
-    <div class="flex flex-col gap-1.5">
-      <Label for="f-role-filter">{{ t('admin.users.filterRoleLabel') }}</Label>
-      <NativeSelect id="f-role-filter" v-model="roleFilter" class="w-56" @change="applyRoleFilter">
-        <NativeSelectOption value="">{{ t('admin.users.filterRoleAll') }}</NativeSelectOption>
-        <NativeSelectOption value="Admin">{{ t('admin.users.roleAdmin') }}</NativeSelectOption>
-        <NativeSelectOption value="HospitalManager">{{ t('admin.users.roleHospitalManager') }}</NativeSelectOption>
-        <NativeSelectOption value="Consultant">{{ t('admin.users.roleConsultant') }}</NativeSelectOption>
-      </NativeSelect>
-    </div>
+    <Card>
+      <CardContent class="flex flex-wrap items-end gap-4">
+        <div class="flex flex-col gap-1.5">
+          <Label for="f-role-filter">{{ t('admin.users.filterRoleLabel') }}</Label>
+          <NativeSelect id="f-role-filter" v-model="roleFilter" class="w-56" @change="applyRoleFilter">
+            <NativeSelectOption value="">{{ t('admin.users.filterRoleAll') }}</NativeSelectOption>
+            <NativeSelectOption value="Admin">{{ t('admin.users.roleAdmin') }}</NativeSelectOption>
+            <NativeSelectOption value="HospitalManager">{{ t('admin.users.roleHospitalManager') }}</NativeSelectOption>
+            <NativeSelectOption value="Consultant">{{ t('admin.users.roleConsultant') }}</NativeSelectOption>
+          </NativeSelect>
+        </div>
+      </CardContent>
+    </Card>
 
     <Card v-if="showCreateForm">
       <CardHeader>

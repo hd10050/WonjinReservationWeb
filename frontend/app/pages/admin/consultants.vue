@@ -56,21 +56,25 @@
       </CardContent>
     </Card>
 
-    <div class="flex flex-wrap items-end gap-4">
-      <div class="flex items-center gap-1.5">
-        <Checkbox id="f-show-inactive" v-model="showInactive" />
-        <Label for="f-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.consultants.includeInactive') }}</Label>
-      </div>
-      <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
-        <Label for="f-search">{{ t('admin.consultants.filterSearch') }}</Label>
-        <Input
-          id="f-search" v-model="formSearch" maxlength="200"
-          :placeholder="t('admin.consultants.filterSearchPlaceholder')"
-          @keyup.enter="applySearch"
-        />
-      </div>
-      <Button @click="applySearch">{{ t('admin.reservations.filterApply') }}</Button>
-    </div>
+    <Card>
+      <CardContent class="flex flex-col gap-3">
+        <div class="flex flex-wrap items-end gap-4">
+          <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
+            <Label for="f-search">{{ t('admin.consultants.filterSearch') }}</Label>
+            <Input
+              id="f-search" v-model="formSearch" maxlength="200"
+              :placeholder="t('admin.consultants.filterSearchPlaceholder')"
+              @keyup.enter="applySearch"
+            />
+          </div>
+          <Button @click="applySearch">{{ t('admin.reservations.filterApply') }}</Button>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <Checkbox id="f-show-inactive" v-model="showInactive" />
+          <Label for="f-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.consultants.includeInactive') }}</Label>
+        </div>
+      </CardContent>
+    </Card>
 
     <Card v-if="showForm">
       <CardHeader>

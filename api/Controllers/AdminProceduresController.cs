@@ -24,6 +24,7 @@ public class AdminProceduresController(AppDbContext db) : ControllerBase
     public async Task<ActionResult<PagedResult<ProcedureLookupDto>>> GetList(
         [FromQuery] bool includeInactive = false,
         [FromQuery] string? search = null,
+        [FromQuery] int? categoryId = null,
         [FromQuery] string? locale = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
@@ -31,6 +32,9 @@ public class AdminProceduresController(AppDbContext db) : ControllerBase
         var query = db.Procedures.AsQueryable();
         if (!includeInactive)
             query = query.Where(p => p.IsActive);
+        // 카테고리별 필터(2026-08-28) — ix_procedures_category_id 인덱스 사용(AddCategories 마이그레이션에서 FK 자동 생성).
+        if (categoryId.HasValue)
+            query = query.Where(p => p.CategoryId == categoryId.Value);
         if (!string.IsNullOrWhiteSpace(search))
         {
             var keyword = LikeEscape.Escape(search.Trim());

@@ -73,21 +73,25 @@
         </CardContent>
       </Card>
 
-      <div class="flex flex-wrap items-end gap-4">
-        <div class="flex items-center gap-1.5">
-          <Checkbox id="cat-show-inactive" v-model="catShowInactive" />
-          <Label for="cat-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.categories.includeInactive') }}</Label>
-        </div>
-        <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
-          <Label for="cat-search">{{ t('admin.categories.filterSearch') }}</Label>
-          <Input
-            id="cat-search" v-model="catFormSearch" maxlength="200"
-            :placeholder="t('admin.categories.filterSearchPlaceholder')"
-            @keyup.enter="applyCategorySearch"
-          />
-        </div>
-        <Button @click="applyCategorySearch">{{ t('admin.reservations.filterApply') }}</Button>
-      </div>
+      <Card>
+        <CardContent class="flex flex-col gap-3">
+          <div class="flex flex-wrap items-end gap-4">
+            <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
+              <Label for="cat-search">{{ t('admin.categories.filterSearch') }}</Label>
+              <Input
+                id="cat-search" v-model="catFormSearch" maxlength="200"
+                :placeholder="t('admin.categories.filterSearchPlaceholder')"
+                @keyup.enter="applyCategorySearch"
+              />
+            </div>
+            <Button @click="applyCategorySearch">{{ t('admin.reservations.filterApply') }}</Button>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <Checkbox id="cat-show-inactive" v-model="catShowInactive" />
+            <Label for="cat-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.categories.includeInactive') }}</Label>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card v-if="catShowForm">
         <CardHeader>
@@ -163,7 +167,7 @@
     <section v-show="mainTab === 'procedures'" class="space-y-6">
       <div class="flex justify-end gap-2">
         <Button variant="outline" @click="downloadProcedureTemplate">{{ t('admin.procedures.bulk.templateButton') }}</Button>
-        <Button variant="outline" @click="procShowBulk = !procShowBulk">{{ t('admin.procedures.bulk.button') }}</Button>
+        <Button variant="outline" :disabled="!activeCategories.length" @click="procShowBulk = !procShowBulk">{{ t('admin.procedures.bulk.button') }}</Button>
         <Button :disabled="!activeCategories.length" @click="procStartCreate">{{ t('admin.procedures.addButton') }}</Button>
       </div>
 
@@ -224,21 +228,34 @@
         </CardContent>
       </Card>
 
-      <div class="flex flex-wrap items-end gap-4">
-        <div class="flex items-center gap-1.5">
-          <Checkbox id="proc-show-inactive" v-model="procShowInactive" />
-          <Label for="proc-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.procedures.includeInactive') }}</Label>
-        </div>
-        <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
-          <Label for="proc-search">{{ t('admin.procedures.filterSearch') }}</Label>
-          <Input
-            id="proc-search" v-model="procFormSearch" maxlength="200"
-            :placeholder="t('admin.procedures.filterSearchPlaceholder')"
-            @keyup.enter="applyProcedureSearch"
-          />
-        </div>
-        <Button @click="applyProcedureSearch">{{ t('admin.reservations.filterApply') }}</Button>
-      </div>
+      <Card>
+        <CardContent class="flex flex-col gap-3">
+          <div class="flex flex-wrap items-end gap-4">
+            <div class="flex flex-col gap-1.5">
+              <Label for="proc-category-filter">{{ t('admin.procedures.filterCategoryLabel') }}</Label>
+              <NativeSelect id="proc-category-filter" v-model="procFilterCategoryId" class="w-56">
+                <NativeSelectOption value="">{{ t('admin.procedures.filterCategoryAll') }}</NativeSelectOption>
+                <NativeSelectOption v-for="c in allCategories" :key="c.id" :value="String(c.id)">
+                  {{ nameOf(c) }}{{ c.isActive ? '' : ` (${t('admin.procedures.inactiveLabel')})` }}
+                </NativeSelectOption>
+              </NativeSelect>
+            </div>
+            <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
+              <Label for="proc-search">{{ t('admin.procedures.filterSearch') }}</Label>
+              <Input
+                id="proc-search" v-model="procFormSearch" maxlength="200"
+                :placeholder="t('admin.procedures.filterSearchPlaceholder')"
+                @keyup.enter="applyProcedureSearch"
+              />
+            </div>
+            <Button @click="applyProcedureSearch">{{ t('admin.reservations.filterApply') }}</Button>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <Checkbox id="proc-show-inactive" v-model="procShowInactive" />
+            <Label for="proc-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.procedures.includeInactive') }}</Label>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card v-if="procShowForm">
         <CardHeader>
@@ -569,6 +586,7 @@ const procQuery = computed(() => ({
   pageSize: 20,
   includeInactive: route.query.pInactive === '1',
   search: (route.query.pSearch as string) || undefined,
+  categoryId: route.query.pCategoryId ? Number(route.query.pCategoryId) : undefined,
   locale: locale.value,
 }))
 const procShowInactive = computed({
@@ -581,8 +599,10 @@ const procPage = computed(() => procQuery.value.page)
 const procTotalPages = computed(() => proceduresPaged.value ? Math.max(1, Math.ceil(proceduresPaged.value.total / proceduresPaged.value.pageSize)) : 1)
 
 const procFormSearch = ref(procQuery.value.search ?? '')
+// 카테고리별 필터(2026-08-28) — 검색어와 마찬가지로 [조회] 클릭 시에만 route.query에 반영(12-4절과 동일 이유).
+const procFilterCategoryId = ref(procQuery.value.categoryId ? String(procQuery.value.categoryId) : '')
 function applyProcedureSearch() {
-  navigateTo({ query: { ...route.query, pPage: 1, pSearch: procFormSearch.value || undefined } })
+  navigateTo({ query: { ...route.query, pPage: 1, pSearch: procFormSearch.value || undefined, pCategoryId: procFilterCategoryId.value || undefined } })
 }
 function goProcedurePage(p: number) {
   navigateTo({ query: { ...route.query, pPage: p } })
