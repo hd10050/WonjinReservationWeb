@@ -80,7 +80,7 @@
     },
     "reservationDetail": {
       "backToList": "返回列表",
-      "notAssignedBanner": "请先分配负责顾问。分配前无法添加咨询记录、变更状态或保存信息。",
+      "notAssignedBanner": "请先分配负责顾问。分配前无法添加咨询记录或保存信息，仅可取消预约。",
       "customerInfo": "客户信息",
       "birthDate": "出生日期",
       "age": "岁",
@@ -93,7 +93,6 @@
       "preferredContactTimeHint": "韩国时间",
       "locale": "申请语言",
       "receivedAt": "接收时间",
-      "referralSource": "获客来源",
       "consultant": "负责顾问",
       "consultantPlaceholder": "请选择负责顾问",
       "inactive": "已停用",
@@ -102,6 +101,7 @@
       "notesEmpty": "暂无咨询记录。",
       "editNote": "编辑",
       "edited": "已编辑",
+      "noteHistory": "修改记录",
       "noteBodyLabel": "新增咨询记录",
       "noteBodyPlaceholder": "请输入咨询内容",
       "addNote": "添加记录",
@@ -112,6 +112,7 @@
       "depositCurrency": "定金币种",
       "depositAmount": "定金金额",
       "depositPaid": "已确认到账",
+      "depositWaived": "无需定金",
       "logs": "处理记录",
       "actions": "操作",
       "markVisited": "确认到店",
@@ -119,8 +120,8 @@
       "cancelReservation": "取消预约",
       "cancelReasonLabel": "取消原因",
       "cancelReasonPlaceholder": "请输入取消原因",
-      "deleteReservation": "删除预约",
-      "deleteConfirm": "确定要删除此预约吗？删除后将从列表中排除。"
+      "restoreReservation": "恢复预约",
+      "restoreConfirm": "确定要恢复此已取消的预约吗？"
     },
     "consultants": {
       "title": "顾问管理",
@@ -365,9 +366,13 @@
     "assigned": "更改负责人",
     "status_changed": "状态变更",
     "note_added": "添加咨询记录",
+    "note_updated": "修改咨询记录",
     "deposit_confirmed": "确认定金到账",
+    "deposit_updated": "定金信息变更",
+    "visit_schedule_changed": "到店时间变更",
+    "procedure_changed": "项目变更",
     "cancelled": "预约取消",
-    "deleted": "已删除"
+    "restored": "预约恢复"
   },
   "errors": {
     "INVALID_CREDENTIALS": "邮箱或密码不正确。",
@@ -378,7 +383,8 @@
     "INVALID_BIRTH_DATE": "请填写正确的出生日期。",
     "SUBMIT_FAILED": "提交失败，请稍后再试。",
     "RESERVATION_NOT_ASSIGNED": "该预约尚未分配负责顾问，请先分配。",
-    "RESERVATION_HAS_NOTES": "存在咨询记录的预约无法删除。",
+    "RESERVATION_LOCKED": "已取消或已到店的预约无法编辑。",
+    "RESERVATION_NOT_CANCELLED": "只有已取消的预约才能恢复。",
     "RESERVATION_STATE_CHANGED": "状态已在其他地方被变更，请刷新后重试。",
     "CONSULTANT_NOT_FOUND": "找不到该顾问。",
     "CONSULTANT_INACTIVE": "无法分配给已停用的顾问。",
@@ -393,6 +399,7 @@
     "INVALID_STATUS_TRANSITION": "不允许此状态变更。",
     "CANCEL_REASON_REQUIRED": "请输入取消原因。",
     "INVALID_DEPOSIT_CURRENCY": "定金币种不正确。",
+    "INVALID_DEPOSIT_AMOUNT": "请输入0至9999999999.99之间的定金金额。",
     "INVALID_PROCEDURE_IDS": "所选项目中包含不存在的项目。",
     "PROCEDURE_CODE_DUPLICATE": "该项目编号已被使用。",
     "INTERNAL_ERROR": "服务器发生临时错误，请稍后重试。",

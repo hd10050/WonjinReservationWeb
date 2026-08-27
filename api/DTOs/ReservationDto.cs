@@ -37,6 +37,8 @@ public record ReservationNoteDto(
     int Id, string Body, int? AuthorUserId, string AuthorName,
     DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, bool IsEdited);
 
+public record ReservationNoteRevisionDto(int Id, string Body, string EditedByName, DateTimeOffset EditedAt);
+
 public record ReservationLogDto(int Id, string Action, string? Note, string ActorName, DateTimeOffset CreatedAt);
 
 public record ReservationDetailDto(
@@ -55,11 +57,15 @@ public record ReservationDetailDto(
 // 9-1절 3곳 일치: DB varchar(200)/varchar(3) — 아래 백엔드 검증과 프론트 maxlength가 이 값을 그대로 따른다.
 // 🔴 DepositAmount 상한은 DB numeric(12,2)(AppDbContext.cs HasPrecision(12,2))와 반드시 일치시킬 것 —
 // double.MaxValue로 뒀다가 큰 값 입력 시 400 대신 numeric overflow 500이 났다(재감사 발견).
+// 🔴 범위 검증은 [Range] 대신 컨트롤러에서 수동으로 한다 — [ApiController]의 자동 ModelState 400은
+// 앱 공용 {code} 응답 형식이 아닌 기본 ProblemDetails를 반환해, 프론트가 errCode()로 이를 못 읽고
+// UNKNOWN(알 수 없는 오류)으로 표시했다(실사용 버그 리포트로 발견). 상·하한 값은 여기와
+// AdminReservationsController.UpdateReservation 양쪽에 동일하게 유지할 것.
 public record UpdateReservationRequest(
     DateOnly? VisitDate,
     TimeOnly? VisitTime,
     int[] ProcedureIds,
-    [Range(0, 9999999999.99)] decimal? DepositAmount,
+    decimal? DepositAmount,
     [Required, MaxLength(3)] string DepositCurrency,
     bool DepositPaid);
 

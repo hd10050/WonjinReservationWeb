@@ -19,6 +19,7 @@ namespace WonjinApi.Controllers;
 public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster broadcaster) : ControllerBase
 {
     private static readonly TimeZoneInfo Kst = TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul");
+    private const decimal MaxDepositAmount = 9999999999.99m; // DB numeric(12,2) 상한과 반드시 일치(DTO 주석 참고)
 
     [HttpGet]
     public async Task<ActionResult<PagedResult<ReservationListItemDto>>> GetList(
@@ -157,7 +158,7 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
             notes, logs));
     }
 
-    // 방문일시·시술·예약금 저장. 미배정이면 400(D17, 10-1절).
+    // 방문일시·시술·예약금 저장. 미배정이면 400(D17, 10-1절). 취소·방문완료 상태도 400(11-2절 잠금).
     [HttpPatch("{id:int}")]
     [Authorize(Roles = "Admin,Consultant")]
     [EnableRateLimiting("admin-write")]
@@ -165,6 +166,11 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
     {
         if (req.DepositCurrency is not ("CNY" or "KRW"))
             return BadRequest(new { code = "INVALID_DEPOSIT_CURRENCY" });
+
+        // 🔴 [Range] 대신 수동 검증(ReservationDto.cs 주석 참고) — 응답을 앱 공용 {code} 형식으로 맞춰
+        // 프론트가 "알 수 없는 오류" 대신 정확한 안내를 보여주게 한다. 음수·numeric overflow 둘 다 여기서 막는다.
+        if (req.DepositAmount is < 0 or > MaxDepositAmount)
+            return BadRequest(new { code = "INVALID_DEPOSIT_AMOUNT" });
 
         // 🔴 시술 ID 존재 검증 — AssignConsultant의 CONSULTANT_NOT_FOUND와 대칭. 검증 없이 그대로 삽입하면
         // FK 위반(fk_reservation_procedures_procedures_procedure_id)이 SaveChangesAsync에서 500으로
@@ -180,10 +186,17 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
 
         var before = await db.Reservations.AsNoTracking()
             .Where(r => r.Id == id)
-            .Select(r => new { r.ConsultantId, r.DepositPaid })
+            .Select(r => new { r.ConsultantId, r.Status, r.VisitDate, r.VisitTime, r.DepositAmount, r.DepositCurrency, r.DepositPaid })
             .FirstOrDefaultAsync();
         if (before is null) return NotFound();
         if (before.ConsultantId is null) return BadRequest(new { code = "RESERVATION_NOT_ASSIGNED" });
+        // 🔴 취소·방문완료는 담당 실장 배정 전과 동일하게 잠긴다 — 서버가 실제 방어선(11-2절).
+        if (before.Status is "Cancelled" or "Visited") return BadRequest(new { code = "RESERVATION_LOCKED" });
+
+        var beforeProcedureIds = await db.ReservationProcedures.AsNoTracking()
+            .Where(rp => rp.ReservationId == id)
+            .Select(rp => rp.ProcedureId)
+            .ToListAsync();
 
         var now = DateTimeOffset.UtcNow;
 
@@ -191,9 +204,9 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
         // 실패하면 전부 롤백되어 "응답은 실패인데 일부만 반영된" 상태를 만들지 않는다(재감사 1번 결함 수정).
         await using var tx = await db.Database.BeginTransactionAsync();
 
-        // D17 — 배정 여부를 같은 UPDATE의 WHERE에 다시 넣어 조회~쓰기 사이 배정 해제된 경우를 닫는다(10-1절).
+        // D17·잠금 상태 둘 다 같은 UPDATE의 WHERE에 다시 넣어 조회~쓰기 사이 변경된 경우를 닫는다(10-1절).
         var affected = await db.Reservations
-            .Where(r => r.Id == id && r.ConsultantId != null)
+            .Where(r => r.Id == id && r.ConsultantId != null && r.Status != "Cancelled" && r.Status != "Visited")
             .ExecuteUpdateAsync(s => s
                 .SetProperty(r => r.VisitDate, req.VisitDate)
                 .SetProperty(r => r.VisitTime, req.VisitTime)
@@ -212,9 +225,11 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
                 distinctProcedureIds.Select(pid => new ReservationProcedure { ReservationId = id, ProcedureId = pid }));
         }
 
-        // New/Consulting에서 방문일+입금확인 둘 다 충족하면 Confirmed로 자동 전이(10장)
+        // New/Consulting에서 방문일이 정해지면 Confirmed로 자동 전이(10장) — 예약금 확인 여부는 더 이상
+        // 조건이 아니다(2026-08-27, 예약금 미확인 상태에서도 내원 확인이 가능해야 한다는 요구로 완화.
+        // 예약금 확인 자체는 아래에서 별도로 계속 추적·기록된다).
         var confirmedAffected = 0;
-        if (req.VisitDate is not null && req.DepositPaid)
+        if (req.VisitDate is not null)
         {
             confirmedAffected = await db.Reservations
                 .Where(r => r.Id == id && (r.Status == "New" || r.Status == "Consulting"))
@@ -225,11 +240,69 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
         }
 
         var (userId, userName) = await GetCurrentUserAsync();
-        var depositNewlyConfirmed = req.DepositPaid && !before.DepositPaid;
-        if (depositNewlyConfirmed)
-            db.ReservationLogs.Add(new ReservationLog { ReservationId = id, Action = "deposit_confirmed", ActorUserId = userId, ActorName = userName, CreatedAt = now });
+
+        // 🔴 예약금·방문일시·시술 — 실제로 값이 바뀐 항목만 처리 이력에 남긴다(전량 이력화 요구,
+        // "저장" 버튼을 값 변경 없이 눌러도 로그가 쌓이지 않도록 비교 후에만 기록).
+        var depositBecamePaid = req.DepositPaid && !before.DepositPaid;
+        var depositBecameUnpaid = !req.DepositPaid && before.DepositPaid;
+        var depositAmountOrCurrencyChanged = before.DepositAmount != req.DepositAmount || before.DepositCurrency != req.DepositCurrency;
+
+        if (depositBecamePaid)
+        {
+            // 예약금 없음(면제) 라디오도 내부적으로는 DepositPaid=true로 처리한다(#13) — 금액 유무로 문구만 구분.
+            var reason = req.DepositAmount is null
+                ? "예약금 없음(입금 불필요 처리)"
+                : $"{FormatDeposit(req.DepositAmount, req.DepositCurrency)} 입금 확인";
+            db.ReservationLogs.Add(new ReservationLog { ReservationId = id, Action = "deposit_confirmed", Note = Cap(reason), ActorUserId = userId, ActorName = userName, CreatedAt = now });
+        }
+        else if (depositAmountOrCurrencyChanged || depositBecameUnpaid)
+        {
+            var parts = new List<string>();
+            if (depositAmountOrCurrencyChanged)
+                parts.Add($"예약금 {FormatDeposit(before.DepositAmount, before.DepositCurrency)} → {FormatDeposit(req.DepositAmount, req.DepositCurrency)}");
+            if (depositBecameUnpaid)
+                parts.Add("입금 확인 해제");
+            db.ReservationLogs.Add(new ReservationLog { ReservationId = id, Action = "deposit_updated", Note = Cap(string.Join(", ", parts)), ActorUserId = userId, ActorName = userName, CreatedAt = now });
+        }
+
+        if (before.VisitDate != req.VisitDate || before.VisitTime != req.VisitTime)
+        {
+            string FormatSchedule(DateOnly? d, TimeOnly? t) =>
+                d is null ? "미정" : $"{d.Value:yyyy-MM-dd} {t?.ToString("HH:mm") ?? ""}".TrimEnd();
+            db.ReservationLogs.Add(new ReservationLog
+            {
+                ReservationId = id,
+                Action = "visit_schedule_changed",
+                Note = Cap($"방문일시 {FormatSchedule(before.VisitDate, before.VisitTime)} → {FormatSchedule(req.VisitDate, req.VisitTime)}"),
+                ActorUserId = userId, ActorName = userName, CreatedAt = now,
+            });
+        }
+
+        var beforeProcSet = beforeProcedureIds.ToHashSet();
+        var afterProcSet = distinctProcedureIds.ToHashSet();
+        if (!beforeProcSet.SetEquals(afterProcSet))
+        {
+            var unionIds = beforeProcSet.Union(afterProcSet).ToArray();
+            var nameMap = await db.Procedures.AsNoTracking()
+                .Where(p => unionIds.Contains(p.Id))
+                .Select(p => new { p.Id, p.NameKo })
+                .ToDictionaryAsync(p => p.Id, p => p.NameKo);
+            string Names(IEnumerable<int> ids)
+            {
+                var joined = string.Join(", ", ids.Select(pid => nameMap.GetValueOrDefault(pid, $"#{pid}")));
+                return joined.Length == 0 ? "없음" : joined;
+            }
+            db.ReservationLogs.Add(new ReservationLog
+            {
+                ReservationId = id,
+                Action = "procedure_changed",
+                Note = Cap($"시술 {Names(beforeProcSet)} → {Names(afterProcSet)}"),
+                ActorUserId = userId, ActorName = userName, CreatedAt = now,
+            });
+        }
+
         if (confirmedAffected > 0)
-            db.ReservationLogs.Add(new ReservationLog { ReservationId = id, Action = "status_changed", Note = "예약금·방문일 확인 → Confirmed", ActorUserId = userId, ActorName = userName, CreatedAt = now });
+            db.ReservationLogs.Add(new ReservationLog { ReservationId = id, Action = "status_changed", Note = "방문일 확정 → Confirmed", ActorUserId = userId, ActorName = userName, CreatedAt = now });
 
         await db.SaveChangesAsync();
         await tx.CommitAsync();
@@ -267,9 +340,11 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
 
         var before = await db.Reservations.AsNoTracking()
             .Where(r => r.Id == id)
-            .Select(r => new { r.ConsultantId, r.RowVersion })
+            .Select(r => new { r.ConsultantId, r.Status, r.RowVersion })
             .FirstOrDefaultAsync();
         if (before is null) return NotFound();
+        // 🔴 취소·방문완료는 담당 실장 배정 전과 동일하게 잠긴다 — 재배정도 예외 없다(11-2절).
+        if (before.Status is "Cancelled" or "Visited") return BadRequest(new { code = "RESERVATION_LOCKED" });
 
         var prevName = "미배정";
         if (before.ConsultantId is not null)
@@ -281,7 +356,7 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
         }
 
         var affected = await db.Reservations
-            .Where(r => r.Id == id && r.RowVersion == before.RowVersion)
+            .Where(r => r.Id == id && r.RowVersion == before.RowVersion && r.Status != "Cancelled" && r.Status != "Visited")
             .ExecuteUpdateAsync(s => s
                 .SetProperty(r => r.ConsultantId, req.ConsultantId)
                 .SetProperty(r => r.UpdatedAt, now));
@@ -335,8 +410,10 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
             if (string.IsNullOrWhiteSpace(req.CancelReason))
                 return BadRequest(new { code = "CANCEL_REASON_REQUIRED" });
 
+            // 🔴 취소는 미배정 상태에서도 허용한다(2026-08-27 요구 변경 — 하드 삭제를 없애고 미배정
+            // 예약의 정리 수단을 삭제 대신 취소로 통일했다) — ConsultantId 조건을 의도적으로 뺀다.
             affected = await db.Reservations
-                .Where(r => r.Id == id && r.ConsultantId != null
+                .Where(r => r.Id == id
                          && (r.Status == "New" || r.Status == "Consulting" || r.Status == "Confirmed"))
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(r => r.Status, "Cancelled")
@@ -352,7 +429,7 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
         }
 
         if (affected == 0)
-            return await DiagnoseWriteFailureAsync(id);
+            return await DiagnoseWriteFailureAsync(id, requiresAssignment: req.Status != "Cancelled");
 
         var (userId, userName) = await GetCurrentUserAsync();
         db.ReservationLogs.Add(new ReservationLog
@@ -378,13 +455,13 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
         await using var tx = await db.Database.BeginTransactionAsync();
 
         // 🔴 보안감사(2026-08-26) 발견 — 이전엔 배정 여부를 트랜잭션 밖 별도 SELECT로만 확인했다.
-        // 그 확인과 아래 INSERT 사이에 SoftDelete가 먼저 커밋되면(둘 다 "상담기록 0건"을 보고 통과),
-        // 노트는 삭제된 예약에 조용히 저장되고 전역 쿼리 필터로 영구히 안 보이게 된다(D15 시나리오와
-        // 동일). ExecuteUpdateAsync 조건부 UPDATE가 이 행에 row-level lock을 걸어, 동시에 들어온
-        // SoftDelete의 UPDATE와 서로 직렬화되게 한다 — SoftDelete가 먼저 커밋되면 아래 WHERE의
-        // ConsultantId 조건이 전역 필터에 의해 대상 자체를 못 찾아 touched=0이 되어 안전하게 막힌다.
+        // ExecuteUpdateAsync 조건부 UPDATE가 이 행에 row-level lock을 걸어, 동시에 들어온 다른 쓰기의
+        // UPDATE와 서로 직렬화되게 한다 — 상대가 먼저 커밋되면 아래 WHERE 조건에 안 걸려 touched=0이
+        // 되어 안전하게 막힌다(경쟁하는 대상은 원래 SoftDelete/D15였으나, 2026-08-27 소프트 삭제
+        // 기능 자체가 폐지되어 지금은 예약 취소(Cancelled 전이)가 그 자리를 대신한다 — 아래 참고).
+        // 🔴 취소된 예약은 상담 기록 추가도 잠근다(11-2절) — 방문완료는 예외(#14, 사후 상담 기록 목적).
         var touched = await db.Reservations
-            .Where(r => r.Id == id && r.ConsultantId != null)
+            .Where(r => r.Id == id && r.ConsultantId != null && r.Status != "Cancelled")
             .ExecuteUpdateAsync(s => s.SetProperty(r => r.UpdatedAt, now));
         if (touched == 0)
             return await DiagnoseNoteWriteFailureAsync(id);
@@ -416,6 +493,7 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
     }
 
     // 상담 기록 수정. 작성자 본인 또는 Admin만 — 삭제 엔드포인트는 만들지 않는다(D14).
+    // 🔴 수정 전 본문을 revisions에 스냅샷으로 남긴다(수정 이력 모달용) + 처리 이력에도 기록한다.
     [HttpPatch("{id:int}/notes/{noteId:int}")]
     [Authorize(Roles = "Admin,Consultant")]
     [EnableRateLimiting("admin-write")]
@@ -425,57 +503,87 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
         if (note is null) return NotFound();
 
         var role = User.FindFirstValue(ClaimTypes.Role);
-        var (userId, _) = await GetCurrentUserAsync();
+        var (userId, userName) = await GetCurrentUserAsync();
         if (role != "Admin" && note.AuthorUserId != userId)
             return Forbid();
 
+        // 🔴 취소된 예약은 상담 기록 수정도 잠근다(11-2절) — 방문완료는 예외(#14, 사후 상담 기록 목적).
+        var status = await db.Reservations.AsNoTracking().Where(r => r.Id == id).Select(r => r.Status).FirstOrDefaultAsync();
+        if (status == "Cancelled") return BadRequest(new { code = "RESERVATION_LOCKED" });
+
+        var now = DateTimeOffset.UtcNow;
+        db.ReservationNoteRevisions.Add(new ReservationNoteRevision
+        {
+            ReservationNoteId = note.Id, Body = note.Body, EditedByUserId = userId, EditedByName = userName, EditedAt = now,
+        });
         note.Body = req.Body;
-        note.UpdatedAt = DateTimeOffset.UtcNow;
+        note.UpdatedAt = now;
+        db.ReservationLogs.Add(new ReservationLog { ReservationId = id, Action = "note_updated", ActorUserId = userId, ActorName = userName, CreatedAt = now });
         await db.SaveChangesAsync();
 
         return Ok(new ReservationNoteDto(note.Id, note.Body, note.AuthorUserId, note.AuthorName, note.CreatedAt, note.UpdatedAt, true));
     }
 
-    // 소프트 삭제(D15) — 상담 기록이 0건일 때만. 미배정이어도 허용(D17, 중복·장난 신청 정리 목적).
-    [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin,Consultant")]
-    [EnableRateLimiting("admin-write")]
-    public async Task<IActionResult> SoftDelete(int id)
+    // 상담 기록 수정 이력 조회(#5) — 조회는 3역할 전부(클래스 레벨 Authorize로 이미 충분).
+    [HttpGet("{id:int}/notes/{noteId:int}/revisions")]
+    public async Task<ActionResult<List<ReservationNoteRevisionDto>>> GetNoteRevisions(int id, int noteId)
     {
-        var now = DateTimeOffset.UtcNow;
-        var (userId, userName) = await GetCurrentUserAsync();
+        var noteExists = await db.ReservationNotes.AsNoTracking().AnyAsync(n => n.Id == noteId && n.ReservationId == id);
+        if (!noteExists) return NotFound();
 
-        // 🔴 삭제 UPDATE와 그 처리 이력(reservation_logs) 기록을 하나의 트랜잭션으로 묶는다 — 로그 기록이
-        // 실패해도 "삭제됐는데 이력이 없는" 불일치를 막는다(재감사 1번 결함과 동일 패턴).
-        await using (var tx = await db.Database.BeginTransactionAsync())
-        {
-            // 조건(상담기록 0건)과 갱신이 같은 문장에서 평가되므로 경쟁 조건이 없다(11-2절)
-            var affected = await db.Reservations
-                .Where(r => r.Id == id && !db.ReservationNotes.Any(n => n.ReservationId == id))
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(r => r.DeletedAt, now)
-                    .SetProperty(r => r.DeletedByUserId, userId));
+        var revisions = await db.ReservationNoteRevisions.AsNoTracking()
+            .Where(r => r.ReservationNoteId == noteId)
+            .OrderByDescending(r => r.EditedAt)
+            .Select(r => new ReservationNoteRevisionDto(r.Id, r.Body, r.EditedByName, r.EditedAt))
+            .ToListAsync();
 
-            if (affected == 0)
-            {
-                var exists = await db.Reservations.AnyAsync(r => r.Id == id);
-                if (!exists) return NotFound();
-                return Conflict(new { code = "RESERVATION_HAS_NOTES" });
-            }
-
-            db.ReservationLogs.Add(new ReservationLog { ReservationId = id, Action = "deleted", ActorUserId = userId, ActorName = userName, CreatedAt = now });
-            await db.SaveChangesAsync();
-            await tx.CommitAsync();
-        }
-
-        // audit_logs는 컨트롤러에서 직접 쓰지 않는다 — 전역 AuditLogFilter(Phase 7) 전용(14장,
-        // AuditLog.cs·Program.cs 주석과 동일). 그 전까지는 다른 5개 쓰기 액션과 마찬가지로
-        // reservation_logs(위)만 남기고 audit_logs는 Phase 7에서 일괄 커버한다.
-        return NoContent();
+        return Ok(revisions);
     }
 
-    // affected==0의 이유가 셋(없음/미배정/상태변경됨)이라 구분해서 응답해야 화면이 올바른 안내를 띄운다(10-1절)
-    private async Task<ActionResult<ReservationDetailDto>> DiagnoseWriteFailureAsync(int id)
+    // 취소된 예약을 되돌린다(#10). 어드민만 — 종결 상태를 되돌리는 액션은 별도 승인 주체를 둔다는
+    // 기존 설계 방향(10-1절 "되돌리기가 필요하면 어드민만")을 그대로 따른다.
+    [HttpPost("{id:int}/restore")]
+    [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("admin-write")]
+    public async Task<ActionResult<ReservationDetailDto>> RestoreCancelled(int id)
+    {
+        var info = await db.Reservations.AsNoTracking()
+            .Where(r => r.Id == id)
+            .Select(r => new { r.Status, r.VisitDate, HasNotes = r.Notes.Any() })
+            .FirstOrDefaultAsync();
+        if (info is null) return NotFound();
+        if (info.Status != "Cancelled") return BadRequest(new { code = "RESERVATION_NOT_CANCELLED" });
+
+        // 취소 시점 데이터(방문일·상담기록)가 그대로 남아있으므로, 순방향 전이 규칙(10장)과 동일한
+        // 기준으로 되돌아갈 상태를 계산한다 — 무조건 New로 되돌리면 이미 진행된 상담·확정 이력이 사라져 보인다.
+        var targetStatus = info.VisitDate is not null ? "Confirmed" : info.HasNotes ? "Consulting" : "New";
+
+        var now = DateTimeOffset.UtcNow;
+        await using var tx = await db.Database.BeginTransactionAsync();
+
+        var affected = await db.Reservations
+            .Where(r => r.Id == id && r.Status == "Cancelled")
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(r => r.Status, targetStatus)
+                .SetProperty(r => r.CancelledAt, (DateTimeOffset?)null)
+                .SetProperty(r => r.CancelReason, (string?)null)
+                .SetProperty(r => r.UpdatedAt, now));
+
+        if (affected == 0)
+            return Conflict(new { code = "RESERVATION_STATE_CHANGED" });
+
+        var (userId, userName) = await GetCurrentUserAsync();
+        db.ReservationLogs.Add(new ReservationLog { ReservationId = id, Action = "restored", Note = $"Cancelled → {targetStatus}", ActorUserId = userId, ActorName = userName, CreatedAt = now });
+        await db.SaveChangesAsync();
+        await tx.CommitAsync();
+
+        return await GetDetail(id);
+    }
+
+    // affected==0의 이유가 셋(없음/미배정/상태변경됨)이라 구분해서 응답해야 화면이 올바른 안내를 띄운다(10-1절).
+    // requiresAssignment=false는 취소처럼 미배정 상태에서도 허용되는 전이 실패를 진단할 때 쓴다 — 그 경우
+    // ConsultantId가 null이어도 "미배정" 때문이 아니라 상태가 이미 바뀐 것이 원인이므로 이 인자로 구분한다.
+    private async Task<ActionResult<ReservationDetailDto>> DiagnoseWriteFailureAsync(int id, bool requiresAssignment = true)
     {
         var cur = await db.Reservations.AsNoTracking()
             .Where(r => r.Id == id)
@@ -483,7 +591,7 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
             .FirstOrDefaultAsync();
 
         if (cur is null) return NotFound();
-        if (cur.ConsultantId is null) return BadRequest(new { code = "RESERVATION_NOT_ASSIGNED" });
+        if (requiresAssignment && cur.ConsultantId is null) return BadRequest(new { code = "RESERVATION_NOT_ASSIGNED" });
         return Conflict(new { code = "RESERVATION_STATE_CHANGED" });
     }
 
@@ -507,4 +615,10 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
         var name = await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => u.Name).FirstOrDefaultAsync() ?? "SYSTEM";
         return (userId, name);
     }
+
+    private static string FormatDeposit(decimal? amount, string currency) =>
+        amount is null ? "없음" : $"{amount:0.##} {currency}";
+
+    // reservation_logs.note는 varchar(300) — 시술명 여러 개가 합쳐지는 등 드물게 넘칠 수 있어 방어적으로 자른다.
+    private static string Cap(string s) => s.Length <= 300 ? s : s[..297] + "...";
 }
