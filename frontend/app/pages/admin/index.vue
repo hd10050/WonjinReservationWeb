@@ -51,11 +51,11 @@
         </div>
         <div class="flex flex-col gap-1.5">
           <Label for="f-from">{{ t('admin.reservations.filterFrom') }}</Label>
-          <DatePicker id="f-from" v-model="formFrom" :locale="inputLang" class="w-40" />
+          <DatePicker id="f-from" v-model="formFrom" :locale="inputLang" />
         </div>
         <div class="flex flex-col gap-1.5">
           <Label for="f-to">{{ t('admin.reservations.filterTo') }}</Label>
-          <DatePicker id="f-to" v-model="formTo" :locale="inputLang" class="w-40" />
+          <DatePicker id="f-to" v-model="formTo" :locale="inputLang" />
         </div>
         <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
           <Label for="f-search">{{ t('admin.reservations.filterSearch') }}</Label>
@@ -178,6 +178,16 @@ const formConsultantId = ref(query.value.consultantId ? String(query.value.consu
 const formFrom = ref(query.value.from)
 const formTo = ref(query.value.to)
 const formSearch = ref(query.value.search ?? '')
+
+// 🔴 버그(2026-08-27) — "비활성 포함" 체크 후 비활성 실장을 선택하고 체크를 다시 해제하면 목록이
+// 활성 실장만으로 교체돼 선택돼 있던 값이 <select>에 더 이상 없는 옵션이 된다. 네이티브 select는
+// 이때 화면만 빈 값처럼 보일 뿐 formConsultantId ref 자체는 사라진 값을 계속 들고 있어(다음
+// [필터 적용] 클릭 시 그 stale id로 조회됨) — 목록이 바뀔 때마다 현재 선택값이 여전히 유효한지
+// 확인해, 없으면 "전체"로 리셋한다(비활성 토글뿐 아니라 목록이 바뀌는 모든 경우에 적용되는 근본 수정).
+watch(consultants, (list) => {
+  if (formConsultantId.value && !(list ?? []).some(c => String(c.id) === formConsultantId.value))
+    formConsultantId.value = ''
+})
 
 function applyFilters() {
   navigateTo({
