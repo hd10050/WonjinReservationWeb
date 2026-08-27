@@ -107,8 +107,12 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
     // 고정 42일로 결정론적이며 클라이언트가 임의로 넓힐 수 없다.
     // 필터가 부분 인덱스 ix_reservations_visit_date의 조건(status IN ('Confirmed','Visited'))과
     // 정확히 일치해야 인덱스를 탄다(8-5절).
+    // 🔴 성능(2026-08-27, "날짜 클릭 전인데 왜 다 로드돼있냐" 사용자 지적) — 이전엔 이 엔드포인트가
+    // 42일치 예약 상세를 전부 반환해, 날짜를 클릭하기도 전에 한 달치 데이터가 통째로 로드돼 있었다.
+    // 그리드가 실제로 표시하는 건 날짜별 배지 숫자뿐이므로 건수만 GroupBy로 집계해 반환하고,
+    // 상세 목록은 GetCalendarDay로 분리해 날짜를 클릭했을 때만 그 하루치만 불러온다.
     [HttpGet("calendar")]
-    public async Task<ActionResult<List<ReservationCalendarItemDto>>> GetCalendar([FromQuery] int year, [FromQuery] int month)
+    public async Task<ActionResult<List<ReservationCalendarDayCountDto>>> GetCalendar([FromQuery] int year, [FromQuery] int month)
     {
         DateOnly monthStart;
         try { monthStart = new DateOnly(year, month, 1); }
@@ -116,10 +120,31 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
         var gridStart = monthStart.AddDays(-(int)monthStart.DayOfWeek); // DayOfWeek: 일요일=0
         var gridEndExclusive = gridStart.AddDays(42);
 
-        var items = await db.Reservations
+        // 🔴 GroupBy(...).Select(g => new Dto(...)) 직결 금지(11-6절 함정) — EF Core가 SQL로 못 옮겨
+        // 런타임 예외. 익명 타입으로 먼저 집계한 뒤 메모리에서 DTO로 매핑하는 2단계로 우회한다.
+        var rows = await db.Reservations
             .Where(r => r.VisitDate != null && r.VisitDate >= gridStart && r.VisitDate < gridEndExclusive
                      && (r.Status == "Confirmed" || r.Status == "Visited"))
-            .OrderBy(r => r.VisitDate).ThenBy(r => r.VisitTime)
+            .GroupBy(r => r.VisitDate!.Value)
+            .Select(g => new { VisitDate = g.Key, Count = g.Count() })
+            .ToListAsync();
+
+        var counts = rows.Select(r => new ReservationCalendarDayCountDto(r.VisitDate, r.Count)).ToList();
+        return Ok(counts);
+    }
+
+    // 위 GetCalendar가 반환하던 상세 목록을 여기로 분리(2026-08-27) — 날짜 클릭 시에만 그 하루치를
+    // 불러온다. 단일 날짜 + 동일 status 필터라 GetCalendar와 같은 부분 인덱스(ix_reservations_visit_date)를
+    // 그대로 탄다. date는 [FromQuery] DateOnly(비-nullable) — 파라미터 누락 시 400이 아니라 default
+    // (0001-01-01)로 조용히 바인딩되는 함정(11-8절)이 있어 명시적으로 검사한다.
+    [HttpGet("calendar/day")]
+    public async Task<ActionResult<List<ReservationCalendarItemDto>>> GetCalendarDay([FromQuery] DateOnly date)
+    {
+        if (date == default) return BadRequest(new { code = "INVALID_CALENDAR_DATE" });
+
+        var items = await db.Reservations
+            .Where(r => r.VisitDate == date && (r.Status == "Confirmed" || r.Status == "Visited"))
+            .OrderBy(r => r.VisitTime)
             .Select(r => new ReservationCalendarItemDto(
                 r.Id, r.Code, r.Name, r.Status, r.VisitDate!.Value, r.VisitTime,
                 r.Consultant == null ? null : r.Consultant.Name))

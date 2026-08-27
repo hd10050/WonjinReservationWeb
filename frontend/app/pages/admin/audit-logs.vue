@@ -26,11 +26,11 @@
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="f-from">{{ t('admin.auditLogs.filterFromLabel') }}</Label>
-        <DatePicker id="f-from" v-model="formFrom" :locale="inputLang" class="w-40" />
+        <DatePicker id="f-from" v-model="formFrom" :locale="inputLang" />
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="f-to">{{ t('admin.auditLogs.filterToLabel') }}</Label>
-        <DatePicker id="f-to" v-model="formTo" :locale="inputLang" class="w-40" />
+        <DatePicker id="f-to" v-model="formTo" :locale="inputLang" />
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="f-search">{{ t('admin.auditLogs.filterSearchLabel') }}</Label>
@@ -76,6 +76,7 @@
 
 <script setup lang="ts">
 import type { AdminUser, AuditLogEntry, PagedResult } from '~/types/reservation'
+import { todayKst } from '~/utils/datetime'
 
 definePageMeta({ middleware: 'admin', layout: 'admin', i18n: false })
 useHead({ title: '로그(감사) | Admin', meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
@@ -89,6 +90,11 @@ const inputLang = useInputLang()
 const ENTITY_TYPES = ['reservation', 'reservation_note', 'consultant', 'procedure', 'user']
 const ACTIONS = ['create', 'update', 'soft_delete', 'note_add', 'note_update', 'status_change']
 
+// 🔴 버그(2026-08-27) — 다른 날짜 필터 페이지(대시보드·유입경로·통계·KPI)는 전부 당월 1일~현재를
+// 기본값으로 두는데 이 페이지만 빠져 있어 날짜 필터가 빈 채로 시작했다 — 나머지와 동일하게 통일.
+const defaultFrom = `${todayKst().slice(0, 7)}-01`
+const defaultTo = todayKst()
+
 // 🔴 검색 입력을 반응형 query에 직접 물리지 말 것(12-4절) — [필터 적용] 클릭 시에만 route.query 반영
 const query = computed(() => ({
   page: Number(route.query.page) || 1,
@@ -96,8 +102,8 @@ const query = computed(() => ({
   actorId: route.query.actorId ? Number(route.query.actorId) : undefined,
   entityType: (route.query.entityType as string) || undefined,
   action: (route.query.action as string) || undefined,
-  from: (route.query.from as string) || undefined,
-  to: (route.query.to as string) || undefined,
+  from: (route.query.from as string) || defaultFrom,
+  to: (route.query.to as string) || defaultTo,
   search: (route.query.search as string) || undefined,
 }))
 const { data } = await useApi<PagedResult<AuditLogEntry>>('/api/admin/audit-logs', { query })
@@ -116,8 +122,8 @@ function formatDateTime(iso: string) {
 const formActorId = ref(query.value.actorId ? String(query.value.actorId) : '')
 const formEntityType = ref(query.value.entityType ?? '')
 const formAction = ref(query.value.action ?? '')
-const formFrom = ref(query.value.from ?? '')
-const formTo = ref(query.value.to ?? '')
+const formFrom = ref(query.value.from)
+const formTo = ref(query.value.to)
 const formSearch = ref(query.value.search ?? '')
 
 function applyFilters() {
@@ -137,8 +143,8 @@ function resetFilters() {
   formActorId.value = ''
   formEntityType.value = ''
   formAction.value = ''
-  formFrom.value = ''
-  formTo.value = ''
+  formFrom.value = defaultFrom
+  formTo.value = defaultTo
   formSearch.value = ''
   navigateTo({ query: {} })
 }

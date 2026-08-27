@@ -94,6 +94,12 @@ export interface ReservationCalendarItem {
   consultantName: string | null
 }
 
+// 달력 그리드 배지용 — 날짜별 건수만(2026-08-27, 상세 목록과 분리)
+export interface ReservationCalendarDayCount {
+  visitDate: string
+  count: number
+}
+
 export interface ConsultantLookup {
   id: number
   name: string

@@ -1,5 +1,16 @@
 <template>
   <div class="space-y-6">
+    <!-- 🔴 상태전이·저장 1~2초 체감 지연을 "렉"이 아니라 로딩임을 보여주는 오버레이(2026-08-27) —
+         RouteOverlay.vue와 동일 원칙: <Transition> 없이 항상 마운트, pointer-events·투명도를 busy
+         상태값에 직접 클래스 바인딩으로만 토글한다(13-2절, 연타 시 오버레이 고착 사고 재발 방지). -->
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center bg-white/60 transition-opacity duration-150"
+      :class="busy ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'"
+      aria-hidden="true"
+    >
+      <Loader2 class="size-10 animate-spin text-primary" />
+    </div>
+
     <button type="button" class="text-sm text-muted-foreground hover:text-foreground" @click="navigateTo('/admin')">
       ← {{ t('admin.reservationDetail.backToList') }}
     </button>
@@ -104,7 +115,7 @@
           <div class="flex flex-wrap gap-4">
             <div class="flex flex-col gap-1.5">
               <Label for="f-visit-date">{{ t('admin.reservationDetail.visitDate') }}</Label>
-              <DatePicker id="f-visit-date" v-model="visitDate" :locale="inputLang" :disabled="!canWrite || isVisitInfoLocked" class="w-40" />
+              <DatePicker id="f-visit-date" v-model="visitDate" :locale="inputLang" :disabled="!canWrite || isVisitInfoLocked" />
             </div>
             <div class="flex flex-col gap-1.5">
               <Label for="f-visit-time">{{ t('admin.reservationDetail.visitTime') }} ({{ t('admin.reservationDetail.preferredContactTimeHint') }})</Label>
@@ -152,7 +163,7 @@
           </div>
 
           <div class="flex items-center gap-3">
-            <Button :disabled="!canWrite || isVisitInfoLocked || saving" @click="submitSave">{{ t('common.save') }}</Button>
+            <Button :disabled="!canWrite || isVisitInfoLocked || busy" @click="submitSave">{{ t('common.save') }}</Button>
             <span v-if="saveError" class="text-sm text-destructive">{{ saveError }}</span>
           </div>
         </CardContent>
@@ -209,6 +220,7 @@
 
 <script setup lang="ts">
 import type { ConsultantLookup, ProcedureLookup, ReservationDetail, ReservationNote, ReservationNoteRevision } from '~/types/reservation'
+import { Loader2 } from '@lucide/vue'
 
 definePageMeta({ middleware: 'admin', layout: 'admin', i18n: false })
 
@@ -288,11 +300,16 @@ function toggleDepositMode(mode: 'paid' | 'waived') {
   if (depositMode.value === 'waived') depositAmount.value = null
 }
 
-const saving = ref(false)
+// 🔴 UX(2026-08-27, "상태 전이·저장이 1~2초 걸릴 때 렉처럼 보임") — 이 페이지의 쓰기 액션 전부
+// (배정·상담기록 추가/수정·저장·상태전이·복구)가 공유하는 단일 플래그. 액션별로 따로 두지 않고
+// 하나로 묶어야 아래 오버레이 하나로 전부 커버되고, 한 액션이 진행 중일 때 다른 버튼도 같이
+// 잠겨 이중 클릭으로 인한 동시 요청도 막는다.
+const busy = ref(false)
+
 const saveError = ref('')
 async function submitSave() {
   saveError.value = ''
-  saving.value = true
+  busy.value = true
   try {
     await authFetch(`/api/admin/reservations/${id.value}`, {
       method: 'PATCH',
@@ -309,7 +326,7 @@ async function submitSave() {
   } catch (e: any) {
     saveError.value = t(`errors.${errCode(e)}`)
   } finally {
-    saving.value = false
+    busy.value = false
   }
 }
 
@@ -317,12 +334,15 @@ const noteBody = ref('')
 const noteError = ref('')
 async function submitNote() {
   noteError.value = ''
+  busy.value = true
   try {
     await authFetch(`/api/admin/reservations/${id.value}/notes`, { method: 'POST', body: { body: noteBody.value } })
     noteBody.value = ''
     await refresh()
   } catch (e: any) {
     noteError.value = t(`errors.${errCode(e)}`)
+  } finally {
+    busy.value = false
   }
 }
 
@@ -333,9 +353,14 @@ function startEditNote(n: ReservationNote) {
   editingNoteBody.value = n.body
 }
 async function saveEditNote(noteId: number) {
-  await authFetch(`/api/admin/reservations/${id.value}/notes/${noteId}`, { method: 'PATCH', body: { body: editingNoteBody.value } })
-  editingNoteId.value = null
-  await refresh()
+  busy.value = true
+  try {
+    await authFetch(`/api/admin/reservations/${id.value}/notes/${noteId}`, { method: 'PATCH', body: { body: editingNoteBody.value } })
+    editingNoteId.value = null
+    await refresh()
+  } finally {
+    busy.value = false
+  }
 }
 function canEditNote(n: ReservationNote): boolean {
   return user.value?.role === 'Admin' || n.authorUserId === user.value?.id
@@ -364,12 +389,15 @@ const assignConsultantId = ref(detail.value?.consultantId != null ? String(detai
 const assignError = ref('')
 async function submitAssign() {
   assignError.value = ''
+  busy.value = true
   try {
     await authFetch(`/api/admin/reservations/${id.value}/consultant`, { method: 'PATCH', body: { consultantId: Number(assignConsultantId.value) } })
     await refresh()
     assignConsultantId.value = detail.value?.consultantId != null ? String(detail.value.consultantId) : ''
   } catch (e: any) {
     assignError.value = t(`errors.${errCode(e)}`)
+  } finally {
+    busy.value = false
   }
 }
 
@@ -378,11 +406,14 @@ async function markVisited() {
   // Visited는 종결 상태(10장) — 취소·삭제와 동일하게 되돌릴 수 없는 액션이라 확인 UI를 거친다(12-5절·16장)
   if (!confirm(t('admin.reservationDetail.markVisitedConfirm'))) return
   statusError.value = ''
+  busy.value = true
   try {
     await authFetch(`/api/admin/reservations/${id.value}/status`, { method: 'POST', body: { status: 'Visited' } })
     await refresh()
   } catch (e: any) {
     statusError.value = t(`errors.${errCode(e)}`)
+  } finally {
+    busy.value = false
   }
 }
 
@@ -390,6 +421,7 @@ const showCancelForm = ref(false)
 const cancelReason = ref('')
 async function submitCancel() {
   statusError.value = ''
+  busy.value = true
   try {
     await authFetch(`/api/admin/reservations/${id.value}/status`, { method: 'POST', body: { status: 'Cancelled', cancelReason: cancelReason.value } })
     showCancelForm.value = false
@@ -397,6 +429,8 @@ async function submitCancel() {
     await refresh()
   } catch (e: any) {
     statusError.value = t(`errors.${errCode(e)}`)
+  } finally {
+    busy.value = false
   }
 }
 
@@ -404,11 +438,14 @@ async function submitCancel() {
 async function submitRestore() {
   if (!confirm(t('admin.reservationDetail.restoreConfirm'))) return
   statusError.value = ''
+  busy.value = true
   try {
     await authFetch(`/api/admin/reservations/${id.value}/restore`, { method: 'POST' })
     await refresh()
   } catch (e: any) {
     statusError.value = t(`errors.${errCode(e)}`)
+  } finally {
+    busy.value = false
   }
 }
 </script>

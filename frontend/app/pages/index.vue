@@ -83,9 +83,14 @@
           </div>
 
           <!-- 페이지 이동·새탭 대신 모달로 표시(2026-08-27) — 본문은 privacy.vue와 PrivacyContent 공유 -->
+          <!-- 🔴 버그(2026-08-27) — Tailwind Preflight가 전 요소 margin을 0으로 리셋하는데,
+               네이티브 <dialog>의 중앙 정렬은 브라우저 기본 스타일시트의 margin:auto가 담당한다.
+               author 스타일시트(Preflight)가 UA 기본값을 항상 이겨 margin:auto가 무력화되면서
+               좌측 상단에 붙어버린 것 — m-auto로 명시 복원(Tailwind utilities 레이어가 Preflight
+               base 레이어보다 뒤에 와 항상 이김). -->
           <dialog
             ref="privacyDialogEl"
-            class="w-[calc(100%-2rem)] max-w-2xl rounded-lg border border-border bg-card p-0 text-foreground backdrop:bg-black/50"
+            class="m-auto w-[calc(100%-2rem)] max-w-2xl rounded-lg border border-border bg-card p-0 text-foreground backdrop:bg-black/50"
             @click="onPrivacyBackdropClick"
             @close="privacyOpen = false"
           >

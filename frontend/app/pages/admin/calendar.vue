@@ -31,11 +31,11 @@
                 </select>
               </div>
               <Button
-                type="button" variant="outline" size="icon" :disabled="pending"
+                type="button" variant="outline" size="icon" :disabled="pending || dayPending"
                 :aria-label="t('admin.calendar.refresh')" :title="t('admin.calendar.refresh')"
-                @click="refresh()"
+                @click="refresh(); refreshDay()"
               >
-                <RefreshCwIcon class="size-4" :class="{ 'animate-spin': pending }" />
+                <RefreshCwIcon class="size-4" :class="{ 'animate-spin': pending || dayPending }" />
               </Button>
             </div>
           </div>
@@ -58,8 +58,8 @@
               @click="selectedDate = cell.dateStr"
             >
               <span class="text-xs">{{ cell.day }}</span>
-              <span v-if="cell.items.length" class="rounded bg-primary/15 px-1 text-[11px] font-medium text-primary">
-                {{ cell.items.length }}
+              <span v-if="cell.count" class="rounded bg-primary/15 px-1 text-[11px] font-medium text-primary">
+                {{ cell.count }}
               </span>
             </button>
           </div>
@@ -70,10 +70,11 @@
         <CardHeader>
           <CardDescription>{{ t('admin.calendar.dayListTitle', { date: selectedDate }) }}</CardDescription>
         </CardHeader>
-        <CardContent class="space-y-2">
-          <p v-if="!selectedItems.length" class="text-sm text-muted-foreground">{{ t('admin.calendar.empty') }}</p>
+        <CardContent class="max-h-[70vh] space-y-2 overflow-y-auto">
+          <p v-if="dayPending" class="text-sm text-muted-foreground">{{ t('common.loading') }}</p>
+          <p v-else-if="!dayItems.length" class="text-sm text-muted-foreground">{{ t('admin.calendar.empty') }}</p>
           <button
-            v-for="item in selectedItems" :key="item.id"
+            v-for="item in dayItems" :key="item.id"
             type="button"
             class="flex w-full flex-col gap-0.5 rounded-md border border-border p-2 text-left text-sm hover:bg-accent"
             @click="navigateTo(`/admin/reservations/${item.id}`)"
@@ -99,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ReservationCalendarItem } from '~/types/reservation'
+import type { ReservationCalendarDayCount, ReservationCalendarItem } from '~/types/reservation'
 import { RefreshCwIcon } from '@lucide/vue'
 import { getKstToday } from '~/utils/datetime'
 
@@ -134,18 +135,32 @@ const selectedMonth = computed({
   set: (m: number) => navigateTo({ query: { year: query.value.year, month: m } }),
 })
 
-const { data, pending, refresh } = await useApi<ReservationCalendarItem[]>('/api/admin/reservations/calendar', { query })
-
-// 예약 확정 시 조용히 새로고침(2026-08-27) — admin.vue 레이아웃이 연결한 SSE를 여기서 구독만 한다.
-// 이 페이지가 마운트돼 있는 동안만 watch가 살아있어 "달력을 보고 있는 계정만" 반응하는 게 자동으로 됨.
-const reservationConfirmedTick = useState('sse:reservationConfirmedTick', () => 0)
-watch(reservationConfirmedTick, () => { refresh() })
+// 🔴 성능(2026-08-27, "날짜 클릭 전인데 왜 다 로드돼있냐" 사용자 지적) — 이전엔 이 API가 42일치
+// 예약 상세를 전부 반환해, 날짜를 클릭하기도 전에 한 달치 데이터가 통째로 로드돼 있었다. 그리드가
+// 실제로 쓰는 건 날짜별 배지 숫자뿐이라 건수만 받는다(2단계 구조 ① — 그리드 배지용).
+const { data: counts, pending, refresh } = await useApi<ReservationCalendarDayCount[]>('/api/admin/reservations/calendar', { query })
 
 const selectedDate = ref(
   query.value.year === today.year && query.value.month === today.month
     ? `${today.year}-${pad(today.month)}-${pad(today.day)}`
     : `${query.value.year}-${pad(query.value.month)}-01`,
 )
+
+// 2단계 구조 ② — 우측 "선택한 날짜의 예약 목록"은 selectedDate가 바뀔 때만(최초 진입·날짜 클릭·월
+// 이동) 그 하루치를 불러온다. useApi가 query 변화를 반응형으로 추적해 자동 재조회하므로 클릭
+// 핸들러에서 직접 fetch를 호출할 필요가 없다(admin/index.vue의 includeInactive 반응형 조회와 동일 패턴).
+// 최초 진입 시점엔 <script setup> 최상위 await라 SSR로 함께 프리로드되어(화면 깜빡임 금지 원칙 충족),
+// 이후 날짜를 바꿀 때만 클라이언트에서 그 시점부터 로딩 상태(dayPending)를 보여주며 재조회한다.
+const dayQuery = computed(() => ({ date: selectedDate.value }))
+const { data: dayItemsData, pending: dayPending, refresh: refreshDay } =
+  await useApi<ReservationCalendarItem[]>('/api/admin/reservations/calendar/day', { query: dayQuery })
+const dayItems = computed(() => dayItemsData.value ?? [])
+
+// 예약 확정 시 조용히 새로고침(2026-08-27) — admin.vue 레이아웃이 연결한 SSE를 여기서 구독만 한다.
+// 이 페이지가 마운트돼 있는 동안만 watch가 살아있어 "달력을 보고 있는 계정만" 반응하는 게 자동으로 됨.
+// 그리드 배지(counts)·선택일 목록(dayItems) 둘 다 갱신해야 한다.
+const reservationConfirmedTick = useState('sse:reservationConfirmedTick', () => 0)
+watch(reservationConfirmedTick, () => { refresh(); refreshDay() })
 
 // 월 이동 시 이전 달의 "선택한 날짜"를 그대로 들고 있으면 새 달과 안 맞으므로 1일로 리셋한다.
 watch(query, () => {
@@ -163,13 +178,9 @@ const weekdayLabels = computed(() => {
   return Array.from({ length: 7 }, (_, i) => fmt.format(new Date(Date.UTC(2024, 0, 7 + i))))
 })
 
-const itemsByDate = computed(() => {
-  const map = new Map<string, ReservationCalendarItem[]>()
-  for (const item of data.value ?? []) {
-    const list = map.get(item.visitDate) ?? []
-    list.push(item)
-    map.set(item.visitDate, list)
-  }
+const countByDate = computed(() => {
+  const map = new Map<string, number>()
+  for (const c of counts.value ?? []) map.set(c.visitDate, c.count)
   return map
 })
 
@@ -186,12 +197,10 @@ const gridCells = computed(() => {
       dateStr,
       day: d.getUTCDate(),
       inMonth: d.getUTCMonth() === m - 1,
-      items: itemsByDate.value.get(dateStr) ?? [],
+      count: countByDate.value.get(dateStr) ?? 0,
     }
   })
 })
-
-const selectedItems = computed(() => itemsByDate.value.get(selectedDate.value) ?? [])
 
 function goMonth(delta: number) {
   let y = query.value.year

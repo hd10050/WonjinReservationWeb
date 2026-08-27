@@ -50,7 +50,7 @@ function clear() {
 </script>
 
 <template>
-  <div class="relative" :class="props.class">
+  <div class="relative" :class="cn('w-[200px]', props.class)">
     <Popover v-model:open="open">
       <PopoverTrigger as-child>
         <Button

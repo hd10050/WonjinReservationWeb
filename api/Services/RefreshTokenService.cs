@@ -25,11 +25,11 @@ public class RefreshTokenService(AppDbContext db) : IRefreshTokenService
         };
         db.RefreshTokens.Add(entity);
 
-        // 재로그인 없는 계정의 토큰이 영구 잔류하지 않도록 사용자별 만료·폐기 토큰을 그때그때 정리
-        await db.RefreshTokens
-            .Where(r => r.UserId == userId && (r.IsRevoked || r.ExpiresAt <= now))
-            .ExecuteDeleteAsync();
-
+        // 🔴 성능(2026-08-27, "로그인이 느림" 재조사) — 사용자별 만료·폐기 토큰 정리를 로그인·
+        // 12분마다의 토큰갱신 요청 경로에서 매번 동기 DELETE로 수행하고 있었다. RefreshTokenCleanupService가
+        // 12시간마다 전역으로 동일한 정리를 이미 수행하므로 이 인라인 정리는 중복이었고, 로그인·갱신
+        // 왕복마다 DB 라운드트립 1회를 추가하고 있었다(최악의 경우도 만료 토큰이 최대 12시간
+        // 더 남아있는 것뿐 — 영구 잔류는 아니라 안전하게 제거 가능).
         await db.SaveChangesAsync();
         return (entity, rawToken);
     }
