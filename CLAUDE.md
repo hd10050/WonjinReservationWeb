@@ -4,7 +4,7 @@
 ## 개요
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원 · 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO(`useSeo`·hreflang·OG이미지), 보안감사 1라운드(High2·Medium5) + **재감사**(원본 Low 12건 목록 유실 발견 → 재감사로 신규 9건 발견·전부 수정). 운영 DB 최초 부트스트랩 계정 3개 생성 완료. 어드민 사이드바·로그인 페이지 언어전환·로고 2배·배경색 조정·`AssignConsultant` RowVersion 동시성까지 반영(상세는 세션 요약). **남은 건 CSP 도입 여부·날짜시간 피커 D11 재검토 사용자 결정, 실배포 도메인 라이브 curl 검증(design.md Phase 9 완료기준)뿐** — git 상태 clean, origin과 완전 동기화 확인 후 세션 종료
+- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO(`useSeo`·hreflang·OG이미지), 보안감사 1라운드(High2·Medium5) + **재감사**(원본 Low 12건 목록 유실 발견 → 재감사로 신규 9건 발견·전부 수정). 운영 DB 최초 부트스트랩 계정 3개 생성 완료. 어드민 사이드바·로그인 페이지 언어전환·로고 2배·배경색 조정·`AssignConsultant` RowVersion 동시성까지 반영(상세는 세션 요약). **남은 건 CSP 도입 여부·날짜시간 피커 D11 재검토 사용자 결정, 실배포 도메인 라이브 curl 검증(design.md Phase 9 완료기준)뿐** — git 상태 clean, origin과 완전 동기화 확인 후 세션 종료. 🔴 **이 워크트리(`worktree-admin-notifications`)에서 관리자 알림 2종(신규예약→VAPID 웹푸시 / 예약확정→SSE 캘린더 조용한 새로고침) 추가 구현+검증 완료**(2026-08-27, 커밋 `6aaf165`) — **아직 main 미병합, 사용자가 "병합해"로 명시 지시하기 전까지 병합·push 절대 금지**. 🔴 **TODO: 실제 브라우저에서 웹 푸시 최종 확인 필요** — 이 자동화 도구 환경은 SW 등록·`Notification.permission`이 원천 차단돼 있어 파이프라인은 간접 증거로 전부 확인했으나 실제 OS 알림 표시는 미검증(테스트 계정 `verify-push@wonjin.local` 로 실브라우저에서 종 아이콘→알림 허용→새 예약 접수로 확인 후 병합 결정)
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -12,6 +12,7 @@
 | 프론트 | Nuxt 4 + Vue 3 **Composition API** + Tailwind v4(`@tailwindcss/vite`) + `@nuxtjs/i18n`(`prefix_except_default`, 기본 zh-CN) |
 | SEO | `@nuxtjs/sitemap` + `@nuxtjs/robots` |
 | 백엔드/DB | ASP.NET Core 10 + EF Core(`EFCore.NamingConventions` 스네이크케이스) / PostgreSQL 16 (스키마 `wonjin`) |
+| 알림(2026-08-27) | **WebPush(1.0.13) VAPID 웹푸시**(신규예약→관리자, 브라우저 종료상태도 수신) + **ASP.NET Core 10 SSE**(`TypedResults.ServerSentEvents`, 예약확정→[예약 달력] 조용한 새로고침, `System.Threading.Channels` 인메모리 pub-sub) — `worktree-admin-notifications`, main 미병합 |
 | 인증 | 자체 JWT(AT 15분, 쿠키 `wj_at`) + RT(7일, SHA-256, 쿠키 `wj_rt`) — **소셜 로그인·회원가입 없음** |
 | UI | **shadcn-vue**(`shadcn-nuxt`, style `new-york`) + `reka-ui` 프리미티브 + `class-variance-authority`(D19, 구 D11 대체) |
 | 팔레트 | **Olive Garden Feast**(D20) — `#606C38`올리브(primary)·`#283618`짙은산림녹(foreground)·`#FEFDF7`크림(background, 2026-08-27 채도 낮춤)·`#DDA15E`탄(secondary)·`#BC6C25`번트오렌지(destructive), OKLCH 변환 후 shadcn CSS 변수에 적용 |
@@ -144,5 +145,5 @@
 `docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종)
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
-## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (32)까지 이동 완료)
-- **2026-08-27 (29)~(32) 이 세션 통합 요약** — 전부 완료, 상세 시행착오는 `docs/session-log.md` (29)~(32) 참고. 순서대로 진행: ①하네스(메모리·훅) 정상 확인 ②푸터 카피라이트 4로케일 보강 ③운영 DB에 최초 부트스트랩 계정 3개(Admin/HospitalManager/Consultant) 직접 SQL 부트스트랩(앱과 동일 BCrypt로 해시 생성, 로그인 실측 확인) ④어드민 로그인 페이지 언어 전환 select 추가(기존엔 로그인 이후 페이지에만 있었음) ⑤로컬 dev 테스트 데이터 전량 삭제 ⑥로고 2배 확대 ⑦배경색 채도 낮춤(`#FEFAE0`→`#FEFDF7`) ⑧`PATCH /consultant` RouteMap 세분화 + `emitRouteChunkError` 추가 ⑨`AssignConsultant`에 `xmin` 기반 RowVersion 낙관적 동시성 도입(SQL 레벨 실측 증명) ⑩모바일 사이드바 애니메이션 사용자 확인으로 TODO 종결 ⑪날짜·시간 피커 언어는 D11 트레이드오프로 코드 수정 불가 확인(사용자 결정 대기로 전환) ⑫M12 OG 이미지 임시본을 최종본으로 확정 ⑬**보안감사 Low 12건 원본 목록 유실 발견 → 1~21절 전체 재감사 → 신규 9건 발견·전부 수정**(로그인 타이밍 사이드채널·X-Forwarded-For 전체신뢰·admin-write rate limit 누락·CSRF Origin-없음 무검증·EscapeLike 중복·비활성 실장 배정 미차단·모델검증 응답포맷 불일치·프론트 보안헤더 전무·언어감지 오픈리다이렉트). 전 항목 `dotnet build`/`npm run build` + curl·브라우저 실측 확인 후 커밋 8건 전부 origin/main push 완료(해시는 session-log.md 참고).
+## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (33)까지 이동 완료)
+- **2026-08-27 (29)~(33)** — (29)~(32) 상세는 `docs/session-log.md` 참고(하네스 확인·부트스트랩 계정·로그인 UI·RowVersion 동시성·보안 재감사 신규 9건 수정 등). **(33) 이번 세션**: 관리자 알림 2종(신규예약→VAPID 웹푸시, 예약확정→SSE로 [예약 달력] 조용한 새로고침) `worktree-admin-notifications`에서 구현+검증 완료. SSE는 curl로 confirm 전이를 발생시켜 브라우저 무조작 상태에서 캘린더가 자동 갱신되는 것까지 end-to-end 실측, 웹 푸시는 파이프라인 전량(공개키·SSRF화이트리스트·구독저장·실제 발송 시도·활성계정 필터) 간접 증거로 확인했으나 실제 SW등록·OS알림 표시는 이 자동화 도구 환경 제약으로 미검증(위 TODO 참고). 테스트데이터 정리 후 커밋 `6aaf165`, **origin 미push·main 미병합**(사용자 지시 대기). 상세: `docs/session-log.md` (33).
