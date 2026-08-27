@@ -9,14 +9,13 @@
                (useOpsLocale.ts가 로그인 전 이 쿠키를 그대로 읽음). -->
           <div class="flex items-center gap-1">
             <label for="login-locale-select" class="text-xs text-muted-foreground">{{ t('admin.common.language') }}</label>
-            <select
+            <NativeSelect
               id="login-locale-select"
-              :value="locale"
-              class="rounded-md border bg-background px-2 py-1 text-xs text-foreground"
-              @change="onLocaleChange"
+              :model-value="locale"
+              @update:model-value="(v) => onLocaleChange(v as string)"
             >
-              <option v-for="loc in locales" :key="loc.code" :value="loc.code">{{ loc.name }}</option>
-            </select>
+              <NativeSelectOption v-for="loc in locales" :key="loc.code" :value="loc.code">{{ loc.name }}</NativeSelectOption>
+            </NativeSelect>
           </div>
         </div>
       </CardHeader>
@@ -58,8 +57,7 @@ const submitting = ref(false)
 const errorMessage = ref('')
 
 // 로그인 전이라 계정에 저장할 수 없어 wj_lang 쿠키에만 반영(useOpsLocale.ts가 다음 방문 시 이 값을 읽음).
-async function onLocaleChange(e: Event) {
-  const code = (e.target as HTMLSelectElement).value
+async function onLocaleChange(code: string) {
   await setLocale(code)
   wjLang.value = code
 }

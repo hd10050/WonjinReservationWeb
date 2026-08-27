@@ -40,12 +40,12 @@
         <CardContent class="flex flex-wrap items-end gap-3">
           <div class="flex flex-col gap-1.5">
             <Label for="f-assign">{{ t('admin.reservationDetail.consultant') }}</Label>
-            <select id="f-assign" v-model="assignConsultantId" :disabled="!canWrite" class="h-9 w-56 rounded-md border border-input bg-transparent px-3 text-sm">
-              <option value="">{{ t('admin.reservationDetail.consultantPlaceholder') }}</option>
-              <option v-for="c in assignableConsultants" :key="c.id" :value="String(c.id)">
+            <NativeSelect id="f-assign" v-model="assignConsultantId" :disabled="!canWrite" class="w-56">
+              <NativeSelectOption value="">{{ t('admin.reservationDetail.consultantPlaceholder') }}</NativeSelectOption>
+              <NativeSelectOption v-for="c in assignableConsultants" :key="c.id" :value="String(c.id)">
                 {{ c.name }}{{ c.isActive ? '' : ` (${t('admin.reservationDetail.inactive')})` }}
-              </option>
-            </select>
+              </NativeSelectOption>
+            </NativeSelect>
           </div>
           <Button :disabled="!canWrite || !assignConsultantId" @click="submitAssign">{{ t('admin.reservationDetail.assign') }}</Button>
           <span v-if="assignError" class="text-sm text-destructive">{{ assignError }}</span>
@@ -64,7 +64,7 @@
                 <button v-if="canEditNote(n) && editingNoteId !== n.id" type="button" class="underline" @click="startEditNote(n)">{{ t('admin.reservationDetail.editNote') }}</button>
               </div>
               <template v-if="editingNoteId === n.id">
-                <textarea v-model="editingNoteBody" maxlength="2000" rows="3" class="w-full rounded-md border border-input bg-transparent p-2 text-sm" />
+                <Textarea v-model="editingNoteBody" maxlength="2000" rows="3" />
                 <div class="mt-2 flex gap-2">
                   <Button size="sm" @click="saveEditNote(n.id)">{{ t('common.save') }}</Button>
                   <Button size="sm" variant="outline" @click="editingNoteId = null">{{ t('common.cancel') }}</Button>
@@ -76,10 +76,9 @@
 
           <div class="flex flex-col gap-1.5 pt-2">
             <Label for="f-note">{{ t('admin.reservationDetail.noteBodyLabel') }}</Label>
-            <textarea
+            <Textarea
               id="f-note" v-model="noteBody" maxlength="2000" rows="3" :disabled="!canWrite || !isAssigned"
               :placeholder="t('admin.reservationDetail.noteBodyPlaceholder')"
-              class="w-full rounded-md border border-input bg-transparent p-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
             />
             <div class="flex items-center gap-3">
               <Button :disabled="!canWrite || !isAssigned || !noteBody.trim()" @click="submitNote">{{ t('admin.reservationDetail.addNote') }}</Button>
@@ -107,29 +106,34 @@
           <div>
             <p class="mb-1.5 text-sm font-medium">{{ t('admin.reservationDetail.procedures') }}</p>
             <div class="flex flex-wrap gap-x-4 gap-y-2">
-              <label v-for="p in visibleProcedures" :key="p.id" class="flex items-center gap-1.5 text-sm">
-                <input type="checkbox" :value="p.id" v-model="selectedProcedureIds" :disabled="!canWrite || !isAssigned">
-                {{ procedureName(p) }}{{ p.isActive ? '' : ` (${t('admin.reservationDetail.inactive')})` }}
-              </label>
+              <div v-for="p in visibleProcedures" :key="p.id" class="flex items-center gap-1.5">
+                <Checkbox
+                  :id="`f-procedure-${p.id}`"
+                  :model-value="selectedProcedureIds.includes(p.id)"
+                  :disabled="!canWrite || !isAssigned"
+                  @update:model-value="(checked) => toggleProcedure(p.id, checked)"
+                />
+                <Label :for="`f-procedure-${p.id}`" class="text-sm font-normal">{{ procedureName(p) }}{{ p.isActive ? '' : ` (${t('admin.reservationDetail.inactive')})` }}</Label>
+              </div>
             </div>
           </div>
 
           <div class="flex flex-wrap items-end gap-4">
             <div class="flex flex-col gap-1.5">
               <Label for="f-deposit-currency">{{ t('admin.reservationDetail.depositCurrency') }}</Label>
-              <select id="f-deposit-currency" v-model="depositCurrency" :disabled="!canWrite || !isAssigned" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm">
-                <option value="CNY">CNY</option>
-                <option value="KRW">KRW</option>
-              </select>
+              <NativeSelect id="f-deposit-currency" v-model="depositCurrency" :disabled="!canWrite || !isAssigned">
+                <NativeSelectOption value="CNY">CNY</NativeSelectOption>
+                <NativeSelectOption value="KRW">KRW</NativeSelectOption>
+              </NativeSelect>
             </div>
             <div class="flex flex-col gap-1.5">
               <Label for="f-deposit-amount">{{ t('admin.reservationDetail.depositAmount') }}</Label>
               <Input id="f-deposit-amount" v-model.number="depositAmount" type="number" min="0" max="9999999999.99" :disabled="!canWrite || !isAssigned" class="w-32" />
             </div>
-            <label class="flex items-center gap-1.5 pb-2 text-sm">
-              <input type="checkbox" v-model="depositPaid" :disabled="!canWrite || !isAssigned">
-              {{ t('admin.reservationDetail.depositPaid') }}
-            </label>
+            <div class="flex items-center gap-1.5 pb-2">
+              <Checkbox id="f-deposit-paid" v-model="depositPaid" :disabled="!canWrite || !isAssigned" />
+              <Label for="f-deposit-paid" class="text-sm font-normal">{{ t('admin.reservationDetail.depositPaid') }}</Label>
+            </div>
           </div>
 
           <div class="flex items-center gap-3">
@@ -241,6 +245,14 @@ const depositCurrency = ref(detail.value?.depositCurrency ?? 'CNY')
 const depositAmount = ref<number | null>(detail.value?.depositAmount ?? null)
 const depositPaid = ref(detail.value?.depositPaid ?? false)
 const selectedProcedureIds = ref<number[]>([...(detail.value?.procedureIds ?? [])])
+// reka-ui Checkbox는 네이티브 체크박스와 달리 배열 v-model을 지원하지 않아 체크 상태를 직접 토글한다.
+function toggleProcedure(id: number, checked: boolean | 'indeterminate') {
+  if (checked) {
+    if (!selectedProcedureIds.value.includes(id)) selectedProcedureIds.value.push(id)
+  } else {
+    selectedProcedureIds.value = selectedProcedureIds.value.filter(x => x !== id)
+  }
+}
 
 const saving = ref(false)
 const saveError = ref('')

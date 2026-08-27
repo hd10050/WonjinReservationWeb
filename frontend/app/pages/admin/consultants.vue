@@ -16,7 +16,7 @@
       <CardContent class="space-y-4">
         <div class="flex flex-col gap-1.5">
           <Label for="f-bulk-file">{{ t('admin.consultants.bulk.fileLabel') }}</Label>
-          <input id="f-bulk-file" type="file" accept=".xlsx,.xls" class="text-sm" @change="onExcelSelected">
+          <Input id="f-bulk-file" type="file" accept=".xlsx,.xls" class="w-auto" @change="onExcelSelected" />
         </div>
 
         <div v-if="bulkRows.length">
@@ -56,10 +56,10 @@
       </CardContent>
     </Card>
 
-    <label class="flex items-center gap-1.5 text-sm text-muted-foreground">
-      <input v-model="showInactive" type="checkbox">
-      {{ t('admin.consultants.includeInactive') }}
-    </label>
+    <div class="flex items-center gap-1.5">
+      <Checkbox id="f-show-inactive" v-model="showInactive" />
+      <Label for="f-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.consultants.includeInactive') }}</Label>
+    </div>
 
     <Card v-if="showForm">
       <CardHeader>
@@ -74,10 +74,10 @@
           <Label for="f-sort">{{ t('admin.consultants.formSortOrderLabel') }}</Label>
           <Input id="f-sort" v-model.number="formSortOrder" type="number" class="w-24" />
         </div>
-        <label v-if="editingId !== null" class="flex items-center gap-1.5 pb-2 text-sm">
-          <input v-model="formIsActive" type="checkbox">
-          {{ t('admin.consultants.formActiveLabel') }}
-        </label>
+        <div v-if="editingId !== null" class="flex items-center gap-1.5 pb-2">
+          <Checkbox id="f-is-active" v-model="formIsActive" />
+          <Label for="f-is-active" class="text-sm font-normal">{{ t('admin.consultants.formActiveLabel') }}</Label>
+        </div>
         <Button :disabled="!formName.trim()" @click="submitForm">{{ t('common.save') }}</Button>
         <Button variant="outline" @click="cancelForm">{{ t('common.cancel') }}</Button>
         <span v-if="formError" class="text-sm text-destructive">{{ formError }}</span>

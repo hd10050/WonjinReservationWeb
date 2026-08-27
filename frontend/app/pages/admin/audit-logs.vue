@@ -5,24 +5,24 @@
     <div class="flex flex-wrap items-end gap-4 rounded-md border border-border p-4">
       <div class="flex flex-col gap-1.5">
         <Label for="f-actor">{{ t('admin.auditLogs.filterActorLabel') }}</Label>
-        <select id="f-actor" v-model="formActorId" class="h-9 w-56 rounded-md border border-input bg-background px-3 text-sm">
-          <option value="">{{ t('admin.auditLogs.filterActorAll') }}</option>
-          <option v-for="u in actors?.items" :key="u.id" :value="String(u.id)">{{ u.email }}</option>
-        </select>
+        <NativeSelect id="f-actor" v-model="formActorId" class="w-56">
+          <NativeSelectOption value="">{{ t('admin.auditLogs.filterActorAll') }}</NativeSelectOption>
+          <NativeSelectOption v-for="u in actors?.items" :key="u.id" :value="String(u.id)">{{ u.email }}</NativeSelectOption>
+        </NativeSelect>
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="f-entity-type">{{ t('admin.auditLogs.filterEntityTypeLabel') }}</Label>
-        <select id="f-entity-type" v-model="formEntityType" class="h-9 w-44 rounded-md border border-input bg-background px-3 text-sm">
-          <option value="">{{ t('admin.auditLogs.filterAll') }}</option>
-          <option v-for="et in ENTITY_TYPES" :key="et" :value="et">{{ et }}</option>
-        </select>
+        <NativeSelect id="f-entity-type" v-model="formEntityType" class="w-44">
+          <NativeSelectOption value="">{{ t('admin.auditLogs.filterAll') }}</NativeSelectOption>
+          <NativeSelectOption v-for="et in ENTITY_TYPES" :key="et" :value="et">{{ et }}</NativeSelectOption>
+        </NativeSelect>
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="f-action">{{ t('admin.auditLogs.filterActionLabel') }}</Label>
-        <select id="f-action" v-model="formAction" class="h-9 w-44 rounded-md border border-input bg-background px-3 text-sm">
-          <option value="">{{ t('admin.auditLogs.filterAll') }}</option>
-          <option v-for="a in ACTIONS" :key="a" :value="a">{{ a }}</option>
-        </select>
+        <NativeSelect id="f-action" v-model="formAction" class="w-44">
+          <NativeSelectOption value="">{{ t('admin.auditLogs.filterAll') }}</NativeSelectOption>
+          <NativeSelectOption v-for="a in ACTIONS" :key="a" :value="a">{{ a }}</NativeSelectOption>
+        </NativeSelect>
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="f-from">{{ t('admin.auditLogs.filterFromLabel') }}</Label>
