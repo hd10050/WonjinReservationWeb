@@ -909,7 +909,7 @@ public record PagedResult<T>(IEnumerable<T> Items, int Total, int Page, int Page
 |---|---|---|---|
 | GET | `/api/admin/reservations` | 전 역할 | 필터: `status`, `consultantId`, `from`, `to`, `search` / 정렬: `created_at DESC` |
 | GET | `/api/admin/reservations/summary` | 전 역할 | 상단 4개 카드 — 조건부 집계 1회(아래) |
-| GET | `/api/admin/reservations/calendar` | 전 역할 | `year`·`month` 필수, **최대 1개월 범위 검증**(무제한 범위 조회 차단). `status IN ('Confirmed','Visited')` |
+| GET | `/api/admin/reservations/calendar` | 전 역할 | `year`·`month` 필수(무제한 범위 조회 차단). 실제 조회 범위는 그 달의 표시 그리드 전체(이전달 말주·다음달 초주 포함 고정 42일, 2026-08-27). `status IN ('Confirmed','Visited')` |
 | GET | `/api/admin/reservations/{id:int}` | 전 역할 | 상세 + 시술 + 상담 기록 + 처리 이력 |
 | PATCH | `/api/admin/reservations/{id:int}` | Consultant, Admin | 방문일시·시술·예약금 저장. **미배정이면 400**(D17) |
 | PATCH | `/api/admin/reservations/{id:int}/consultant` | Consultant, Admin | **담당 실장 배정·변경 전용**. 처리 이력 필수 기록(D17) |
@@ -1248,7 +1248,9 @@ function submitSearch(value: string) {
 - 첨부 스크린샷과 동일한 구성: 좌측 월간 그리드 + 우측 "선택한 날짜의 예약 목록".
 - 조회 기준은 **`visit_date`(방문 예정일)**이며 **`status IN ('Confirmed','Visited')`**를 표시한다.
   > 🔴 `Confirmed`만 조회하면 **고객이 실제로 내원해 `Visited`가 되는 순간 그 날짜가 달력에서 사라진다**(F1). 실장이 "지난주에 누가 왔었지"를 달력에서 확인할 수 없게 되므로, 확정과 방문완료를 함께 표시하고 배지 색으로 구분한다. 8-5의 부분 인덱스 조건도 이와 동일하게 맞춰야 한다(불일치 시 인덱스를 못 탄다).
-- 월 이동 시 `year`·`month` 쿼리로만 재조회하고, **서버에서 최대 1개월 범위를 검증**한다(클라이언트가 임의 범위를 보내 전체 스캔을 유발하지 못하게).
+- 월 이동은 이전/다음 달 버튼 + **연도·월 드롭다운**(빠른 이동, 2026-08-27 추가)으로 가능하다. 어느 쪽이든 `year`·`month` 쿼리로만 재조회한다.
+  > 🔴 **서버가 실제로 조회하는 범위는 그 달의 리터럴 1일~말일이 아니라 화면 그리드 전체(6주=42일, 일요일 시작)다**(2026-08-27). 그리드에는 이전달 말주·다음달 초주 셀도 함께 보이는데, 리터럴 월 범위만 조회하면 그 셀들의 예약이 있어도 표시되지 않는 결함이 있었다(실사용 재현·수정). `gridStart = monthStart - monthStart.DayOfWeek`, `gridEnd = gridStart + 42일` — 프론트 `calendar.vue`의 `gridCells` 계산과 반드시 동일해야 한다. `year`·`month`가 계산의 유일한 입력이라 범위는 여전히 고정 42일로 결정론적이며, **최대 1개월 범위 검증**(클라이언트가 임의 범위를 보내 전체 스캔을 유발하지 못하게 하는 목적)의 취지는 그대로 유지된다.
+- 새로고침 버튼(아이콘)으로 그리드·선택일 목록을 동시에 강제 재조회할 수 있다(2026-08-27 추가) — 별도 API 없이 기존 `useApi`의 `refresh()` 재호출.
 - 날짜에 예약이 없으면 "이 날짜에는 예약이 없습니다"를 표시한다(데이터 없음 안내는 허용 — 13장 참고).
 - 라이브러리 없이 자체 월간 그리드로 구현한다(D11).
 

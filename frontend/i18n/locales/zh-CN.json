@@ -70,6 +70,9 @@
       "title": "预约日历",
       "prevMonth": "上个月",
       "nextMonth": "下个月",
+      "yearLabel": "年",
+      "monthLabel": "月",
+      "refresh": "刷新",
       "dayListTitle": "{date} 的预约列表",
       "empty": "该日期没有预约。",
       "colTime": "到店时间"

@@ -70,6 +70,9 @@
       "title": "Reservation Calendar",
       "prevMonth": "Previous",
       "nextMonth": "Next",
+      "yearLabel": "Year",
+      "monthLabel": "Month",
+      "refresh": "Refresh",
       "dayListTitle": "Reservations on {date}",
       "empty": "No reservations on this date.",
       "colTime": "Visit Time"
