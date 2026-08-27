@@ -96,11 +96,11 @@
           <div class="flex flex-wrap gap-4">
             <div class="flex flex-col gap-1.5">
               <Label for="f-visit-date">{{ t('admin.reservationDetail.visitDate') }}</Label>
-              <Input id="f-visit-date" v-model="visitDate" type="date" :disabled="!canWrite || !isAssigned" class="w-40" />
+              <DatePicker id="f-visit-date" v-model="visitDate" :locale="inputLang" :disabled="!canWrite || !isAssigned" class="w-40" />
             </div>
             <div class="flex flex-col gap-1.5">
               <Label for="f-visit-time">{{ t('admin.reservationDetail.visitTime') }} ({{ t('admin.reservationDetail.preferredContactTimeHint') }})</Label>
-              <Input id="f-visit-time" v-model="visitTime" type="time" :disabled="!canWrite || !isAssigned" class="w-32" />
+              <TimePicker id="f-visit-time" v-model="visitTime" :locale="inputLang" :disabled="!canWrite || !isAssigned" />
             </div>
           </div>
 
@@ -199,6 +199,8 @@ const { t, locale } = useI18n()
 const { user } = useAuth()
 const { authFetch } = useAuthFetch()
 const route = useRoute()
+// layouts/admin.vue가 useOpsLocale()을 이미 호출해 locale이 계정 값으로 맞춰져 있다 — 여기선 재사용만.
+const inputLang = useInputLang()
 
 const id = computed(() => Number(route.params.id))
 

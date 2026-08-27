@@ -26,11 +26,11 @@
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="f-from">{{ t('admin.auditLogs.filterFromLabel') }}</Label>
-        <Input id="f-from" v-model="formFrom" type="date" class="w-40" />
+        <DatePicker id="f-from" v-model="formFrom" :locale="inputLang" class="w-40" />
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="f-to">{{ t('admin.auditLogs.filterToLabel') }}</Label>
-        <Input id="f-to" v-model="formTo" type="date" class="w-40" />
+        <DatePicker id="f-to" v-model="formTo" :locale="inputLang" class="w-40" />
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="f-search">{{ t('admin.auditLogs.filterSearchLabel') }}</Label>
@@ -86,6 +86,8 @@ useHead({ title: '로그(감사) | Admin', meta: [{ name: 'robots', content: 'no
 
 const { t } = useI18n()
 const route = useRoute()
+// layouts/admin.vue가 useOpsLocale()을 이미 호출해 locale이 계정 값으로 맞춰져 있다 — 여기선 재사용만.
+const inputLang = useInputLang()
 
 // 14-1절 RouteMap에 실제 등록된 entity_type·action 값만 노출(존재하지 않는 조합을 필터로 주면 항상 0건)
 const ENTITY_TYPES = ['reservation', 'reservation_note', 'consultant', 'procedure', 'user']
