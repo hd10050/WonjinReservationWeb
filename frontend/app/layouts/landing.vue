@@ -1,71 +1,6 @@
 <template>
   <div class="flex min-h-screen flex-col bg-background">
-    <header class="border-b bg-card">
-      <div class="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
-        <NuxtLink :to="localePath('index')" class="flex shrink-0 items-center">
-          <img src="/logo.svg" :alt="t('common.appName')" class="h-9 w-auto sm:h-12">
-        </NuxtLink>
-
-        <!-- 🔴 최종 리뷰 실측 발견 — 375px 모바일에서 로고(shrink-0 180px대)+언어버튼(shrink-0 95px대)만
-             으로 헤더 폭이 거의 소진돼, 홈·문의하기 텍스트 링크까지 다 넣으면 글자가 세로로 줄바꿈되며
-             깨진다(개발자도구로 "문의하기" 링크가 13px 폭에 80px 높이로 렌더링되는 것 실측 확인). 홈은
-             로고 클릭으로, 문의하기는 상시 노출 FAB으로 이미 갈 수 있으므로 두 텍스트 링크만 모바일에서
-             숨기고 "시술안내" 드롭다운만 남긴다. 🔴 이것만으로는 부족했다 — 남는 "시술안내" 트리거조차
-             들어갈 공간이 없어(실측: nav에 35.9px만 배정됨) 로고를 모바일에서 축소(`h-9`, sm 이상 `h-12`
-             복귀)하고 언어버튼의 국가명 텍스트도 모바일에서 숨겨(Globe+chevron만) 폭을 추가로 확보했다.
-             셋 중 하나만 빼면 다시 깨지니 함께 유지할 것. 별도 햄버거 컴포넌트는 도입하지 않았다. -->
-        <nav class="flex flex-1 items-center justify-center gap-4 text-sm font-medium">
-          <NuxtLink :to="localePath('index')" class="hidden text-muted-foreground hover:text-foreground sm:inline">{{ t('landing.nav.home') }}</NuxtLink>
-          <DropdownMenuRoot>
-            <DropdownMenuTrigger class="flex items-center gap-1 text-muted-foreground hover:text-foreground aria-expanded:text-foreground">
-              {{ t('landing.nav.procedures') }}
-              <ChevronDown class="size-3.5" />
-            </DropdownMenuTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuContent :side-offset="8" align="center" class="z-50 max-h-[70vh] min-w-40 overflow-y-auto rounded-lg border bg-card p-1 text-sm shadow-md">
-                <DropdownMenuItem
-                  v-for="category in PROCEDURE_CATEGORIES"
-                  :key="category.slug"
-                  as-child
-                  class="block cursor-pointer rounded-md px-3 py-1.5 text-foreground outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
-                >
-                  <NuxtLink :to="localePath({ name: 'procedures-category', params: { category: category.slug } })">
-                    {{ category.name[locale as Locale] }}
-                  </NuxtLink>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenuPortal>
-          </DropdownMenuRoot>
-          <NuxtLink :to="localePath('inquiry')" class="hidden text-muted-foreground hover:text-foreground sm:inline">{{ t('landing.nav.inquiry') }}</NuxtLink>
-        </nav>
-
-        <DropdownMenuRoot>
-          <DropdownMenuTrigger
-            :aria-label="currentLocaleName"
-            class="flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground aria-expanded:border-primary aria-expanded:text-foreground"
-          >
-            <Globe class="size-3.5" />
-            <!-- 🔴 재검증 발견 — 이 텍스트가 모바일에서 숨겨지면서(sm:inline) 트리거의 유일한 접근가능
-                 이름도 함께 사라졌었다(FAB과 같은 종류의 결함). 위 aria-label로 항상 이름을 제공한다. -->
-            <span class="hidden sm:inline">{{ currentLocaleName }}</span>
-            <ChevronDown class="size-3.5" />
-          </DropdownMenuTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuContent :side-offset="8" align="end" class="z-50 min-w-32 rounded-lg border bg-card p-1 text-sm shadow-md">
-              <DropdownMenuItem
-                v-for="loc in locales"
-                :key="loc.code"
-                as-child
-                class="block w-full cursor-pointer rounded-md px-3 py-1.5 text-foreground outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
-                :class="{ 'font-semibold': loc.code === locale }"
-              >
-                <NuxtLink :to="switchLocalePath(loc.code)" @click="markManualLocale(loc.code)">{{ loc.name }}</NuxtLink>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenuPortal>
-        </DropdownMenuRoot>
-      </div>
-    </header>
+    <LandingHeader @select-locale="onSelectLocale" />
 
     <main class="flex-1">
       <slot />
@@ -94,21 +29,17 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronDown, Globe } from '@lucide/vue'
-import { PROCEDURE_CATEGORIES, type Locale } from '~/data/procedures'
-import {
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuPortal,
-  DropdownMenuRoot,
-  DropdownMenuTrigger,
-} from 'reka-ui'
-
 // 공개 랜딩 전용 레이아웃(12-1절) — index.vue·privacy.vue·procedures/*·inquiry.vue가 공유한다.
-const { t, locale, locales } = useI18n()
+// 헤더 마크업은 components/LandingHeader.vue로 추출(로그인 페이지와 공유, 12-2절).
+const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const switchLocalePath = useSwitchLocalePath()
-const currentLocaleName = computed(() => locales.value.find(l => l.code === locale.value)?.name ?? locale.value)
+
+// 헤더의 언어 선택 — 랜딩은 로케일 프리픽스 라우팅이라 해당 언어 경로로 이동 + 수동선택 쿠키 기록.
+async function onSelectLocale(code: string) {
+  markManualLocale(code)
+  await navigateTo(switchLocalePath(code))
+}
 
 const route = useRoute()
 const isInquiryPage = computed(() => route.path.replace(/\/$/, '') === localePath('inquiry').replace(/\/$/, ''))

@@ -89,7 +89,7 @@
       "genderMale": "男",
       "genderOther": "其他",
       "wechatId": "微信ID",
-      "preferredContactTime": "希望联系时间",
+      "preferredContactTime": "希望联系日期时间",
       "preferredContactTimeHint": "韩国时间",
       "locale": "申请语言",
       "receivedAt": "接收时间",
@@ -343,7 +343,7 @@
   },
   "landing": {
     "nav": { "home": "首页", "procedures": "项目介绍", "inquiry": "咨询预约", "inquiryFab": "咨询" },
-    "home": { "heroTitle": "WJ原辰整形外科", "heroSubtitle": "以精密诊断和咨询完成的美丽", "categoriesHeading": "项目分类", "introHeading": "WJ原辰介绍", "introBody": "医院介绍内容准备中。" },
+    "home": { "heroTitle": "WJ原辰整形外科", "categoriesHeading": "项目分类", "introHeading": "WJ原辰介绍", "introBody": "医院介绍内容准备中。" },
     "hero": {
       "title": "预约咨询",
       "subtitle": "请填写以下信息，我们的顾问将通过微信与您联系。"
@@ -357,6 +357,7 @@
       "genderMale": "男",
       "genderOther": "其他",
       "wechatId": "微信号",
+      "contactDate": "希望联系日期（韩国时间 UTC+9）",
       "contactTime": "希望联系时间（韩国时间 UTC+9）",
       "consentPrefix": "我已阅读并同意",
       "consentLink": "《隐私政策》",
@@ -450,6 +451,7 @@
     "INVALID_GENDER": "性别选择无效。",
     "UNSUPPORTED_LOCALE": "不支持的语言。",
     "INVALID_BIRTH_DATE": "请填写正确的出生日期。",
+    "INVALID_CONTACT_DATE": "请选择希望联系日期。",
     "SUBMIT_FAILED": "提交失败，请稍后再试。",
     "RESERVATION_NOT_ASSIGNED": "该预约尚未分配负责顾问，请先分配。",
     "RESERVATION_LOCKED": "已取消或已到店的预约无法编辑。",

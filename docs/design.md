@@ -70,7 +70,7 @@
 | D7 | **동일 출처 API 프록시 채택** | 화면 깜빡임 금지 원칙을 SSR 프리로드로 이행하려면 SSR 요청에 인증 쿠키가 실려야 하기 때문. 13장 참고 |
 | D8 | **🔴 실장은 `consultants` 독립 테이블 — 계정(`users`)과 1:1이 아니다** | [실장 관리]에서 CRUD하는 **마스터 데이터**이며 로그인 계정과 완전히 별개다. 계정 없는 실장이 존재할 수 있고(병원관리자가 대신 배정·입력), 계정이 있다고 실장인 것도 아니다. **두 테이블 사이에 FK 연결을 두지 않는다** — `users.role='Consultant'`는 "로그인 권한 등급"일 뿐 "이 사람이 그 실장"이라는 뜻이 아니다. (2026-08-25 정정: 초안에서 이 둘을 하나로 합쳤던 것은 오설계) |
 | D9 | **시술명은 언어별 컬럼 4개** | `procedures` 테이블에 `name_zh_cn`/`name_zh_tw`/`name_en`/`name_ko`. 조인 없음 + DB 레벨 길이 제약(9장) 확보. 언어 추가 시 마이그레이션 필요(수용) |
-| D10 | **연락 희망 시각은 고객이 직접 입력한다** | 요구사항 2번이 "연락 받고자 하는 시간을 **입력**한다"이므로 `<input type="time">`으로 시각을 그대로 받는다(`time` 컬럼). 초안에서 오전/오후/저녁 4지선다로 바꿨던 것은 **요구되지 않은 임의 변경이라 2026-08-26 철회**했다. 자유 텍스트가 아니라 `time` 타입이므로 언어와 무관하게 해석이 명확하다 |
+| D10 | **연락 희망 일시(날짜+시각)는 고객이 직접 입력한다** | 요구사항 2번이 "연락 받고자 하는 시간을 **입력**한다"이므로 시각을 그대로 받는다(`time` 컬럼). 초안에서 오전/오후/저녁 4지선다로 바꿨던 것은 **요구되지 않은 임의 변경이라 2026-08-26 철회**했다. **2026-08-28 사용자 지시로 날짜도 함께 입력받는다** — `preferred_contact_date`(`date`) 신설, `DatePicker`(D23). 라이브 서비스라 기존 예약 행 호환을 위해 DB는 `NULL` 허용이되 신규 제출은 프론트·백엔드 모두 필수(생년월일과 동일 취급). 자유 텍스트가 아니라 `date`/`time` 타입이라 언어와 무관하게 해석이 명확하다. 예약 상세(12-5절)에 날짜+시각을 함께 표시한다 |
 | D11 | **~~UI 컴포넌트 라이브러리 미도입~~ → shadcn-vue로 정정(D19)** | 2026-08-26 사용자 지시로 철회. 아래 D19 참고 |
 | D19 | **UI 컴포넌트 라이브러리 = shadcn-vue**(D11 대체, 2026-08-26) | `shadcn-nuxt` 모듈(`npx nuxi module add shadcn-nuxt`)로 통합. 컴포넌트는 npm 의존성이 아니라 `npx shadcn-vue add <name>`으로 소스를 프로젝트에 직접 복사하는 방식(shadcn 고유 철학) — `components/ui/`에 쌓인다. 날짜 입력은 D23으로 대체(커스텀 DatePicker/TimePicker) — 예약 달력은 여전히 자체 구현 유지 |
 | D20 | **브랜드 팔레트 = "Olive Garden Feast"**(coolors.co 트렌딩, 9.76만 좋아요, 2026-08-26 확정) | `#606C38`(올리브, primary) · `#283618`(짙은 산림녹, foreground/dark) · `#FEFAE0`(따뜻한 크림, background) · `#DDA15E`(탄, secondary accent) · `#BC6C25`(번트오렌지, 강조/경고). `reservation-desk_1.html`의 팔레트(딥틸 #0B6152 계열)를 **대체**한다 — 참고 화면은 레이아웃·톤(세리프 헤딩, 4개 상태 카드 등)만 채택하고 색상 자체는 이 팔레트로 새로 정의 |
@@ -591,6 +591,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 | `birth_date` | date | NOT NULL — 나이는 저장하지 않고 계산 |
 | `gender` | varchar(10) | NOT NULL, CHECK `IN ('Female','Male','Other')` |
 | `wechat_id` | varchar(50) | NOT NULL |
+| `preferred_contact_date` | date | **NULL**(라이브 서비스 기존 행 호환, D10) — 고객이 입력한 연락 희망 날짜. 신규 제출은 프론트·백엔드 필수. **KST 기준**(9-2절), 타임존 없는 벽시계 날짜 (`visit_date`와 동일 취급) |
 | `preferred_contact_time` | time | NOT NULL — 고객이 입력한 연락 희망 시각. **KST 기준**(9-2절), 타임존 없는 벽시계 시각 (D10) |
 | `locale` | varchar(10) | NOT NULL — 고객이 신청한 언어. 실장이 응대 언어를 판단하는 근거 |
 | `status` | varchar(20) | NOT NULL DEFAULT `'New'`, CHECK `IN ('New','Consulting','Confirmed','Visited','Cancelled')` |
@@ -822,7 +823,7 @@ var kstDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcN
 |---|---|---|
 | `created_at` 등 이벤트 시각 | `timestamptz`(UTC로 저장) | 관리자 화면에서 **항상 KST로 변환해 표시** |
 | `visit_date` / `visit_time` | `date` / `time` (타임존 없음) | **병원 현지(KST) 벽시계 시각 그대로**. 타임존 변환을 적용하지 않는다 |
-| `preferred_contact_time` | `time` (타임존 없음) | **KST 기준 벽시계 시각** — 아래 규칙 |
+| `preferred_contact_date` / `preferred_contact_time` | `date` / `time` (타임존 없음) | **KST 기준 벽시계 날짜·시각** — `visit_date`/`visit_time`과 동일 취급, 아래 규칙 |
 
 **① 연락 희망 시각은 고객이 `<input type="time">`으로 직접 입력하고, 라벨에 한국 시간 기준임을 명시한다.**
 
@@ -1198,7 +1199,7 @@ public record LoginRequest([Required, MaxLength(254)] string Email, [Required, M
 | 생년월일 | `DatePicker`(D23) | ✅ |
 | 성별 | radio (여성/남성/기타) | ✅ |
 | 위챗 ID | text | ✅ |
-| 연락 희망 시각 | `TimePicker`(D23, 라벨에 "한국 시간" 병기) | ✅ |
+| 연락 희망 일시 | `DatePicker` + `TimePicker`(D23, 라벨에 "한국시간 UTC +9" 병기, 2026-08-28 날짜 추가) | ✅ |
 | 개인정보 수집·이용 동의 | checkbox + 처리방침 링크 | ✅ |
 | (honeypot) | 숨김 필드 | — |
 
@@ -1246,6 +1247,8 @@ public record LoginRequest([Required, MaxLength(254)] string Email, [Required, M
 푸터의 저작권 표기(`© 2026 원진성형외과`)를 `/admin/login`으로 가는 링크로 만든다. `rel="nofollow"` + robots disallow로 색인에서 제외한다.
 
 > ⚠️ 이것은 **보안 조치가 아니라 UI 노출 억제**일 뿐이다. 실제 보호는 로그인 인증과 백엔드 `[Authorize]`가 담당한다. "숨겼으니 안전하다"고 판단하지 말 것.
+
+> **로그인 페이지(`/admin/login`) 상단에 공개 랜딩 헤더를 표시한다**(2026-08-28 사용자 지시) — 로고·시술안내 드롭다운·언어 선택을 공용 컴포넌트 `components/LandingHeader.vue`로 추출해 `layouts/landing.vue`와 로그인 페이지가 공유한다. 로그인 페이지는 `i18n:false`(URL 프리픽스 라우팅 제외, 5-4절)라 헤더의 언어 선택은 `switchLocalePath` 네비게이션 대신 로그인 페이지 기존 방식(`setLocale` + `wj_lang` 쿠키)을 그대로 쓴다 — 컴포넌트가 `@select-locale` 이벤트만 올리고 동작은 각 사용처가 정한다. 헤더가 언어 선택을 제공하므로 로그인 카드 안에 있던 별도 언어 select는 제거한다. UTM 캡처·`landing-visit`·JSON-LD는 랜딩 레이아웃 고유 로직이라 헤더 컴포넌트에 넣지 않는다(로그인은 공개 유입 페이지가 아님).
 
 ### 12-3. 관리자 레이아웃 (2026-08-26 구현 완료)
 
@@ -1305,7 +1308,7 @@ function submitSearch(value: string) {
 
 참고 화면의 상세 구성을 그대로 옮긴다.
 
-1. **고객 정보**(읽기 전용): 이름 / 생년월일(나이 계산 표시) / 성별 / 위챗 ID / 연락 희망 시각(한국 시간) / 신청 언어 / 유입 경로 / 접수 시각 / 예약 코드
+1. **고객 정보**(읽기 전용): 이름 / 생년월일(나이 계산 표시) / 성별 / 위챗 ID / **연락 희망 일시(날짜+시각, 한국 시간)** / 신청 언어 / 유입 경로 / 접수 시각 / 예약 코드 — 날짜는 2026-08-28 추가(D10), 기존 예약은 날짜가 비어 있을 수 있어 시각만 표시
 2. **상담 기록**(누적, D14): 기존 기록을 작성자·시각과 함께 **시간순으로 모두 나열**하고, 하단에 새 기록 추가용 textarea(2000자) + [기록 추가] 버튼. 기존 기록은 작성자 본인·어드민만 수정 가능하며 수정 시 "(수정됨)" 표시. **삭제 버튼은 두지 않는다**
 3. **방문 예약**: 방문 날짜 / 방문 시각(**KST 기준**) / 담당 실장 select(활성 실장만, 단 현재 배정된 비활성 실장은 목록에 유지 — 8-4 함정)
 

@@ -1,23 +1,11 @@
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-background px-4">
+  <div class="flex min-h-screen flex-col bg-background">
+    <!-- 공개 랜딩 헤더 공유(12-2절, 2026-08-28) — 언어 선택은 로그인 페이지 기존 방식(setLocale + wj_lang 쿠키)으로 처리. -->
+    <LandingHeader @select-locale="onLocaleChange" />
+    <div class="flex flex-1 items-center justify-center px-4 py-10">
     <Card class="w-full max-w-sm">
       <CardHeader>
-        <div class="flex items-center justify-between gap-2">
-          <CardTitle>{{ t('admin.login.title') }}</CardTitle>
-          <!-- 디자인 원칙(절대 원칙) — select에는 보이는 label 필수. admin.vue 상단바와 동일 패턴,
-               로그인 전이라 계정 저장(PATCH /api/auth/me/locale) 대신 wj_lang 쿠키에만 반영한다
-               (useOpsLocale.ts가 로그인 전 이 쿠키를 그대로 읽음). -->
-          <div class="flex items-center gap-1">
-            <label for="login-locale-select" class="text-xs text-muted-foreground">{{ t('admin.common.language') }}</label>
-            <NativeSelect
-              id="login-locale-select"
-              :model-value="locale"
-              @update:model-value="(v) => onLocaleChange(v as string)"
-            >
-              <NativeSelectOption v-for="loc in locales" :key="loc.code" :value="loc.code">{{ loc.name }}</NativeSelectOption>
-            </NativeSelect>
-          </div>
-        </div>
+        <CardTitle>{{ t('admin.login.title') }}</CardTitle>
       </CardHeader>
       <CardContent>
         <!-- novalidate — 브라우저 기본 검증 팝업(브라우저/OS 언어를 따름)을 끄고 아래 커스텀 검증으로 대체한다. -->
@@ -38,6 +26,7 @@
         </form>
       </CardContent>
     </Card>
+    </div>
   </div>
 </template>
 
@@ -46,7 +35,7 @@
 definePageMeta({ middleware: 'admin', layout: false, i18n: false })
 useHead({ meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
 
-const { t, locale, locales, setLocale } = useI18n()
+const { t, setLocale } = useI18n()
 await useOpsLocale()
 const wjLang = useCookie<string | null>('wj_lang')
 

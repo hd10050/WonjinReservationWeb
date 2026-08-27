@@ -9,6 +9,7 @@ public record ReservationCreateRequest(
     DateOnly BirthDate,
     [Required] string Gender,
     [Required, MaxLength(50)] string WechatId,
+    DateOnly PreferredContactDate,
     TimeOnly PreferredContactTime,
     [Required] string Locale,
     bool PrivacyConsent,
@@ -47,7 +48,7 @@ public record ReservationLogDto(int Id, string Action, string? Note, string Acto
 
 public record ReservationDetailDto(
     int Id, string Code, string Name, DateOnly BirthDate, string Gender, string WechatId,
-    TimeOnly PreferredContactTime, string Locale, string Status,
+    DateOnly? PreferredContactDate, TimeOnly PreferredContactTime, string Locale, string Status,
     int? ConsultantId, string? ConsultantName,
     DateOnly? VisitDate, TimeOnly? VisitTime,
     decimal? DepositAmount, string DepositCurrency, bool DepositPaid, string? CancelReason,

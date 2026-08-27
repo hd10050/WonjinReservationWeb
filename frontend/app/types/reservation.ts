@@ -58,6 +58,7 @@ export interface ReservationDetail {
   birthDate: string
   gender: 'Female' | 'Male' | 'Other'
   wechatId: string
+  preferredContactDate: string | null
   preferredContactTime: string
   locale: string
   status: ReservationStatus

@@ -3,7 +3,6 @@
   <div>
     <section class="mx-auto max-w-3xl px-4 py-12 text-center">
       <h1 class="text-3xl font-bold text-foreground">{{ t('landing.home.heroTitle') }}</h1>
-      <p class="mt-3 text-muted-foreground">{{ t('landing.home.heroSubtitle') }}</p>
     </section>
 
     <section class="border-y bg-muted/30 py-10">
@@ -41,7 +40,6 @@ const localePath = useLocalePath()
 
 useSeo({
   title: () => t('landing.home.heroTitle'),
-  description: () => t('landing.home.heroSubtitle'),
 })
 
 // 🔴 UTM 캡처 + landing-visit 방문기록은 layouts/landing.vue로 옮겼다(최종 리뷰 발견 +

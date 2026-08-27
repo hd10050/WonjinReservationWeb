@@ -39,6 +39,11 @@ public class ReservationsController(AppDbContext db, IPushSender pushSender, ILo
         if (req.BirthDate == default)
             return BadRequest(new { code = "INVALID_BIRTH_DATE" });
 
+        // 연락 희망 날짜(D10, 2026-08-28 추가) — 비-nullable DateOnly라 누락 시 400이 아니라 default로
+        // 조용히 바인딩된다(11-8절 함정, 생년월일과 동일) → 명시적으로 검사한다.
+        if (req.PreferredContactDate == default)
+            return BadRequest(new { code = "INVALID_CONTACT_DATE" });
+
         var nowKst = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Kst);
         var kstDate = DateOnly.FromDateTime(nowKst.DateTime);
 
@@ -66,6 +71,7 @@ public class ReservationsController(AppDbContext db, IPushSender pushSender, ILo
             BirthDate = req.BirthDate,
             Gender = req.Gender,
             WechatId = req.WechatId.Trim(),
+            PreferredContactDate = req.PreferredContactDate,
             PreferredContactTime = req.PreferredContactTime,
             Locale = req.Locale,
             UtmSource = Truncate(req.UtmSource, 100),

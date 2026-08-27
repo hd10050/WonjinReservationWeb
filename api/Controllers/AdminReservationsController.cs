@@ -174,7 +174,7 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
             .ToList();
 
         return Ok(new ReservationDetailDto(
-            r.Id, r.Code, r.Name, r.BirthDate, r.Gender, r.WechatId, r.PreferredContactTime, r.Locale, r.Status,
+            r.Id, r.Code, r.Name, r.BirthDate, r.Gender, r.WechatId, r.PreferredContactDate, r.PreferredContactTime, r.Locale, r.Status,
             r.ConsultantId, r.Consultant?.Name,
             r.VisitDate, r.VisitTime, r.DepositAmount, r.DepositCurrency, r.DepositPaid, r.CancelReason,
             r.UtmSource, r.UtmMedium, r.UtmCampaign, r.ReferralCode,

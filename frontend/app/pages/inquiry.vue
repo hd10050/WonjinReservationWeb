@@ -61,6 +61,12 @@
           </div>
 
           <div class="flex flex-col gap-2">
+            <Label for="contactDate">{{ t('landing.form.contactDate') }}</Label>
+            <DatePicker id="contactDate" v-model="contactDate" :locale="inputLang" :invalid="errors.contactDate" />
+            <p v-if="errors.contactDate" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
+          </div>
+
+          <div class="flex flex-col gap-2">
             <Label for="contactTime">{{ t('landing.form.contactTime') }}</Label>
             <TimePicker id="contactTime" v-model="contactTime" :locale="inputLang" :invalid="errors.contactTime" />
             <p v-if="errors.contactTime" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
@@ -130,6 +136,7 @@ const name = ref('')
 const birthDate = ref('')
 const gender = ref('')
 const wechatId = ref('')
+const contactDate = ref('')
 const contactTime = ref('')
 const consent = ref(false)
 const honeypot = ref('')
@@ -153,6 +160,7 @@ const errors = reactive({
   birthDate: false,
   gender: false,
   wechatId: false,
+  contactDate: false,
   contactTime: false,
   consent: false,
 })
@@ -163,6 +171,7 @@ function validate(): boolean {
   errors.birthDate = !birthDate.value
   errors.gender = !gender.value
   errors.wechatId = !wechatId.value.trim()
+  errors.contactDate = !contactDate.value
   errors.contactTime = !contactTime.value
   errors.consent = !consent.value
   return !Object.values(errors).some(Boolean)
@@ -181,6 +190,7 @@ async function submit() {
         birthDate: birthDate.value,
         gender: gender.value,
         wechatId: wechatId.value,
+        preferredContactDate: contactDate.value,
         preferredContactTime: `${contactTime.value}:00`,
         locale: locale.value,
         privacyConsent: consent.value,

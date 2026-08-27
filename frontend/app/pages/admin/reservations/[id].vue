@@ -37,7 +37,7 @@
           <div><span class="text-muted-foreground">{{ t('admin.reservationDetail.wechatId') }}: </span>{{ detail.wechatId }}</div>
           <div>
             <span class="text-muted-foreground">{{ t('admin.reservationDetail.preferredContactTime') }} ({{ t('admin.reservationDetail.preferredContactTimeHint') }}): </span>
-            {{ detail.preferredContactTime.slice(0, 5) }}
+            {{ [detail.preferredContactDate, detail.preferredContactTime.slice(0, 5)].filter(Boolean).join(' ') }}
           </div>
           <div><span class="text-muted-foreground">{{ t('admin.reservationDetail.locale') }}: </span>{{ detail.locale }}</div>
           <div><span class="text-muted-foreground">{{ t('admin.reservationDetail.receivedAt') }}: </span>{{ formatKst(detail.createdAt) }}</div>
@@ -168,16 +168,27 @@
               <Label for="f-deposit-amount">{{ t('admin.reservationDetail.depositAmount') }}</Label>
               <Input id="f-deposit-amount" v-model.number="depositAmount" type="number" min="0" max="9999999999.99" :disabled="!canWrite || isVisitInfoLocked || depositMode === 'waived'" class="w-32" />
             </div>
-            <div class="flex items-center gap-6 pb-2">
-              <label class="flex items-center gap-1.5 text-sm">
-                <input type="radio" name="deposit-mode" :checked="depositMode === 'paid'" :disabled="!canWrite || isVisitInfoLocked" @click="toggleDepositMode('paid')">
+            <!-- 3상태 라디오(#13) — 미확인/입금확인/예약금없음. 이미 선택된 항목을 다시 클릭하면
+                 미확인으로 되돌려야 하는데 reka RadioGroup은 스스로 해제가 안 된다. 그래서:
+                 ①포인터·Space/Enter로 인한 클릭은 label의 @click.capture로 reka 내부 핸들러가
+                 돌기 전에 가로채(.stop) toggleDepositMode가 전담한다(reka와 상태가 안 싸운다).
+                 ②화살표키 이동만 reka가 처리하고 @update:model-value로 받는다(네이티브 radio처럼
+                 키보드로는 해제 불가, 허용). :model-value는 표시(data-state)용 단방향. -->
+            <RadioGroup
+              :model-value="depositMode === 'unpaid' ? undefined : depositMode"
+              :disabled="!canWrite || isVisitInfoLocked"
+              class="flex flex-row items-center gap-6 pb-2"
+              @update:model-value="onDepositRadioNav"
+            >
+              <label class="flex cursor-pointer items-center gap-1.5 text-sm" @click.capture.stop.prevent="toggleDepositMode('paid')">
+                <RadioGroupItem value="paid" tabindex="-1" />
                 {{ t('admin.reservationDetail.depositPaid') }}
               </label>
-              <label class="flex items-center gap-1.5 text-sm">
-                <input type="radio" name="deposit-mode" :checked="depositMode === 'waived'" :disabled="!canWrite || isVisitInfoLocked" @click="toggleDepositMode('waived')">
+              <label class="flex cursor-pointer items-center gap-1.5 text-sm" @click.capture.stop.prevent="toggleDepositMode('waived')">
+                <RadioGroupItem value="waived" tabindex="-1" />
                 {{ t('admin.reservationDetail.depositWaived') }}
               </label>
-            </div>
+            </RadioGroup>
           </div>
 
           <div class="flex items-center gap-3">
@@ -354,8 +365,16 @@ function deriveDepositMode(paid: boolean, amount: number | null): DepositMode {
 }
 const depositMode = ref<DepositMode>(deriveDepositMode(detail.value?.depositPaid ?? false, detail.value?.depositAmount ?? null))
 function toggleDepositMode(mode: 'paid' | 'waived') {
-  // 이미 선택된 라디오를 다시 클릭하면 미확인 상태로 되돌린다(네이티브 radio는 스스로 해제가 안 되므로).
+  // label 클릭(캡처)·Space/Enter 경로. disabled 가드가 없으므로 여기서 잠금 상태를 먼저 확인한다.
+  if (!canWrite.value || isVisitInfoLocked.value) return
+  // 이미 선택된 라디오를 다시 클릭하면 미확인 상태로 되돌린다(radio는 스스로 해제가 안 되므로).
   depositMode.value = depositMode.value === mode ? 'unpaid' : mode
+  if (depositMode.value === 'waived') depositAmount.value = null
+}
+// 화살표키로 reka RadioGroup 선택을 옮긴 경우만 이 경로로 온다(마우스·Space/Enter는 위 @click.capture가 가로챔).
+function onDepositRadioNav(v: unknown) {
+  if (!canWrite.value || isVisitInfoLocked.value || !v) return
+  depositMode.value = v as DepositMode
   if (depositMode.value === 'waived') depositAmount.value = null
 }
 
