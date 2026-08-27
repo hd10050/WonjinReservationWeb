@@ -41,9 +41,12 @@
 
         <DropdownMenuRoot>
           <DropdownMenuTrigger
+            :aria-label="currentLocaleName"
             class="flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground aria-expanded:border-primary aria-expanded:text-foreground"
           >
             <Globe class="size-3.5" />
+            <!-- 🔴 재검증 발견 — 이 텍스트가 모바일에서 숨겨지면서(sm:inline) 트리거의 유일한 접근가능
+                 이름도 함께 사라졌었다(FAB과 같은 종류의 결함). 위 aria-label로 항상 이름을 제공한다. -->
             <span class="hidden sm:inline">{{ currentLocaleName }}</span>
             <ChevronDown class="size-3.5" />
           </DropdownMenuTrigger>
@@ -108,12 +111,33 @@ const switchLocalePath = useSwitchLocalePath()
 const currentLocaleName = computed(() => locales.value.find(l => l.code === locale.value)?.name ?? locale.value)
 
 const route = useRoute()
-const isInquiryPage = computed(() => route.path === localePath('inquiry'))
+const isInquiryPage = computed(() => route.path.replace(/\/$/, '') === localePath('inquiry').replace(/\/$/, ''))
+const config = useRuntimeConfig()
 
-// 🔴 UTM 캡처는 광고가 어느 페이지로든(시술 상세 딥링크 포함) 착지할 수 있으므로 홈 페이지가 아니라
-// 이 레이아웃(모든 공개 페이지 공용)에서 잡는다(최종 리뷰 발견 — 이전엔 index.vue에만 있어 딥링크
-// 유입의 UTM이 전부 유실됐다). captureUtm()은 쿼리에 UTM 값이 있을 때만 쓰므로 부작용 없다.
+// 🔴 UTM 캡처 + landing-visit 방문기록은 광고가 어느 페이지로든(시술 상세 딥링크 포함) 착지할 수
+// 있으므로 홈 페이지가 아니라 이 레이아웃(모든 공개 페이지 공용)에서 잡는다(최종 리뷰 발견 —
+// 이전엔 index.vue에만 있어 딥링크 유입의 UTM·방문집계가 전부 유실됐다. 재검증에서 landing-visit
+// 이전 누락이 재지적됨 — /admin/referrals 퍼널 집계가 base set을 landing_daily_stats 방문건
+// 기준으로 잡아서, 방문이 안 잡히면 그 캠페인의 예약 자체가 통계에서 통째로 사라진다).
+// captureUtm()은 쿼리에 UTM 값이 있을 때만 쓰므로 부작용 없다.
 captureUtm()
+
+// 15-1절 — 랜딩 SSR 시점에 프론트 서버가 내부 시크릿 헤더와 함께 방문을 기록한다.
+// 🔴 await 하지 않는다(F6) — 방문 집계 실패·지연이 랜딩 렌더 응답 시간에 영향을 주면 안 된다.
+if (import.meta.server) {
+  const utmQuery = {
+    referralCode: (route.query.ref as string) || '',
+    utmSource: (route.query.utm_source as string) || '',
+    utmMedium: (route.query.utm_medium as string) || '',
+    utmCampaign: (route.query.utm_campaign as string) || '',
+  }
+  $fetch(`${config.apiBaseInternal}/api/internal/landing-visit`, {
+    method: 'POST',
+    headers: { 'X-Internal-Secret': config.internalSecret as string },
+    body: utmQuery,
+    timeout: 2000,
+  }).catch(() => {})
+}
 
 // 5-1절 hreflang alternate + <html lang> 자동 생성.
 const i18nHead = useLocaleHead({ seo: true })
@@ -142,7 +166,7 @@ const BUSINESS_PHONE = '02-3477-3300'
 
 // M8 JSON-LD(5-5절 형식) — MedicalClinic + Organization을 @graph로 묶는다.
 // 🔴 innerHTML + <를 <로 이스케이프 — children으로 넣으면 본문이 비고, 미이스케이프는 저장형 XSS가 된다.
-const siteUrl = useRuntimeConfig().public.siteUrl as string
+const siteUrl = config.public.siteUrl as string
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
