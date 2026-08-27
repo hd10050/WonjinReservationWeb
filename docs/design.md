@@ -85,6 +85,7 @@
 | D21 | **실장 KPI·예약 통계 = 표 + 차트 병행, 차트는 `vue-chartjs` + `chart.js`**(Phase 6, 2026-08-26) | 완료기준(빈 구간 0 채움)은 표만으로도 충족되지만 추이 파악 편의를 위해 사용자 지시로 차트를 병행한다. **Canvas 기반이라 SSR을 타지 않는다** — `<ClientOnly>`로 감싸 클라이언트 마운트 후에만 그린다. 13장 SSR 프리로드 원칙은 **데이터** 프리로드에 대한 것이라 위반이 아니다(표는 SSR로 데이터와 함께 즉시 표시되고, 차트만 하이드레이션 후 한 박자 늦게 그려진다 — 레이아웃 시프트 방지를 위해 차트 컨테이너에 고정 높이를 둔다). 차트 색상은 새 팔레트를 만들지 않고 **D20 Olive Garden Feast를 그대로 재사용**한다 |
 | D22 | **🔴 푸터 주소는 로케일별로 다른 문구 — 12-1-1절 "번역 안 함" 원칙의 예외**(2026-08-26) | 상호·사업자등록번호는 여전히 원문 고정(번역 금지 원칙 유지)이지만, **주소만 사용자 지시로 로케일별 표기를 분리**: ko는 등록원문("서울시 서초구 강남대로 419 파고다타워 12-18층") 유지, zh-CN은 `首尔市 瑞草区 江南大路419 PAGODA 12-18楼`, zh-TW·en은 영문 주소 `PAGODA tower 17th floor 1306~6 Seocho-dong Seocho-gu, SEOUL`(사용자가 zh-TW도 영문 표기를 명시적으로 선택). JSON-LD `PostalAddress`도 이 영문 주소 형식으로 함께 갱신(`streetAddress: "PAGODA Tower 17F, 1306-6 Seocho-dong"` 등). `landing.vue`의 `ADDRESS_BY_LOCALE` 상수로 구현(i18n JSON 키 아님 — 사업자 정보는 언어별 "번역"이 아니라 "다른 표기"이므로 기존 `BUSINESS_NAME`/`BUSINESS_REG_NO`와 같은 패턴 유지) |
 | D23 | **날짜·시간 입력 = 커스텀 `DatePicker`/`TimePicker`(D11 날짜입력 부분 대체, 2026-08-27)** | shadcn Popover+Calendar(reka-ui 기반)로 `DatePicker`, reka-ui `TimeField`로 `TimePicker` 구현(`components/ui/date-picker`·`components/ui/time-picker`). v-model은 기존 네이티브 input과 동일하게 `"YYYY-MM-DD"`/`"HH:mm"` 문자열(빈 문자열=미입력)이라 제출 로직·API 계약은 불변. `locale` prop에 각 페이지의 BCP-47 태그(`useInputLang()` 공용 컴포저블)를 그대로 전달해 팝업 캘린더 요일·월 이름까지 코드로 제어된다(9-2절① 잔여 한계 해소). 시간은 24시간제로 고정(로케일별 오전/오후 표기 차이 제거). 신규 npm 의존성은 `@internationalized/date`(reka-ui의 기존 전이 의존성을 직접 의존성으로 승격) 하나뿐 — CSS 테마는 shadcn 변수를 자동 상속. 예약 달력(`admin/calendar.vue`, 12-6절)은 애초에 네이티브 위젯이 아니라 자체 그리드라 이 결정과 무관 — 범위에서 제외(사용자 확인, 재론 불필요). **같은 세션에서 폼 필수 필드의 브라우저 기본 검증 팝업 문제도 함께 해소** — 브라우저 기본 검증 메시지가 페이지 로케일이 아니라 브라우저/OS 언어를 따라 표시되는 것을 사용자가 재현 보고(날짜 위젯과 근본 원인 동일: 네이티브 브라우저 UI가 앱 로케일을 안 따름). `<form novalidate>` + 커스텀 `validate()`(필드별 인라인 에러 텍스트 + `aria-invalid`)로 대체(랜딩 폼·어드민 로그인 2곳, `required` 사용처 전수 grep으로 확인한 범위). 신규 i18n 키: `common.pickDate`·`common.clear`·`common.fieldRequired`·`admin.login.invalidEmail`(4개 로케일 파일 키 집합 동일 확인 완료) |
+| D25 | **시술 카테고리 마스터 신설 + 시술은 카테고리에 필수 소속 + 정렬순서 폐지**(2026-08-28) | `categories` 테이블 신설(`code` UNIQUE + 언어별 이름 4개 + `is_active`, 8-3-1절). `procedures.category_id`는 **NOT NULL**(FK → `categories.id` ON DELETE RESTRICT) — 출시 전이라 기존 시술 행이 없어 바로 NOT NULL로 추가한다(사용자 확인). **`procedures.sort_order`와 카테고리의 정렬 컬럼을 두지 않는다** — 카테고리·시술을 나열하는 모든 화면(관리 탭 목록, 예약 상세 시술 선택)에서 정렬은 **현재 UI 로케일의 이름 컬럼 오름차순**(`name_<locale>`)으로 한다. [시술·수술 관리] 메뉴는 별도 메뉴를 늘리지 않고 **한 화면 안 탭 2개(카테고리 관리 / 시술·수술 관리)**로 구성한다. 카테고리도 시술·실장과 동일하게 **DELETE 없음 — `is_active=false` 비활성화만**(D13). 카테고리·시술 둘 다 엑셀 일괄등록 지원(시술 엑셀은 소속 카테고리를 **카테고리 코드**로 지정). 예약 상세의 시술 선택은 **카테고리별 아코디언**(기본 전부 접힘, 이미 선택된 시술이 든 카테고리만 펼침, 시술이 없거나 비활성인 카테고리는 숨김 — 단 이미 선택된 시술이 든 카테고리는 유지) |
 
 ---
 
@@ -526,16 +527,33 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 |---|---|---|
 | `id` | int | PK |
 | `code` | varchar(30) | **UNIQUE** (예: `botox`, `rhino`) |
+| `category_id` | int | **NOT NULL**, FK → `categories.id` ON DELETE RESTRICT (D25) — 소속 카테고리 필수 |
 | `name_zh_cn` / `name_zh_tw` / `name_en` / `name_ko` | varchar(50) | NOT NULL |
-| `sort_order` | int | NOT NULL DEFAULT 0 |
 | `is_active` | boolean | NOT NULL DEFAULT true |
 | `created_at` / `updated_at` | timestamptz | NOT NULL |
 
-**인덱스**: `ux_procedures_code` (UNIQUE), `ix_procedures_is_active_sort_order` — 예약 상세의 시술 선택 목록이 `WHERE is_active ORDER BY sort_order`로 조회하므로 복합 인덱스로 커버한다.
+**인덱스**: `ux_procedures_code` (UNIQUE), `ix_procedures_is_active` (목록 필터 `WHERE is_active=?`), `ix_procedures_category_id` (FK + 예약 상세 카테고리별 그룹핑). 정렬은 `ORDER BY name_<locale>`(D25) — 8-3-1절과 동일 이유(소규모 마스터)로 정렬 커버 인덱스는 두지 않는다.
+
+> **~~`sort_order`~~ 폐지**(D25, 2026-08-28) — 정렬은 현재 UI 로케일 이름 오름차순. 인덱스 `ix_procedures_is_active_sort_order` → `ix_procedures_is_active`로 대체하고 `ix_procedures_category_id`를 추가했다.
 
 > **초기 데이터를 코드로 시딩하지 않는다.** 이 테이블은 [시술·수술 관리] 메뉴(요구사항 8번)에서 어드민·병원관리자가 직접 등록·수정하는 마스터 데이터다. 시딩해두면 실제 병원이 다루는 시술과 어긋난 값이 남고, 관리 화면이 있는데 코드로 값을 심을 이유도 없다. 운영 시작 전에 관리 화면에서 등록하면 된다.
 
-> ⚠️ 예약 상세 폼의 시술 체크박스는 **활성 시술만** 노출하되, 편집 화면은 그 예약에 이미 선택된 비활성 시술을 목록에 남겨야 한다 — 빼면 저장 시 조용히 값이 사라진다.
+> ⚠️ 예약 상세 폼의 시술 체크박스는 **활성 시술만** 노출하되, 편집 화면은 그 예약에 이미 선택된 비활성 시술을 목록에 남겨야 한다 — 빼면 저장 시 조용히 값이 사라진다. 카테고리 아코디언(12-5절)도 동일 — 이미 선택된 시술이 든 카테고리는 비활성이어도 노출한다.
+
+### 8-3-1. `categories` — 시술·수술 카테고리 마스터 (D25, 2026-08-28 신설)
+
+| 컬럼 | 타입 | 제약 |
+|---|---|---|
+| `id` | int | PK |
+| `code` | varchar(30) | **UNIQUE** (예: `eye`, `nose`) |
+| `name_zh_cn` / `name_zh_tw` / `name_en` / `name_ko` | varchar(50) | NOT NULL |
+| `is_active` | boolean | NOT NULL DEFAULT true |
+| `created_at` / `updated_at` | timestamptz | NOT NULL |
+
+**인덱스**: `ux_categories_code` (UNIQUE), `ix_categories_is_active` — 목록 조회가 `WHERE is_active=?`로 필터한다. 정렬(`ORDER BY name_<locale>`)은 커버 인덱스를 두지 않는다 — 카테고리는 어드민이 수동 등록하는 소규모 마스터(20-1절: 시딩 없음, 수십 행 규모)라 varchar 정렬 비용이 무의미하며, 17장의 ILIKE 검색 한계와 동일한 "소규모 마스터 데이터라 해당 없음" 범주다.
+
+> **DELETE 없음** — `is_active=false`로만 비활성화(D13·시술과 동일). 시딩하지 않는다 — [시술·수술 관리] > [카테고리 관리] 탭에서 어드민·병원관리자가 직접 등록.
+> 랜딩(`frontend/app/data/procedures.ts`)의 정적 11개 카테고리와는 **별개 데이터**다 — 이 테이블은 어드민 운영용이며 랜딩 화면은 이 수정 범위 밖(통합 여부는 랜딩 재설계 시 별도 결정).
 
 ### 8-4. `consultants` — 실장 마스터 (D8 · 계정과 무관한 독립 테이블)
 
@@ -782,6 +800,8 @@ var kstDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcN
 | 실장 이름(`consultants.name`) | `varchar(30)` | `[MaxLength(30)]` | `maxlength="30"` |
 | 시술명(언어당) | `varchar(50)` | `[MaxLength(50)]` | `maxlength="50"` |
 | 시술 코드 | `varchar(30)` | `[MaxLength(30)]` | `maxlength="30"` |
+| 카테고리 코드(`categories.code`) | `varchar(30)` | `[MaxLength(30)]` | `maxlength="30"` |
+| 카테고리명(언어당) | `varchar(50)` | `[MaxLength(50)]` | `maxlength="50"` |
 | 처리 이력 메모 | `varchar(300)` | `[MaxLength(300)]` | `maxlength="300"` |
 | UTM 각 항목 | `varchar(100)` | 서버에서 100자로 **절단**(거부 아님) | — (URL 파라미터) |
 | 추천 코드 | `varchar(50)` | 서버에서 50자로 **절단** | — (URL 파라미터) |
@@ -1026,7 +1046,8 @@ var summary = await db.Reservations
 | 메서드 | 경로 | 비고 |
 |---|---|---|
 | GET / POST / PUT | `/api/admin/consultants[/{id}]` | 실장 마스터 CRUD(D8). **DELETE 없음** — 비활성화는 `PUT`의 `isActive=false`로 (D13). 목록은 `includeInactive`·`search`(이름) 쿼리 + `PagedResult`(기본 20건, 2026-08-27부터). 드롭다운·다중선택 등 "전체 목록"이 필요한 호출부는 `pageSize=100`을 명시로 요청 |
-| GET / POST / PUT | `/api/admin/procedures[/{id}]` | 시술 마스터. **DELETE 없음** — `isActive=false`로 비활성화. 목록은 `includeInactive`·`search`(코드+4언어명) 쿼리 + `PagedResult`(기본 20건, 2026-08-27부터), "전체 목록" 호출부는 `pageSize=100` |
+| GET / POST / PUT | `/api/admin/categories[/{id}]` | **시술 카테고리 마스터**(D25, 8-3-1절). GET은 3역할(예약 상세 시술 아코디언이 Consultant에도 필요), POST/PUT은 HospitalManager 이상. **DELETE 없음** — `isActive=false`. 목록은 `includeInactive`·`search`(코드+4언어명)·`locale`(정렬 기준 언어) 쿼리 + `PagedResult`(기본 20건). "전체 목록" 호출부는 `pageSize=100`. `POST /bulk` 엑셀 일괄등록(레이어3 all-or-nothing) |
+| GET / POST / PUT | `/api/admin/procedures[/{id}]` | 시술 마스터. **DELETE 없음** — `isActive=false`로 비활성화. 목록은 `includeInactive`·`search`(코드+4언어명)·`locale` 쿼리 + `PagedResult`(기본 20건, 2026-08-27부터), "전체 목록" 호출부는 `pageSize=100`. **정렬은 `name_<locale>` 오름차순**(D25, `sort_order` 폐지). 등록·수정 시 `categoryId` **필수** — 존재하는 카테고리가 아니면 400 `CATEGORY_NOT_FOUND`. `POST /bulk`는 소속 카테고리를 **카테고리 코드**로 지정(없는 코드면 행 오류 `BULK_CATEGORY_NOT_FOUND`) |
 
 ### 11-4. 통계 (HospitalManager 이상)
 
@@ -1291,7 +1312,7 @@ function submitSearch(value: string) {
 > 🔴 **미배정(`consultant_id = null`) 예약은 담당 실장 select와 [배정] 버튼만 활성화하고 나머지 입력(상담 기록·방문일시·시술·예약금·상태 전이)은 전부 `disabled`로 둔다**(D17). 상단에 "담당 실장을 먼저 배정하세요" 안내를 띄운다. 화면 비활성화는 UX일 뿐이고 **실제 차단은 서버가 400 `RESERVATION_NOT_ASSIGNED`로 한다**(10-1절).
 >
 > 담당 실장을 바꾸면 **반드시 처리 이력에 남는다**(이전 담당자 → 새 담당자). 실장 간 예약 접근이 전면 허용돼 있어(F8) 이 기록이 담당자 변경을 추적할 유일한 수단이다.
-4. **시술·수술 결정**: 활성 시술 다중 선택
+4. **시술·수술 결정**: **카테고리별 아코디언**으로 묶어 표시한다(D25). 기본은 모든 카테고리가 접힌 상태이며, 그 예약에 **이미 선택된 시술이 있는 카테고리만 펼쳐진 채로** 로드된다. 각 아코디언 안에서 활성 시술을 체크박스로 다중 선택한다. **시술이 하나도 없는 카테고리, 비활성 카테고리는 숨긴다** — 단 8-3의 원칙대로 그 예약에 이미 선택된(지금은 비활성일 수 있는) 시술이 든 카테고리·시술은 계속 노출해 조용히 값이 사라지지 않게 한다. 카테고리 정렬은 현재 UI 로케일 이름 오름차순
 5. **예약금**: 통화 select(`CNY` 기본 / `KRW`) + 금액 + 입금 확인 체크박스 (D3·D12). 통화 select에도 보이는 label을 붙인다
 6. **처리 이력**: `reservation_logs` 타임라인
 7. **액션**: 저장 / 상태 전이 / 취소(사유 입력 필수) / **삭제**(아래)
@@ -1320,7 +1341,7 @@ function submitSearch(value: string) {
 | 메뉴 | 핵심 구성 |
 |---|---|
 | 실장 관리 | `consultants` 마스터 CRUD(D8) — 이름·정렬순서 등록/수정 + **활성/비활성 토글**. 삭제 버튼 없음(D13). "비활성 포함 보기" 체크박스로 퇴사자 조회. **로그인 계정과 무관한 독립 데이터이므로 계정 관리 화면과 혼동하지 말 것** |
-| 시술·수술 관리 | 목록 + 4언어 탭 입력 폼(코드·정렬순서·활성). 삭제 버튼 없음 |
+| 시술·수술 관리 | **한 화면 안 탭 2개**(D25, 별도 메뉴 추가 없음) — ①**카테고리 관리**: 목록(코드·이름·상태) + 코드·4언어 탭 입력 폼 + 활성/비활성 토글 + 엑셀 일괄등록. ②**시술·수술 관리**: 목록(코드·소속 카테고리·이름·상태) + 코드·**소속 카테고리 select(필수, 보이는 label)**·4언어 탭 입력 폼 + 활성/비활성 + 엑셀 일괄등록(소속을 카테고리 코드 열로 지정). 둘 다 삭제 버튼 없음, 정렬은 현재 로케일 이름 오름차순 |
 | 실장 KPI | 기간 선택 + 실장별 배정/확정/방문/확정전환율 **표 + 막대 차트**(D21) (평균 응대시간 없음 — U6) |
 | 예약 통계 | **주(일~토) 단위** 추이(**표 + 라인 차트**) + 시술별 집계(**표 + 막대 차트**) + 언어별 분포(**표 + 도넛 차트**) + **담당 실장별 집계(표 + 막대 차트)**(D21) |
 | 계정 관리 | 계정 목록 + 발급 폼 + 역할 변경 + 정지 (어드민 전용) |
@@ -1410,6 +1431,9 @@ var statusCode = executed.Exception is not null ? 500 : context.HttpContext.Resp
 | `/api/admin/consultants` | PUT | `update` | `consultant` |
 | `/api/admin/procedures` | POST | `create` | `procedure` |
 | `/api/admin/procedures` | PUT | `update` | `procedure` |
+| `/api/admin/categories` + `/bulk` | POST | `bulk_create` | `category` |
+| `/api/admin/categories` | POST | `create` | `category` |
+| `/api/admin/categories` | PUT | `update` | `category` |
 | `/api/admin/users` | POST | `create` | `user` |
 | `/api/admin/users` | PATCH | `update` | `user` |
 | `/api/admin/influencer-links` | POST | `create` | `influencer_link` |
@@ -1575,7 +1599,9 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 | 실장 배정 드롭다운 | `WHERE is_active ORDER BY sort_order` | `ix_consultants_is_active_sort_order` |
 | 상담 기록 조회 | `WHERE reservation_id=? ORDER BY created_at` | `ix_reservation_notes_reservation_id_created_at` |
 | 실장 관리 목록 | `WHERE is_active=? ORDER BY sort_order LIMIT 20` (+ `search` 시 이름 `ILIKE`) | `ix_consultants_is_active_sort_order` |
-| 시술 관리 목록 | `WHERE is_active=? ORDER BY sort_order LIMIT 20` (+ `search` 시 코드·4언어명 `ILIKE`) | `ix_procedures_is_active_sort_order` |
+| 카테고리 관리 목록 | `WHERE is_active=? ORDER BY name_<locale> LIMIT 20` (+ `search` 시 코드·4언어명 `ILIKE`) | `ix_categories_is_active` (정렬은 소규모 마스터라 커버 인덱스 없음 — 8-3-1절) |
+| 시술 관리 목록 | `WHERE is_active=? ORDER BY name_<locale> LIMIT 20` (+ `search` 시 코드·4언어명 `ILIKE`) | `ix_procedures_is_active` (정렬은 소규모 마스터라 커버 인덱스 없음) |
+| 예약 상세 시술 아코디언 | 전체 활성 시술·활성 카테고리 각 1회 조회 → 클라이언트가 `category_id`로 그룹핑 | `ix_procedures_category_id` |
 | 인플루언서 링크 목록 | `WHERE is_active=? ORDER BY created_at DESC LIMIT 20` (+ `search` 시 코드·표시명 `ILIKE`) | `ix_influencer_links_is_active_created_at` |
 
 **명시적 한계**: 검색(`ILIKE '%키워드%'`)은 **B-tree 인덱스를 타지 않는다.** 예약이 수만 건을 넘어가면 검색이 느려지므로, 그 시점에 `pg_trgm` GIN 인덱스 도입을 검토한다. 지금 규모에서 미리 넣는 것은 과설계다 — 실장·시술·인플루언서 링크는 전부 어드민이 수동 등록하는 소규모 마스터 데이터라(20-1절: 시딩 없음) 이 한계에 해당 없음.

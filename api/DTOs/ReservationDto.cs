@@ -86,5 +86,6 @@ public record UpdateNoteRequest([Required, MaxLength(2000)] string Body);
 // 배정 드롭다운(예약 상세)·시술 선택 체크박스·Phase 4 관리 화면 목록이 공유하는 룩업 DTO.
 public record ConsultantLookupDto(int Id, string Name, bool IsActive, int SortOrder);
 
+// 🔴 D25(2026-08-28) — SortOrder 폐지, CategoryId 추가(예약 상세 아코디언이 이 값으로 카테고리별 그룹핑).
 public record ProcedureLookupDto(
-    int Id, string Code, string NameZhCn, string NameZhTw, string NameEn, string NameKo, bool IsActive, int SortOrder);
+    int Id, string Code, int CategoryId, string NameZhCn, string NameZhTw, string NameEn, string NameKo, bool IsActive);

@@ -7,6 +7,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Category> Categories => Set<Category>();
     public DbSet<Procedure> Procedures => Set<Procedure>();
     public DbSet<Consultant> Consultants => Set<Consultant>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
@@ -58,6 +59,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(r => r.UserId).HasDatabaseName("ix_refresh_tokens_user_id");
         });
 
+        // ── categories (8-3-1, D25 2026-08-28 신설) ──────────────
+        modelBuilder.Entity<Category>(e =>
+        {
+            e.Property(c => c.Code).HasMaxLength(30).IsRequired();
+            e.Property(c => c.NameZhCn).HasMaxLength(50).IsRequired();
+            e.Property(c => c.NameZhTw).HasMaxLength(50).IsRequired();
+            e.Property(c => c.NameEn).HasMaxLength(50).IsRequired();
+            e.Property(c => c.NameKo).HasMaxLength(50).IsRequired();
+            e.Property(c => c.IsActive).HasDefaultValue(true);
+
+            e.HasIndex(c => c.Code).IsUnique().HasDatabaseName("ux_categories_code");
+            // 목록 조회 WHERE is_active=? — 정렬(ORDER BY name_<locale>)은 소규모 마스터라 커버 인덱스를 두지 않는다(8-3-1절).
+            e.HasIndex(c => c.IsActive).HasDatabaseName("ix_categories_is_active");
+        });
+
         // ── procedures (8-3) ─────────────────────────────────────
         modelBuilder.Entity<Procedure>(e =>
         {
@@ -66,11 +82,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(p => p.NameZhTw).HasMaxLength(50).IsRequired();
             e.Property(p => p.NameEn).HasMaxLength(50).IsRequired();
             e.Property(p => p.NameKo).HasMaxLength(50).IsRequired();
-            e.Property(p => p.SortOrder).HasDefaultValue(0);
             e.Property(p => p.IsActive).HasDefaultValue(true);
 
+            // 🔴 D25 — 소속 카테고리 필수. 카테고리는 삭제 없이 비활성화만 하므로(D13) RESTRICT가 안전.
+            e.HasOne(p => p.Category).WithMany(c => c.Procedures)
+                .HasForeignKey(p => p.CategoryId).OnDelete(DeleteBehavior.Restrict);
+
             e.HasIndex(p => p.Code).IsUnique().HasDatabaseName("ux_procedures_code");
-            e.HasIndex(p => new { p.IsActive, p.SortOrder }).HasDatabaseName("ix_procedures_is_active_sort_order");
+            // sort_order 폐지(D25) — 목록 필터는 is_active, 정렬은 이름 오름차순(커버 인덱스 없음).
+            e.HasIndex(p => p.IsActive).HasDatabaseName("ix_procedures_is_active");
+            e.HasIndex(p => p.CategoryId).HasDatabaseName("ix_procedures_category_id");
         });
 
         // ── consultants (8-4) ────────────────────────────────────

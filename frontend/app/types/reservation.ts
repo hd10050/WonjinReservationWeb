@@ -107,7 +107,20 @@ export interface ConsultantLookup {
   sortOrder: number
 }
 
+// D25(2026-08-28) — sortOrder 폐지, categoryId 추가(예약 상세 아코디언이 이 값으로 카테고리별 그룹핑).
 export interface ProcedureLookup {
+  id: number
+  code: string
+  categoryId: number
+  nameZhCn: string
+  nameZhTw: string
+  nameEn: string
+  nameKo: string
+  isActive: boolean
+}
+
+// D25 — 시술 카테고리 마스터. 관리 탭 목록 + 예약 상세 시술 아코디언 그룹 헤더가 공유.
+export interface CategoryLookup {
   id: number
   code: string
   nameZhCn: string
@@ -115,7 +128,6 @@ export interface ProcedureLookup {
   nameEn: string
   nameKo: string
   isActive: boolean
-  sortOrder: number
 }
 
 // Phase 6 — 실장 KPI(11-4절). 활성 실장은 실적 0건이어도 0행으로 내려온다(11-6절 구간 0 채움).

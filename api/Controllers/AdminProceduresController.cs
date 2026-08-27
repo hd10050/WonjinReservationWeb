@@ -18,12 +18,13 @@ namespace WonjinApi.Controllers;
 public class AdminProceduresController(AppDbContext db) : ControllerBase
 {
     // 🔴 2026-08-27 페이징 전면 적용(DB성능 절대원칙) — 예약 상세의 시술 다중선택(reservations/[id].vue)은
-    // pageSize=100(다른 목록 API와 동일한 상한)을 명시로 넘기고 .items를 읽도록 함께 수정했다 — 그
-    // 호출부가 깨진다는 이유로 페이징 자체를 안 넣던 이전 결정(2026-08-26)을 대체.
+    // pageSize=100(다른 목록 API와 동일한 상한)을 명시로 넘기고 .items를 읽도록 함께 수정했다.
+    // 🔴 D25(2026-08-28) — 정렬은 sort_order 폐지, 현재 UI 로케일 이름(name_<locale>) 오름차순.
     [HttpGet]
     public async Task<ActionResult<PagedResult<ProcedureLookupDto>>> GetList(
         [FromQuery] bool includeInactive = false,
         [FromQuery] string? search = null,
+        [FromQuery] string? locale = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
@@ -44,12 +45,20 @@ public class AdminProceduresController(AppDbContext db) : ControllerBase
         pageSize = Math.Clamp(pageSize, 1, 100);
         page = Math.Max(page, 1);
 
+        // locale은 쿼리 빌드 시점의 상수라 어떤 OrderBy 람다를 쓸지 C#에서 고른다(각 람다는 단순 속성 접근이라 EF 번역 OK).
+        var ordered = locale switch
+        {
+            "zh-TW" => query.OrderBy(p => p.NameZhTw),
+            "en" => query.OrderBy(p => p.NameEn),
+            "ko" => query.OrderBy(p => p.NameKo),
+            _ => query.OrderBy(p => p.NameZhCn),
+        };
+
         var total = await query.CountAsync();
-        var items = await query
-            .OrderBy(p => p.SortOrder)
+        var items = await ordered
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(p => new ProcedureLookupDto(p.Id, p.Code, p.NameZhCn, p.NameZhTw, p.NameEn, p.NameKo, p.IsActive, p.SortOrder))
+            .Select(p => new ProcedureLookupDto(p.Id, p.Code, p.CategoryId, p.NameZhCn, p.NameZhTw, p.NameEn, p.NameKo, p.IsActive))
             .ToListAsync();
 
         return Ok(new PagedResult<ProcedureLookupDto>(items, total, page, pageSize));
@@ -62,16 +71,20 @@ public class AdminProceduresController(AppDbContext db) : ControllerBase
     {
         if (await db.Procedures.AnyAsync(p => p.Code == req.Code))
             return BadRequest(new { code = "PROCEDURE_CODE_DUPLICATE" });
+        // 🔴 D25 — 소속 카테고리 존재 검증(AssignConsultant의 CONSULTANT_NOT_FOUND와 대칭). 비-nullable int라
+        // 누락 시 0으로 바인딩되는데(11-8절), 0인 카테고리는 존재하지 않으므로 이 검사에 함께 걸린다.
+        if (!await db.Categories.AnyAsync(c => c.Id == req.CategoryId))
+            return BadRequest(new { code = "CATEGORY_NOT_FOUND" });
 
         var now = DateTimeOffset.UtcNow;
         var procedure = new Procedure
         {
             Code = req.Code,
+            CategoryId = req.CategoryId,
             NameZhCn = req.NameZhCn,
             NameZhTw = req.NameZhTw,
             NameEn = req.NameEn,
             NameKo = req.NameKo,
-            SortOrder = req.SortOrder,
             IsActive = true,
             CreatedAt = now,
             UpdatedAt = now,
@@ -79,7 +92,7 @@ public class AdminProceduresController(AppDbContext db) : ControllerBase
         db.Procedures.Add(procedure);
         await db.SaveChangesAsync();
 
-        return Ok(new ProcedureLookupDto(procedure.Id, procedure.Code, procedure.NameZhCn, procedure.NameZhTw, procedure.NameEn, procedure.NameKo, procedure.IsActive, procedure.SortOrder));
+        return Ok(new ProcedureLookupDto(procedure.Id, procedure.Code, procedure.CategoryId, procedure.NameZhCn, procedure.NameZhTw, procedure.NameEn, procedure.NameKo, procedure.IsActive));
     }
 
     // 비활성화도 이 엔드포인트다 — isActive=false로 PUT. code 변경 시에도 UNIQUE 재검증(자기 자신 제외).
@@ -93,22 +106,25 @@ public class AdminProceduresController(AppDbContext db) : ControllerBase
 
         if (await db.Procedures.AnyAsync(p => p.Code == req.Code && p.Id != id))
             return BadRequest(new { code = "PROCEDURE_CODE_DUPLICATE" });
+        if (!await db.Categories.AnyAsync(c => c.Id == req.CategoryId))
+            return BadRequest(new { code = "CATEGORY_NOT_FOUND" });
 
         procedure.Code = req.Code;
+        procedure.CategoryId = req.CategoryId;
         procedure.NameZhCn = req.NameZhCn;
         procedure.NameZhTw = req.NameZhTw;
         procedure.NameEn = req.NameEn;
         procedure.NameKo = req.NameKo;
-        procedure.SortOrder = req.SortOrder;
         procedure.IsActive = req.IsActive;
         procedure.UpdatedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
 
-        return Ok(new ProcedureLookupDto(procedure.Id, procedure.Code, procedure.NameZhCn, procedure.NameZhTw, procedure.NameEn, procedure.NameKo, procedure.IsActive, procedure.SortOrder));
+        return Ok(new ProcedureLookupDto(procedure.Id, procedure.Code, procedure.CategoryId, procedure.NameZhCn, procedure.NameZhTw, procedure.NameEn, procedure.NameKo, procedure.IsActive));
     }
 
     // 엑셀 일괄등록 — excel-bulk-upload-pattern-reference.md 레이어3(all-or-nothing).
     // 코드 중복은 "엑셀 내부"와 "기존 DB"를 별도 오류로 구분한다(관리자가 취해야 할 조치가 다름).
+    // 🔴 D25 — 소속 카테고리는 카테고리 코드로 지정. 존재하지 않는 코드는 행 오류(BULK_CATEGORY_NOT_FOUND).
     [HttpPost("bulk")]
     [Authorize(Roles = "Admin,HospitalManager")]
     [EnableRateLimiting("admin-write")]
@@ -132,6 +148,7 @@ public class AdminProceduresController(AppDbContext db) : ControllerBase
             CheckField(r.Row, r.NameZhTw, "nameZhTw", 50);
             CheckField(r.Row, r.NameEn, "nameEn", 50);
             CheckField(r.Row, r.NameKo, "nameKo", 50);
+            CheckField(r.Row, r.CategoryCode, "categoryCode", 30);
         }
 
         // 엑셀 내부 중복 — 서버 조회 없이 배치 자체에서 계산(코드가 있는 행만 대상).
@@ -150,6 +167,14 @@ public class AdminProceduresController(AppDbContext db) : ControllerBase
             if (!string.IsNullOrWhiteSpace(r.Code) && existingCodes.Contains(r.Code!.Trim()))
                 rowErrors.Add(new BulkRowError(r.Row, "BULK_CODE_DUPLICATE_EXISTING"));
 
+        // 소속 카테고리 코드 → id 배치 해석(조회 1회). 존재하지 않는 코드면 행 오류.
+        var catCodes = requests.Where(r => !string.IsNullOrWhiteSpace(r.CategoryCode)).Select(r => r.CategoryCode!.Trim()).Distinct().ToList();
+        var categoryIdByCode = await db.Categories.Where(c => catCodes.Contains(c.Code))
+            .ToDictionaryAsync(c => c.Code, c => c.Id);
+        foreach (var r in requests)
+            if (!string.IsNullOrWhiteSpace(r.CategoryCode) && !categoryIdByCode.ContainsKey(r.CategoryCode!.Trim()))
+                rowErrors.Add(new BulkRowError(r.Row, "BULK_CATEGORY_NOT_FOUND", "categoryCode"));
+
         if (rowErrors.Count > 0)
             return BadRequest(new { code = "BULK_VALIDATION_FAILED", rowErrors });
 
@@ -157,11 +182,11 @@ public class AdminProceduresController(AppDbContext db) : ControllerBase
         var procedures = requests.Select(r => new Procedure
         {
             Code = r.Code!.Trim(),
+            CategoryId = categoryIdByCode[r.CategoryCode!.Trim()],
             NameZhCn = r.NameZhCn!.Trim(),
             NameZhTw = r.NameZhTw!.Trim(),
             NameEn = r.NameEn!.Trim(),
             NameKo = r.NameKo!.Trim(),
-            SortOrder = r.SortOrder,
             IsActive = true,
             CreatedAt = now,
             UpdatedAt = now,

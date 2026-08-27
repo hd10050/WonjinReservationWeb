@@ -125,15 +125,33 @@
 
           <div>
             <p class="mb-1.5 text-sm font-medium">{{ t('admin.reservationDetail.procedures') }}</p>
-            <div class="flex flex-wrap gap-x-4 gap-y-2">
-              <div v-for="p in visibleProcedures" :key="p.id" class="flex items-center gap-1.5">
-                <Checkbox
-                  :id="`f-procedure-${p.id}`"
-                  :model-value="selectedProcedureIds.includes(p.id)"
-                  :disabled="!canWrite || isVisitInfoLocked"
-                  @update:model-value="(checked) => toggleProcedure(p.id, checked)"
-                />
-                <Label :for="`f-procedure-${p.id}`" class="text-sm font-normal">{{ procedureName(p) }}{{ p.isActive ? '' : ` (${t('admin.reservationDetail.inactive')})` }}</Label>
+            <p v-if="!visibleCategories.length" class="text-sm text-muted-foreground">{{ t('admin.reservationDetail.proceduresEmpty') }}</p>
+            <!-- 카테고리별 아코디언(D25) — 기본 전부 접힘, 이미 선택된 시술이 든 카테고리만 펼침. -->
+            <div class="space-y-1.5">
+              <div v-for="c in visibleCategories" :key="c.id" class="rounded-md border border-border">
+                <button
+                  type="button"
+                  class="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium"
+                  :aria-expanded="openCategoryIds.has(c.id)"
+                  @click="toggleCategory(c.id)"
+                >
+                  <span>
+                    {{ categoryName(c) }}{{ c.isActive ? '' : ` (${t('admin.reservationDetail.inactive')})` }}
+                    <span v-if="selectedCountInCategory(c.id)" class="ml-1 text-xs text-primary">· {{ selectedCountInCategory(c.id) }}</span>
+                  </span>
+                  <ChevronDown class="size-4 shrink-0 transition-transform" :class="openCategoryIds.has(c.id) ? 'rotate-180' : ''" />
+                </button>
+                <div v-show="openCategoryIds.has(c.id)" class="flex flex-wrap gap-x-4 gap-y-2 border-t border-border px-3 py-2.5">
+                  <div v-for="p in proceduresInCategory(c.id)" :key="p.id" class="flex items-center gap-1.5">
+                    <Checkbox
+                      :id="`f-procedure-${p.id}`"
+                      :model-value="selectedProcedureIds.includes(p.id)"
+                      :disabled="!canWrite || isVisitInfoLocked"
+                      @update:model-value="(checked) => toggleProcedure(p.id, checked)"
+                    />
+                    <Label :for="`f-procedure-${p.id}`" class="text-sm font-normal">{{ procedureName(p) }}{{ p.isActive ? '' : ` (${t('admin.reservationDetail.inactive')})` }}</Label>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -219,8 +237,8 @@
 </template>
 
 <script setup lang="ts">
-import type { ConsultantLookup, PagedResult, ProcedureLookup, ReservationDetail, ReservationNote, ReservationNoteRevision } from '~/types/reservation'
-import { Loader2 } from '@lucide/vue'
+import type { CategoryLookup, ConsultantLookup, PagedResult, ProcedureLookup, ReservationDetail, ReservationNote, ReservationNoteRevision } from '~/types/reservation'
+import { ChevronDown, Loader2 } from '@lucide/vue'
 
 definePageMeta({ middleware: 'admin', layout: 'admin', i18n: false })
 
@@ -237,7 +255,9 @@ const { data: detail, refresh, error } = await useApi<ReservationDetail>(() => `
 // 담당 배정·시술 다중선택은 "전체 목록"이 필요하다 — 백엔드 상한(100)과 동일한 pageSize로 명시
 // 요청(2026-08-27 페이징 전면 적용, AdminConsultantsController·AdminProceduresController 주석 참고).
 const { data: consultantsPaged } = await useApi<PagedResult<ConsultantLookup>>('/api/admin/consultants', { query: { includeInactive: true, pageSize: 100 } })
-const { data: proceduresPaged } = await useApi<PagedResult<ProcedureLookup>>('/api/admin/procedures', { query: { includeInactive: true, pageSize: 100 } })
+const { data: proceduresPaged } = await useApi<PagedResult<ProcedureLookup>>('/api/admin/procedures', { query: { includeInactive: true, pageSize: 100, locale: locale.value } })
+// 시술 선택 아코디언의 카테고리 그룹(D25) — 비활성 포함(이미 선택된 시술이 든 비활성 카테고리는 노출 유지, 8-3절 함정).
+const { data: categoriesPaged } = await useApi<PagedResult<CategoryLookup>>('/api/admin/categories', { query: { includeInactive: true, pageSize: 100, locale: locale.value } })
 
 if (error.value) {
   throw createError({ statusCode: (error.value as any)?.statusCode ?? 404, statusMessage: 'Not Found', fatal: true })
@@ -286,6 +306,43 @@ function toggleProcedure(id: number, checked: boolean | 'indeterminate') {
   } else {
     selectedProcedureIds.value = selectedProcedureIds.value.filter(x => x !== id)
   }
+}
+
+// ── 시술 선택 카테고리 아코디언(D25) ──
+function categoryName(c: CategoryLookup): string {
+  const map: Record<string, string> = { 'zh-CN': c.nameZhCn, 'zh-TW': c.nameZhTw, en: c.nameEn, ko: c.nameKo }
+  return map[locale.value] ?? c.nameKo
+}
+function proceduresInCategory(categoryId: number): ProcedureLookup[] {
+  return visibleProcedures.value.filter(p => p.categoryId === categoryId)
+}
+function selectedCountInCategory(categoryId: number): number {
+  return proceduresInCategory(categoryId).filter(p => selectedProcedureIds.value.includes(p.id)).length
+}
+// 표시 규칙: ①보여줄 시술이 하나도 없는 카테고리는 숨김 ②비활성 카테고리는 숨김 — 단 이미 선택된
+// 시술이 든 카테고리는 비활성이어도 노출(8-3절 함정과 동일, 저장 시 조용히 사라지지 않게).
+const visibleCategories = computed(() =>
+  (categoriesPaged.value?.items ?? [])
+    .filter(c => proceduresInCategory(c.id).length > 0)
+    .filter(c => c.isActive || selectedCountInCategory(c.id) > 0)
+    .sort((a, b) => categoryName(a).localeCompare(categoryName(b))))
+
+// 기본은 전부 접힘, 이미 선택된 시술이 든 카테고리만 펼친 채로 로드한다.
+const openCategoryIds = ref<Set<number>>(new Set())
+{
+  const procById = new Map((proceduresPaged.value?.items ?? []).map(p => [p.id, p]))
+  const initial = new Set<number>()
+  for (const pid of detail.value?.procedureIds ?? []) {
+    const catId = procById.get(pid)?.categoryId
+    if (catId != null) initial.add(catId)
+  }
+  openCategoryIds.value = initial
+}
+function toggleCategory(id: number) {
+  const next = new Set(openCategoryIds.value)
+  if (next.has(id)) next.delete(id)
+  else next.add(id)
+  openCategoryIds.value = next
 }
 
 // 입금 확인 라디오 3상태(#13) — 미확인/입금확인/예약금없음(면제). 예약금없음도 내부적으로는
