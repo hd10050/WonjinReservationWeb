@@ -106,21 +106,26 @@ export function useAuth() {
   async function logout() {
     const config = useRuntimeConfig()
     user.value = null
+
+    // 🔴 다른 탭 즉시 로그아웃(2026-08-27, 자체 검토로 발견해 수정) — auth-pattern-reference.md
+    // 6-1절 원본 패턴은 이 방송을 user.value=null 직후·await 이전에 보낸다. 처음엔 이 프로젝트에
+    // "서버가 쿠키를 실제로 지운 뒤에만 다른 탭에 알리는 게 더 안전하다"는 생각으로 await 뒤로
+    // 옮겼었으나, 그러면 다른 탭은 이 fetch가 끝날 때까지(최대 3초, 네트워크 상태에 따라 더 길어질
+    // 수 있음) "즉시" 로그아웃되지 않는다 — 애초에 이 기능을 요청한 이유(다른 탭 즉시 로그아웃)에
+    // 반한다. 이 탭 자신도 user.value=null 시점에 이미 낙관적으로 화면이 바뀌므로, 다른 탭만 서버
+    // 확인을 기다리게 할 이유가 없다 — 원본 패턴대로 되돌린다.
+    if (import.meta.client) {
+      const channel = new BroadcastChannel('wj_auth')
+      channel.postMessage('logout')
+      channel.close()
+    }
+
     // fire-and-forget 금지 — 응답으로 AT 쿠키가 실제로 삭제되기 전까지는 그 AT가 여전히 유효하다.
     await $fetch(`${config.public.apiBase}/api/auth/logout`, {
       method: 'POST',
       credentials: 'include',
       timeout: 3000,
     }).catch(() => {})
-
-    // 🔴 다른 탭 즉시 로그아웃(2026-08-27) — useState('auth:user')는 탭 간 공유되지 않아
-    // 이 탭의 로그아웃이 다른 탭에는 반영되지 않았다. BroadcastChannel로 방송하고,
-    // 수신 측은 plugins/02.auth-sync.client.ts가 처리(auth-pattern-reference.md 6-7절 패턴).
-    if (import.meta.client) {
-      const channel = new BroadcastChannel('wj_auth')
-      channel.postMessage('logout')
-      channel.close()
-    }
   }
 
   return { user, isLoggedIn, fetchMe, login, logout }
