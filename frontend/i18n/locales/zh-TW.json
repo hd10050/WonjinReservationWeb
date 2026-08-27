@@ -52,6 +52,7 @@
       "filterSearchPlaceholder": "姓名·微信ID·預約碼",
       "filterApply": "套用",
       "filterReset": "重置",
+      "refresh": "重新整理",
       "colCode": "預約碼",
       "colName": "姓名",
       "colWechatId": "微信ID",

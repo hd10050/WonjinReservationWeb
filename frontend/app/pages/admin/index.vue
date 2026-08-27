@@ -1,9 +1,23 @@
 <template>
   <div class="space-y-6">
-    <h1 class="text-xl font-semibold text-foreground">{{ t('admin.reservations.title') }}</h1>
+    <div class="flex items-center justify-between">
+      <h1 class="text-xl font-semibold text-foreground">{{ t('admin.reservations.title') }}</h1>
+      <Button
+        variant="ghost" size="icon"
+        :aria-label="t('admin.reservations.refresh')"
+        :title="t('admin.reservations.refresh')"
+        @click="refreshAll"
+      >
+        <RefreshCw class="size-4" :class="{ 'animate-spin': dataPending }" />
+      </Button>
+    </div>
 
     <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-      <Card v-for="c in cards" :key="c.key">
+      <Card
+        v-for="c in cards" :key="c.key"
+        class="cursor-pointer transition-colors hover:bg-accent/50"
+        @click="filterByStatus(c.status)"
+      >
         <CardHeader>
           <CardDescription>{{ c.label }}</CardDescription>
         </CardHeader>
@@ -14,7 +28,7 @@
     </div>
 
     <Card>
-      <CardContent class="flex flex-wrap items-end gap-4 pt-6">
+      <CardContent class="flex flex-wrap items-start gap-4 pt-6">
         <div class="flex flex-col gap-1.5">
           <Label for="f-status">{{ t('admin.reservations.filterStatus') }}</Label>
           <select id="f-status" v-model="formStatus" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm">
@@ -24,7 +38,7 @@
         </div>
         <div class="flex flex-col gap-1.5">
           <Label for="f-consultant">{{ t('admin.reservations.filterConsultant') }}</Label>
-          <select id="f-consultant" v-model="formConsultantId" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm">
+          <select id="f-consultant" v-model="formConsultantId" class="h-9 min-w-[160px] rounded-md border border-input bg-transparent px-3 text-sm">
             <option value="">{{ t('admin.reservations.filterConsultantAll') }}</option>
             <option v-for="c in consultants" :key="c.id" :value="String(c.id)">
               {{ c.name }}{{ c.isActive ? '' : ` (${t('admin.reservationDetail.inactive')})` }}
@@ -51,8 +65,14 @@
             @keyup.enter="applyFilters"
           />
         </div>
-        <Button @click="applyFilters">{{ t('admin.reservations.filterApply') }}</Button>
-        <Button variant="outline" @click="resetFilters">{{ t('admin.reservations.filterReset') }}</Button>
+        <div class="flex flex-col gap-1.5">
+          <Label class="invisible">{{ t('admin.reservations.filterApply') }}</Label>
+          <Button @click="applyFilters">{{ t('admin.reservations.filterApply') }}</Button>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <Label class="invisible">{{ t('admin.reservations.filterReset') }}</Label>
+          <Button variant="outline" @click="resetFilters">{{ t('admin.reservations.filterReset') }}</Button>
+        </div>
       </CardContent>
     </Card>
 
@@ -96,6 +116,7 @@
 
 <script setup lang="ts">
 import type { ConsultantLookup, PagedResult, ReservationListItem, ReservationSummary } from '~/types/reservation'
+import { RefreshCw } from '@lucide/vue'
 
 definePageMeta({ middleware: 'admin', layout: 'admin', i18n: false })
 useHead({ title: '예약 대시보드 | Admin', meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
@@ -107,19 +128,24 @@ const inputLang = useInputLang()
 
 const STATUSES: string[] = ['New', 'Consulting', 'Confirmed', 'Visited', 'Cancelled']
 
+// 접수일 필터 기본값 = 당월 1일~현재(KST, 2026-08-27) — todayKst()는 YYYY-MM-DD 고정 길이라 앞 8자
+// + '01'로 당월 1일을 얻는다(day 필드 별도 계산 불필요, utils/datetime.ts 기존 패턴 재사용)
+const defaultFrom = `${todayKst().slice(0, 8)}01`
+const defaultTo = todayKst()
+
 // 🔴 검색 입력을 반응형 query에 직접 물리지 말 것(12-4절) — URL 쿼리를 computed로 감싸 제출 시에만 반응
 const query = computed(() => ({
   page: Number(route.query.page) || 1,
   pageSize: 20,
   status: (route.query.status as string) || undefined,
   consultantId: route.query.consultantId ? Number(route.query.consultantId) : undefined,
-  from: (route.query.from as string) || undefined,
-  to: (route.query.to as string) || undefined,
+  from: (route.query.from as string) || defaultFrom,
+  to: (route.query.to as string) || defaultTo,
   search: (route.query.search as string) || undefined,
 }))
 
-const { data: summary } = await useApi<ReservationSummary>('/api/admin/reservations/summary')
-const { data } = await useApi<PagedResult<ReservationListItem>>('/api/admin/reservations', { query })
+const { data: summary, refresh: refreshSummary } = await useApi<ReservationSummary>('/api/admin/reservations/summary')
+const { data, refresh: refreshData, pending: dataPending } = await useApi<PagedResult<ReservationListItem>>('/api/admin/reservations', { query })
 // 8-4절/12-4절 — 대시보드 필터는 기본 활성 실장만, "비활성 포함" 체크 시 퇴사자도 필터 대상에 노출
 const showInactiveConsultants = ref(false)
 const { data: consultants } = await useApi<ConsultantLookup[]>('/api/admin/consultants', {
@@ -130,17 +156,17 @@ const page = computed(() => query.value.page)
 const totalPages = computed(() => data.value ? Math.max(1, Math.ceil(data.value.total / data.value.pageSize)) : 1)
 
 const cards = computed(() => [
-  { key: 'new', label: t('admin.reservations.cardNew'), value: summary.value?.new ?? 0 },
-  { key: 'consulting', label: t('admin.reservations.cardConsulting'), value: summary.value?.consulting ?? 0 },
-  { key: 'confirmed', label: t('admin.reservations.cardConfirmed'), value: summary.value?.confirmed ?? 0 },
-  { key: 'visited', label: t('admin.reservations.cardVisitedThisMonth'), value: summary.value?.visitedThisMonth ?? 0 },
+  { key: 'new', label: t('admin.reservations.cardNew'), value: summary.value?.new ?? 0, status: 'New' },
+  { key: 'consulting', label: t('admin.reservations.cardConsulting'), value: summary.value?.consulting ?? 0, status: 'Consulting' },
+  { key: 'confirmed', label: t('admin.reservations.cardConfirmed'), value: summary.value?.confirmed ?? 0, status: 'Confirmed' },
+  { key: 'visited', label: t('admin.reservations.cardVisitedThisMonth'), value: summary.value?.visitedThisMonth ?? 0, status: 'Visited' },
 ])
 
 // 폼 로컬 상태 — [필터 적용] 클릭 시에만 route.query로 반영한다(타이핑 중 재조회 방지)
 const formStatus = ref(query.value.status ?? '')
 const formConsultantId = ref(query.value.consultantId ? String(query.value.consultantId) : '')
-const formFrom = ref(query.value.from ?? '')
-const formTo = ref(query.value.to ?? '')
+const formFrom = ref(query.value.from)
+const formTo = ref(query.value.to)
 const formSearch = ref(query.value.search ?? '')
 
 function applyFilters() {
@@ -158,8 +184,8 @@ function applyFilters() {
 function resetFilters() {
   formStatus.value = ''
   formConsultantId.value = ''
-  formFrom.value = ''
-  formTo.value = ''
+  formFrom.value = defaultFrom
+  formTo.value = defaultTo
   formSearch.value = ''
   navigateTo({ query: {} })
 }
@@ -168,5 +194,14 @@ function goPage(p: number) {
 }
 function goDetail(id: number) {
   navigateTo(`/admin/reservations/${id}`)
+}
+// 상단 카드 클릭 → 그 카드의 상태로 필터 세팅 후 검색(날짜 범위는 접수일 기준이라 건드리지 않음 —
+// "이번 달 방문 완료" 카드는 방문일(visitedAt) 기준 집계라 접수일 필터와 무관, 그대로 두는 게 맞음)
+function filterByStatus(status: string) {
+  formStatus.value = status
+  navigateTo({ query: { ...route.query, page: 1, status } })
+}
+async function refreshAll() {
+  await Promise.all([refreshData(), refreshSummary()])
 }
 </script>
