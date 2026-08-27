@@ -3,7 +3,7 @@
     <h1 class="text-xl font-semibold text-foreground">{{ t('admin.stats.title') }}</h1>
 
     <Card>
-      <CardContent class="flex flex-wrap items-end gap-4 pt-6">
+      <CardContent class="flex flex-wrap items-end gap-4">
         <div class="flex flex-col gap-1.5">
           <Label for="f-from">{{ t('admin.stats.filterFrom') }}</Label>
           <DatePicker id="f-from" v-model="formFrom" :locale="inputLang" class="w-40" />
@@ -19,7 +19,7 @@
     <section class="space-y-3">
       <h2 class="text-lg font-medium text-foreground">{{ t('admin.stats.sectionWeekly') }}</h2>
       <Card>
-        <CardContent class="pt-6">
+        <CardContent>
           <ClientOnly>
             <div style="height: 320px">
               <Line :data="weeklyChartData" :options="chartOptions" />
@@ -60,7 +60,7 @@
     <section class="space-y-3">
       <h2 class="text-lg font-medium text-foreground">{{ t('admin.stats.sectionProcedures') }}</h2>
       <Card>
-        <CardContent class="pt-6">
+        <CardContent>
           <ClientOnly>
             <div style="height: 320px">
               <Bar :data="procedureChartData" :options="chartOptions" />
@@ -95,7 +95,7 @@
     <section class="space-y-3">
       <h2 class="text-lg font-medium text-foreground">{{ t('admin.stats.sectionLocales') }}</h2>
       <Card>
-        <CardContent class="pt-6">
+        <CardContent>
           <ClientOnly>
             <div style="height: 320px">
               <Doughnut :data="localeChartData" :options="chartOptions" />
@@ -130,7 +130,7 @@
     <section class="space-y-3">
       <h2 class="text-lg font-medium text-foreground">{{ t('admin.stats.sectionConsultants') }}</h2>
       <Card>
-        <CardContent class="pt-6">
+        <CardContent>
           <ClientOnly>
             <div style="height: 320px">
               <Bar :data="consultantChartData" :options="chartOptions" />

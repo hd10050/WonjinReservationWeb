@@ -48,15 +48,14 @@
           <!-- 디자인 원칙(절대 원칙) — select에는 보이는 label 필수, aria-label만으로 대체 금지 -->
           <div class="flex items-center gap-1">
             <label for="admin-locale-select" class="text-xs">{{ t('admin.common.language') }}</label>
-            <!-- 🔴 v-model 직접 대입 금지(로케일 절대 원칙) — :value+@change로 setLocale()만 거치게 한다 -->
-            <select
+            <!-- 🔴 v-model 직접 대입 금지(로케일 절대 원칙) — :model-value+@update:model-value로 setLocale()만 거치게 한다 -->
+            <NativeSelect
               id="admin-locale-select"
-              :value="locale"
-              class="rounded-md border bg-background px-2 py-1 text-xs text-foreground"
-              @change="onLocaleChange"
+              :model-value="locale"
+              @update:model-value="(v) => onLocaleChange(v as string)"
             >
-              <option v-for="loc in locales" :key="loc.code" :value="loc.code">{{ loc.name }}</option>
-            </select>
+              <NativeSelectOption v-for="loc in locales" :key="loc.code" :value="loc.code">{{ loc.name }}</NativeSelectOption>
+            </NativeSelect>
           </div>
           <!-- 새 예약 웹 푸시 토글 — 노출 조건은 isSupported뿐(5-5절, granted로만 게이팅하면
                default·denied 유저는 여기서 켤 방법이 사라진다). ClientOnly로 감싸는 이유는 이
@@ -160,8 +159,7 @@ function isActive(link: { to: string, exact?: boolean }) {
 
 // 화면 전환은 setLocale()로만(직접 대입 금지, 5-4절) + 계정 locale 서버 저장.
 // 저장 실패해도 화면 언어 전환 자체는 막지 않는다(MeiyantongWeb 패턴과 동일).
-async function onLocaleChange(e: Event) {
-  const code = (e.target as HTMLSelectElement).value
+async function onLocaleChange(code: string) {
   await setLocale(code)
   try {
     const updated = await authFetch<{ id: number, email: string, role: string, name: string, locale: string }>(

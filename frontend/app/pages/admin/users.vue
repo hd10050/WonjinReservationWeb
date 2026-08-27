@@ -7,12 +7,12 @@
 
     <div class="flex flex-col gap-1.5">
       <Label for="f-role-filter">{{ t('admin.users.filterRoleLabel') }}</Label>
-      <select id="f-role-filter" v-model="roleFilter" class="h-9 w-56 rounded-md border border-input bg-background px-3 text-sm" @change="applyRoleFilter">
-        <option value="">{{ t('admin.users.filterRoleAll') }}</option>
-        <option value="Admin">{{ t('admin.users.roleAdmin') }}</option>
-        <option value="HospitalManager">{{ t('admin.users.roleHospitalManager') }}</option>
-        <option value="Consultant">{{ t('admin.users.roleConsultant') }}</option>
-      </select>
+      <NativeSelect id="f-role-filter" v-model="roleFilter" class="w-56" @change="applyRoleFilter">
+        <NativeSelectOption value="">{{ t('admin.users.filterRoleAll') }}</NativeSelectOption>
+        <NativeSelectOption value="Admin">{{ t('admin.users.roleAdmin') }}</NativeSelectOption>
+        <NativeSelectOption value="HospitalManager">{{ t('admin.users.roleHospitalManager') }}</NativeSelectOption>
+        <NativeSelectOption value="Consultant">{{ t('admin.users.roleConsultant') }}</NativeSelectOption>
+      </NativeSelect>
     </div>
 
     <Card v-if="showCreateForm">
@@ -34,11 +34,11 @@
         </div>
         <div class="flex flex-col gap-1.5">
           <Label for="f-create-role">{{ t('admin.users.formRoleLabel') }}</Label>
-          <select id="f-create-role" v-model="createRole" class="h-9 w-44 rounded-md border border-input bg-background px-3 text-sm">
-            <option value="Admin">{{ t('admin.users.roleAdmin') }}</option>
-            <option value="HospitalManager">{{ t('admin.users.roleHospitalManager') }}</option>
-            <option value="Consultant">{{ t('admin.users.roleConsultant') }}</option>
-          </select>
+          <NativeSelect id="f-create-role" v-model="createRole" class="w-44">
+            <NativeSelectOption value="Admin">{{ t('admin.users.roleAdmin') }}</NativeSelectOption>
+            <NativeSelectOption value="HospitalManager">{{ t('admin.users.roleHospitalManager') }}</NativeSelectOption>
+            <NativeSelectOption value="Consultant">{{ t('admin.users.roleConsultant') }}</NativeSelectOption>
+          </NativeSelect>
         </div>
         <Button :disabled="!canSubmitCreate" @click="submitCreate">{{ t('common.save') }}</Button>
         <Button variant="outline" @click="showCreateForm = false">{{ t('common.cancel') }}</Button>
@@ -53,16 +53,16 @@
       <CardContent class="flex flex-wrap items-end gap-4">
         <div class="flex flex-col gap-1.5">
           <Label for="f-edit-role">{{ t('admin.users.formRoleLabel') }}</Label>
-          <select id="f-edit-role" v-model="editRole" class="h-9 w-44 rounded-md border border-input bg-background px-3 text-sm">
-            <option value="Admin">{{ t('admin.users.roleAdmin') }}</option>
-            <option value="HospitalManager">{{ t('admin.users.roleHospitalManager') }}</option>
-            <option value="Consultant">{{ t('admin.users.roleConsultant') }}</option>
-          </select>
+          <NativeSelect id="f-edit-role" v-model="editRole" class="w-44">
+            <NativeSelectOption value="Admin">{{ t('admin.users.roleAdmin') }}</NativeSelectOption>
+            <NativeSelectOption value="HospitalManager">{{ t('admin.users.roleHospitalManager') }}</NativeSelectOption>
+            <NativeSelectOption value="Consultant">{{ t('admin.users.roleConsultant') }}</NativeSelectOption>
+          </NativeSelect>
         </div>
-        <label class="flex items-center gap-1.5 pb-2 text-sm">
-          <input v-model="editSuspended" type="checkbox">
-          {{ t('admin.users.formSuspendedLabel') }}
-        </label>
+        <div class="flex items-center gap-1.5 pb-2">
+          <Checkbox id="f-edit-suspended" v-model="editSuspended" />
+          <Label for="f-edit-suspended" class="text-sm font-normal">{{ t('admin.users.formSuspendedLabel') }}</Label>
+        </div>
         <Button @click="submitEdit">{{ t('common.save') }}</Button>
         <Button variant="outline" @click="editingId = null">{{ t('common.cancel') }}</Button>
         <span v-if="editError" class="text-sm text-destructive">{{ editError }}</span>

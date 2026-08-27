@@ -3,7 +3,7 @@
     <h1 class="text-xl font-semibold text-foreground">{{ t('admin.kpi.title') }}</h1>
 
     <Card>
-      <CardContent class="flex flex-wrap items-end gap-4 pt-6">
+      <CardContent class="flex flex-wrap items-end gap-4">
         <div class="flex flex-col gap-1.5">
           <Label for="f-from">{{ t('admin.kpi.filterFrom') }}</Label>
           <DatePicker id="f-from" v-model="formFrom" :locale="inputLang" class="w-40" />
@@ -17,7 +17,7 @@
     </Card>
 
     <Card>
-      <CardContent class="pt-6">
+      <CardContent>
         <ClientOnly>
           <div style="height: 320px">
             <Bar :data="chartData" :options="chartOptions" />

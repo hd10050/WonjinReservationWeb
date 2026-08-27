@@ -28,26 +28,26 @@
     </div>
 
     <Card>
-      <CardContent class="flex flex-wrap items-start gap-4 pt-6">
+      <CardContent class="flex flex-wrap items-start gap-4">
         <div class="flex flex-col gap-1.5">
           <Label for="f-status">{{ t('admin.reservations.filterStatus') }}</Label>
-          <select id="f-status" v-model="formStatus" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm">
-            <option value="">{{ t('admin.reservations.filterStatusAll') }}</option>
-            <option v-for="s in STATUSES" :key="s" :value="s">{{ t(`status.${s}`) }}</option>
-          </select>
+          <NativeSelect id="f-status" v-model="formStatus">
+            <NativeSelectOption value="">{{ t('admin.reservations.filterStatusAll') }}</NativeSelectOption>
+            <NativeSelectOption v-for="s in STATUSES" :key="s" :value="s">{{ t(`status.${s}`) }}</NativeSelectOption>
+          </NativeSelect>
         </div>
         <div class="flex flex-col gap-1.5">
           <Label for="f-consultant">{{ t('admin.reservations.filterConsultant') }}</Label>
-          <select id="f-consultant" v-model="formConsultantId" class="h-9 min-w-[160px] rounded-md border border-input bg-transparent px-3 text-sm">
-            <option value="">{{ t('admin.reservations.filterConsultantAll') }}</option>
-            <option v-for="c in consultants" :key="c.id" :value="String(c.id)">
+          <NativeSelect id="f-consultant" v-model="formConsultantId" class="min-w-[160px]">
+            <NativeSelectOption value="">{{ t('admin.reservations.filterConsultantAll') }}</NativeSelectOption>
+            <NativeSelectOption v-for="c in consultants" :key="c.id" :value="String(c.id)">
               {{ c.name }}{{ c.isActive ? '' : ` (${t('admin.reservationDetail.inactive')})` }}
-            </option>
-          </select>
-          <label class="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <input type="checkbox" v-model="showInactiveConsultants">
-            {{ t('admin.reservations.filterIncludeInactive') }}
-          </label>
+            </NativeSelectOption>
+          </NativeSelect>
+          <div class="flex items-center gap-1.5">
+            <Checkbox id="f-show-inactive-consultants" v-model="showInactiveConsultants" />
+            <Label for="f-show-inactive-consultants" class="text-xs font-normal text-muted-foreground">{{ t('admin.reservations.filterIncludeInactive') }}</Label>
+          </div>
         </div>
         <div class="flex flex-col gap-1.5">
           <Label for="f-from">{{ t('admin.reservations.filterFrom') }}</Label>
