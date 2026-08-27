@@ -278,7 +278,15 @@
       "empty": "暂无数据。"
     }
   },
+  "procedures": {
+    "concernHeading": "{category}有什么困扰吗？",
+    "otherHeading": "其他项目",
+    "inquireCta": "立即咨询",
+    "comingSoon": "详细内容准备中。"
+  },
   "landing": {
+    "nav": { "home": "首页", "procedures": "项目介绍", "inquiry": "咨询预约", "inquiryFab": "咨询" },
+    "home": { "heroTitle": "WJ原辰整形外科", "heroSubtitle": "以精密诊断和咨询完成的美丽", "categoriesHeading": "项目分类", "introHeading": "WJ原辰介绍", "introBody": "医院介绍内容准备中。" },
     "hero": {
       "title": "预约咨询",
       "subtitle": "请填写以下信息，我们的顾问将通过微信与您联系。"
