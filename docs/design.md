@@ -453,6 +453,7 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 | `admin-write` | 관리자 쓰기 전체(POST/PUT/PATCH/DELETE) | 사용자 ID | 분당 60 |
 | — | 관리자 읽기(GET) | 없음 | 인증으로 보호 |
 | — | `POST /api/internal/landing-visit` | 없음 | 내부 시크릿 헤더로 보호(11-1절) |
+| — | `GET /api/internal/influencer-links/{code}` | 없음 | 내부 시크릿 헤더로 보호(11-1절, B안 2026-08-27) — 프론트 서버만 호출해 남용 경로 자체가 없다 |
 
 **정책을 새로 만들 때 지킬 것**
 - **기존 정책을 습관적으로 재사용하지 말 것.** 호출 빈도·트리거가 다른 엔드포인트가 같은 정책을 공유하면, 한쪽의 정상 호출이 다른 쪽 한도를 소진시켜 세션이 통째로 튕긴다(`refresh`가 `auth`를 재사용하면 안 되는 이유와 같다).
@@ -941,6 +942,8 @@ public record PagedResult<T>(IEnumerable<T> Items, int Total, int Page, int Page
 > **대신 프론트 서버(Nitro)만 호출할 수 있는 내부 전용 경로로 만든다.** 프록시가 백엔드로 전달할 때 쓰는 내부 공유 시크릿 헤더(`X-Internal-Secret`)를 함께 보내고, 백엔드는 그 헤더가 없거나 값이 다르면 **404**를 반환한다(401이 아니라 404 — 엔드포인트 존재 자체를 숨긴다). 브라우저는 이 경로를 호출할 방법이 없으므로 조작 경로가 원천적으로 닫힌다.
 >
 > 시크릿은 프론트에서 **`NUXT_PUBLIC_` 접두사가 없는 private 런타임 설정**으로만 둔다 — `public`에 두면 브라우저 번들에 그대로 노출되어 의미가 없어진다.
+>
+> 🔴 **`GET /api/internal/influencer-links/{code}`도 동일한 내부 전용 원칙**(B안, 2026-08-27 신설, 8-12·15-3절) — 프론트 서버(Nitro)의 `/go/{code}` 리다이렉트가 이 엔드포인트를 `X-Internal-Secret` 헤더로만 호출한다. 코드 없음·비활성·시크릿 불일치 모두 동일하게 404(엔드포인트 존재 자체를 숨김, 어드민 인증 API가 아니므로 11-5절 표가 아니라 여기 둔다).
 
 ### 11-2. 예약 운영 (Consultant 이상)
 
@@ -1064,7 +1067,6 @@ ORDER BY week_start;
 | GET | `/api/admin/audit-logs` | 필터: `actorId`, `entityType`, `action`, `from`, `to`, `search` |
 | GET | `/api/admin/stats/referrals` | **어드민 전용(D5)** — 유입 경로별 방문수·예약수·전환율 |
 | GET / POST / PUT | `/api/admin/influencer-links[/{id}]` | **어드민 전용**(B안, 2026-08-27 신설, 8-12·15-3절) — 인플루언서 짧은 링크(`/go/{code}`) 매핑 관리. `PagedResult` 페이징 적용. **DELETE 없음** — `isActive=false`로 비활성화. `code`는 PUT 대상이 아니다(생성 후 불변 — 이미 배포된 URL이 깨지지 않도록) |
-| GET | `/api/internal/influencer-links/{code}` | **내부 전용**(11-1절 F11과 동일 원칙) — 프론트 서버(Nitro)의 `/go/{code}` 리다이렉트가 `X-Internal-Secret` 헤더로만 호출. 코드 없음·비활성·시크릿 불일치 모두 404(엔드포인트 존재 자체를 숨김) |
 
 ### 11-6. 🔴 통계 쿼리 작성 시 함정
 
@@ -1521,7 +1523,7 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 - [ ] 미들웨어 순서: `ForwardedHeaders` → 보안헤더 → CSRF Origin → CORS → Authentication → RateLimiter → Authorization
   - `UseAuthentication()` → `UseRateLimiter()` 순서를 지킬 것. 반대면 사용자 ID 기준 rate limit이 전부 IP 폴백된다.
 - [ ] 공개 예약 폼: rate limit + honeypot + 개인정보 동의 서버 재검증
-- [ ] **`/api/internal/landing-visit`이 내부 시크릿 헤더 없이는 404를 반환하는지**(F11) — 시크릿이 `NUXT_PUBLIC_`이 아닌 private 설정에 있는지 함께 확인
+- [ ] **`/api/internal/landing-visit`·`/api/internal/influencer-links/{code}`가 내부 시크릿 헤더 없이는 404를 반환하는지**(F11, 후자는 B안 2026-08-27) — 시크릿이 `NUXT_PUBLIC_`이 아닌 private 설정에 있는지 함께 확인
 - [ ] `.env`·`appsettings.Development.json`이 `.gitignore`에 포함됐는지
 
 ### 데이터 보존

@@ -46,7 +46,7 @@
             <div class="flex flex-col gap-1.5">
               <Label for="f-il-locale">{{ t('admin.referrals.influencerLinks.formLocaleLabel') }}</Label>
               <NativeSelect id="f-il-locale" v-model="formLocale" class="w-28">
-                <NativeSelectOption v-for="loc in LOCALES" :key="loc" :value="loc">{{ loc }}</NativeSelectOption>
+                <NativeSelectOption v-for="loc in LOCALES" :key="loc" :value="loc">{{ localeName(loc) }}</NativeSelectOption>
               </NativeSelect>
             </div>
             <div v-if="editingId !== null" class="flex items-center gap-1.5 pb-2">
@@ -163,7 +163,7 @@ import { todayKst } from '~/utils/datetime'
 definePageMeta({ middleware: 'admin', layout: 'admin', i18n: false })
 useHead({ title: '유입 경로 분석 | Admin', meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
 
-const { t } = useI18n()
+const { t, locales } = useI18n()
 const { authFetch } = useAuthFetch()
 const route = useRoute()
 // layouts/admin.vue가 useOpsLocale()을 이미 호출해 locale이 계정 값으로 맞춰져 있다 — 여기선 재사용만.
@@ -190,6 +190,11 @@ function applyFilters() {
 // 인플루언서 링크 관리(B안, 2026-08-27 신설) — 짧은 URL(/go/{code}) 매핑 CRUD. consultants.vue의
 // 폼 CRUD 패턴을 그대로 따른다(startCreate/startEdit/submitForm).
 const LOCALES = ['zh-CN', 'zh-TW', 'en', 'ko'] as const
+// 관리자 상단바 언어 선택(layouts/admin.vue)·로그인 화면과 동일하게 useI18n().locales의 친화적
+// 이름을 재사용한다 — 원본 코드값("zh-CN" 등)을 select에 그대로 노출하지 않는다.
+function localeName(code: string): string {
+  return locales.value.find(l => l.code === code)?.name ?? code
+}
 const showLinks = ref(false)
 const showInactive = ref(false)
 const { data: links, refresh: refreshLinks } = await useApi<PagedResult<InfluencerLink>>('/api/admin/influencer-links', {
