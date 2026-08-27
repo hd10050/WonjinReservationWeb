@@ -774,7 +774,7 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
     },
     items: [
       {
-        slug: 'stemcell-injection',
+        slug: 'injection',
         name: { ko: '줄기세포 주사', 'zh-CN': '干细胞注射', 'zh-TW': '幹細胞注射', en: 'Stem Cell Injection' },
         concerns: {
           ko: ['노화된 피부는 물론 전체적인 컨디션, 조직 기능, 면역력을 높이고 싶어요.'],
@@ -792,7 +792,7 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         image: 'stemcell-injection.png',
       },
       {
-        slug: 'stemcell-fat-grafting',
+        slug: 'fat-grafting',
         name: { ko: '줄기세포 지방이식', 'zh-CN': '干细胞脂肪填充', 'zh-TW': '幹細胞脂肪填補', en: 'Stem Cell Fat Grafting' },
         concerns: {
           ko: ['석회화나 뭉침 걱정 없이 볼륨감 있고 생착률 높은 지방이식을 하고 싶어요.'],
@@ -810,25 +810,25 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         image: 'stemcell-fat-grafting.png',
       },
       {
-        slug: 'stemcell-lifting',
+        slug: 'lifting',
         name: { ko: '줄기세포 리프팅', 'zh-CN': '干细胞提拉', 'zh-TW': '幹細胞拉提', en: 'Stem Cell Lifting' },
         concerns: {
           ko: ['흉터나 통증 없이 손상된 피부를 되돌려 탄력 있고 어려보이는 동안이 되고 싶어요.'],
           en: ['I want to restore damaged skin without scars or pain, to achieve firm, youthful-looking skin.'],
-          'zh-CN': [],
-          'zh-TW': [],
+          'zh-CN': ['想要恢复无疤痕或疼痛受损的皮肤。'],
+          'zh-TW': ['想要恢復無疤痕或疼痛受損的皮膚。'],
         },
         description: {
           ko: '피부 세포 재생으로 자연스럽게 어려지며 고급스러운 미모와 건강함을 겸유할 수 있습니다.',
-          'zh-CN': '想要恢复无疤痕或疼痛受损的皮肤。',
+          'zh-CN': '',
           en: "Through skin cell regeneration, your skin naturally looks younger, allowing you refined beauty and health together.",
-          'zh-TW': '想要恢復無疤痕或疼痛受損的皮膚。',
+          'zh-TW': '',
         },
         label: { ko: '피부 시간을 되감는 더블 시너지의 힘', en: "The Power of Double Synergy That Rewinds Your Skin's Clock" },
         image: 'stemcell-lifting.png',
       },
       {
-        slug: 'stemcell-hair-loss',
+        slug: 'hair-loss',
         name: { ko: '줄기세포 탈모개선', 'zh-CN': '干细胞脱发改善', 'zh-TW': '幹細胞落髮改善', en: 'Stem Cell Hair Loss Treatment' },
         concerns: {
           ko: ['번거로운 모발이식 대신 간편하면서 효과적으로 탈모를 치료하고 싶어요.'],
@@ -846,19 +846,19 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         image: 'stemcell-hair-loss.png',
       },
       {
-        slug: 'stemcell-mens-wellness',
+        slug: 'mens-wellness',
         name: { ko: '줄기세포 남성활력', 'zh-CN': '干细胞男性活力', 'zh-TW': '幹細胞男性活力', en: "Stem Cell Men's Wellness" },
         concerns: {
           ko: ['스트레스와 노화로 인해 지쳐 약해진 활력을 되찾고 싶어요.'],
           en: ["I want to restore the vitality I've lost due to stress and aging."],
-          'zh-CN': [],
-          'zh-TW': [],
+          'zh-CN': ['因压力和老化带来的疲惫缺少活力。'],
+          'zh-TW': ['因壓力和老化帶來的疲憊缺少活力。'],
         },
         description: {
           ko: '성기능 저하의 원인이 되는 혈관과 신경을 재생시키고 남성호르몬을 증대해 활력을 되찾아 줍니다.',
-          'zh-CN': '因压力和老化带来的疲惫缺少活力。',
+          'zh-CN': '',
           en: 'It regenerates the blood vessels and nerves responsible for declining sexual function and increases male hormone levels.',
-          'zh-TW': '因壓力和老化帶來的疲憊缺少活力。',
+          'zh-TW': '',
         },
         label: { ko: '남성호르몬을 끌어올려 활력에너지 활성화', en: 'Boosting Male Hormones to Activate Vital Energy' },
         image: 'stemcell-mens-wellness.png',
