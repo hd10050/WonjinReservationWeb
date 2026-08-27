@@ -42,4 +42,8 @@ public class Reservation
     public ICollection<ReservationProcedure> ReservationProcedures { get; set; } = [];
     public ICollection<ReservationNote> Notes { get; set; } = [];
     public ICollection<ReservationLog> Logs { get; set; } = [];
+
+    // 낙관적 동시성 토큰 — PostgreSQL 시스템 컬럼 xmin에 매핑(AppDbContext에서 IsRowVersion() 설정).
+    // 새 컬럼을 추가하는 게 아니라 이미 모든 행에 존재하는 값을 노출만 하는 것이라 저장공간 증가 없음.
+    public uint RowVersion { get; set; }
 }

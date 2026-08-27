@@ -238,26 +238,36 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
         var now = DateTimeOffset.UtcNow;
         var (userId, userName) = await GetCurrentUserAsync();
 
-        // 🔴 보안감사(2026-08-26) 부분개선 — 조회~반영~로그기록을 하나의 트랜잭션으로 묶어 창을 좁힌다.
-        // ⚠️ 완전한 해결(동시 재배정 시 로그의 "이전 담당자명"이 항상 정확함을 보장)은 낙관적 동시성
-        // 토큰(RowVersion) 도입이 필요한 별도 스키마 변경 작업이다 — 이번 라운드 범위 밖으로 TODO에
-        // 남긴다. 최종 배정 상태(last-write-wins)는 항상 정확하고 데이터 손상·권한상승은 없다.
+        // 🔴 보안감사(2026-08-26) 1차 완화(트랜잭션 통일)에 이어 2026-08-27 RowVersion(xmin) 낙관적
+        // 동시성 토큰으로 완전 해결. 조회 시점의 RowVersion을 조건부 UPDATE의 WHERE에 함께 걸어,
+        // 조회~반영 사이 다른 요청이 먼저 커밋되면 이 UPDATE는 0행 매치로 실패 → 409 반환. 이제
+        // 로그의 "이전 담당자명"이 항상 실제 직전 값과 일치함을 DB 레벨에서 보장한다(더 이상
+        // "최종 상태는 정확하지만 로그가 부정확할 수 있음"이 아니다).
         await using var tx = await db.Database.BeginTransactionAsync();
 
-        var reservation = await db.Reservations.FirstOrDefaultAsync(r => r.Id == id);
-        if (reservation is null) return NotFound();
+        var before = await db.Reservations.AsNoTracking()
+            .Where(r => r.Id == id)
+            .Select(r => new { r.ConsultantId, r.RowVersion })
+            .FirstOrDefaultAsync();
+        if (before is null) return NotFound();
 
         var prevName = "미배정";
-        if (reservation.ConsultantId is not null)
+        if (before.ConsultantId is not null)
         {
             prevName = await db.Consultants.AsNoTracking()
-                .Where(c => c.Id == reservation.ConsultantId)
+                .Where(c => c.Id == before.ConsultantId)
                 .Select(c => c.Name)
                 .FirstOrDefaultAsync() ?? "알 수 없음";
         }
 
-        reservation.ConsultantId = req.ConsultantId;
-        reservation.UpdatedAt = now;
+        var affected = await db.Reservations
+            .Where(r => r.Id == id && r.RowVersion == before.RowVersion)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(r => r.ConsultantId, req.ConsultantId)
+                .SetProperty(r => r.UpdatedAt, now));
+
+        if (affected == 0)
+            return Conflict(new { code = "RESERVATION_STATE_CHANGED" }); // tx 미커밋 → using 종료 시 자동 롤백
 
         db.ReservationLogs.Add(new ReservationLog
         {

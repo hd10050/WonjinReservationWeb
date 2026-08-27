@@ -97,6 +97,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(r => r.UtmMedium).HasMaxLength(100).IsRequired().HasDefaultValue("");
             e.Property(r => r.UtmCampaign).HasMaxLength(100).IsRequired().HasDefaultValue("");
             e.Property(r => r.ReferralCode).HasMaxLength(50).IsRequired().HasDefaultValue("");
+            // AssignConsultant 동시 재배정 시 로그의 "이전 담당자명" 정확성 보장(보안감사 2026-08-26 TODO,
+            // 2026-08-27 도입) — PostgreSQL 시스템 컬럼 xmin을 낙관적 동시성 토큰으로 사용. 새 컬럼을
+            // 만드는 게 아니라 이미 존재하는 시스템 컬럼을 노출하는 것뿐이라 마이그레이션이 AddColumn을
+            // 생성하지 않아야 정상(Npgsql.EntityFrameworkCore.PostgreSQL 공식 문서 패턴).
+            e.Property(r => r.RowVersion).IsRowVersion();
 
             e.HasOne(r => r.Consultant).WithMany(c => c.Reservations)
                 .HasForeignKey(r => r.ConsultantId).OnDelete(DeleteBehavior.Restrict);
