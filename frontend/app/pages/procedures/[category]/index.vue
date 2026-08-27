@@ -1,4 +1,4 @@
-<!-- frontend/app/pages/procedures/[category].vue -->
+<!-- frontend/app/pages/procedures/[category]/index.vue -->
 <template>
   <div v-if="category">
     <section
