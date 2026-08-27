@@ -4,7 +4,7 @@
 ## 개요
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원 · 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO(`useSeo`·hreflang·OG이미지), 보안감사 1라운드(High2·Medium5) + **재감사**(원본 Low 12건 목록 유실 발견 → 재감사로 신규 9건 발견·전부 수정). 운영 DB 최초 부트스트랩 계정 3개 생성 완료. 어드민 사이드바·로그인 페이지 언어전환·로고 2배·배경색 조정·`AssignConsultant` RowVersion 동시성까지 반영(상세는 세션 요약). **날짜·시간 피커는 D11을 뒤집고 커스텀 라이브러리로 교체 완료**(D23, 2026-08-27 — 세션 요약 참고). **남은 건 CSP 도입 여부 결정, 실배포 도메인 라이브 curl 검증(design.md Phase 9 완료기준)뿐**
+- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO(`useSeo`·hreflang·OG이미지), 보안감사 1라운드(High2·Medium5) + **재감사**(원본 Low 12건 목록 유실 발견 → 재감사로 신규 9건 발견·전부 수정). 운영 DB 최초 부트스트랩 계정 3개 생성, 어드민 UI·보안 재감사 반영(상세는 세션 요약). **날짜·시간 피커는 D11을 뒤집고 커스텀 라이브러리로 교체 완료**(D23, 2026-08-27). **남은 건 CSP 도입 결정·실배포 라이브 curl 검증뿐** — **git 상태 clean, origin/main 동기화 확인 후 세션 종료**(2026-08-27, 다음 세션은 워크트리 아닌 main에서 바로 이어가면 됨)
 
 ## 기술 스택
 | 레이어 | 기술 |
