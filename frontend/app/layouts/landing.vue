@@ -3,11 +3,19 @@
     <header class="border-b bg-card">
       <div class="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
         <NuxtLink :to="localePath('index')" class="flex shrink-0 items-center">
-          <img src="/logo.svg" :alt="t('common.appName')" class="h-12 w-auto">
+          <img src="/logo.svg" :alt="t('common.appName')" class="h-9 w-auto sm:h-12">
         </NuxtLink>
 
+        <!-- 🔴 최종 리뷰 실측 발견 — 375px 모바일에서 로고(shrink-0 180px대)+언어버튼(shrink-0 95px대)만
+             으로 헤더 폭이 거의 소진돼, 홈·문의하기 텍스트 링크까지 다 넣으면 글자가 세로로 줄바꿈되며
+             깨진다(개발자도구로 "문의하기" 링크가 13px 폭에 80px 높이로 렌더링되는 것 실측 확인). 홈은
+             로고 클릭으로, 문의하기는 상시 노출 FAB으로 이미 갈 수 있으므로 두 텍스트 링크만 모바일에서
+             숨기고 "시술안내" 드롭다운만 남긴다. 🔴 이것만으로는 부족했다 — 남는 "시술안내" 트리거조차
+             들어갈 공간이 없어(실측: nav에 35.9px만 배정됨) 로고를 모바일에서 축소(`h-9`, sm 이상 `h-12`
+             복귀)하고 언어버튼의 국가명 텍스트도 모바일에서 숨겨(Globe+chevron만) 폭을 추가로 확보했다.
+             셋 중 하나만 빼면 다시 깨지니 함께 유지할 것. 별도 햄버거 컴포넌트는 도입하지 않았다. -->
         <nav class="flex flex-1 items-center justify-center gap-4 text-sm font-medium">
-          <NuxtLink :to="localePath('index')" class="text-muted-foreground hover:text-foreground">{{ t('landing.nav.home') }}</NuxtLink>
+          <NuxtLink :to="localePath('index')" class="hidden text-muted-foreground hover:text-foreground sm:inline">{{ t('landing.nav.home') }}</NuxtLink>
           <DropdownMenuRoot>
             <DropdownMenuTrigger class="flex items-center gap-1 text-muted-foreground hover:text-foreground aria-expanded:text-foreground">
               {{ t('landing.nav.procedures') }}
@@ -28,7 +36,7 @@
               </DropdownMenuContent>
             </DropdownMenuPortal>
           </DropdownMenuRoot>
-          <NuxtLink :to="localePath('inquiry')" class="text-muted-foreground hover:text-foreground">{{ t('landing.nav.inquiry') }}</NuxtLink>
+          <NuxtLink :to="localePath('inquiry')" class="hidden text-muted-foreground hover:text-foreground sm:inline">{{ t('landing.nav.inquiry') }}</NuxtLink>
         </nav>
 
         <DropdownMenuRoot>
@@ -36,7 +44,7 @@
             class="flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground aria-expanded:border-primary aria-expanded:text-foreground"
           >
             <Globe class="size-3.5" />
-            {{ currentLocaleName }}
+            <span class="hidden sm:inline">{{ currentLocaleName }}</span>
             <ChevronDown class="size-3.5" />
           </DropdownMenuTrigger>
           <DropdownMenuPortal>
@@ -78,7 +86,7 @@
       </div>
     </footer>
 
-    <InquiryFab />
+    <InquiryFab v-if="!isInquiryPage" />
   </div>
 </template>
 
@@ -93,11 +101,19 @@ import {
   DropdownMenuTrigger,
 } from 'reka-ui'
 
-// 공개 랜딩 전용 레이아웃(12-1절) — index.vue·privacy.vue가 공유한다.
+// 공개 랜딩 전용 레이아웃(12-1절) — index.vue·privacy.vue·procedures/*·inquiry.vue가 공유한다.
 const { t, locale, locales } = useI18n()
 const localePath = useLocalePath()
 const switchLocalePath = useSwitchLocalePath()
 const currentLocaleName = computed(() => locales.value.find(l => l.code === locale.value)?.name ?? locale.value)
+
+const route = useRoute()
+const isInquiryPage = computed(() => route.path === localePath('inquiry'))
+
+// 🔴 UTM 캡처는 광고가 어느 페이지로든(시술 상세 딥링크 포함) 착지할 수 있으므로 홈 페이지가 아니라
+// 이 레이아웃(모든 공개 페이지 공용)에서 잡는다(최종 리뷰 발견 — 이전엔 index.vue에만 있어 딥링크
+// 유입의 UTM이 전부 유실됐다). captureUtm()은 쿼리에 UTM 값이 있을 때만 쓰므로 부작용 없다.
+captureUtm()
 
 // 5-1절 hreflang alternate + <html lang> 자동 생성.
 const i18nHead = useLocaleHead({ seo: true })

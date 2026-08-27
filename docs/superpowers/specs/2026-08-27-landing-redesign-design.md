@@ -41,7 +41,7 @@ WonjinReservationWeb은 광고를 보고 유입된 외국인(주로 중화권) �
 **결정: 정적 데이터 파일 + 동적 라우트 페이지** (3가지 대안 중 채택, 사용자 승인 완료)
 
 - `frontend/app/data/procedures.ts` 1개 파일에 11개 카테고리 × 76개 시술의 4개 언어 데이터를 구조화해 하드코딩한다. 관리자 CRUD와 무관 — 코드에 박히는 콘텐츠다.
-- 페이지 파일은 `pages/procedures/[category].vue` 1개, `pages/procedures/[category]/[procedure].vue` 1개, 이렇게 2개로 87개 페이지(카테고리 11 + 상세 76) 전부 커버한다.
+- 페이지 파일은 `pages/procedures/[category]/index.vue` 1개, `pages/procedures/[category]/[procedure].vue` 1개, 이렇게 2개로 87개 페이지(카테고리 11 + 상세 76) 전부 커버한다. 🔴 처음엔 `pages/procedures/[category].vue`(파일)로 시작했으나, 이후 `[category]/[procedure].vue`가 생기면서 파일명과 디렉터리명이 같아져 Nuxt가 부모-자식 중첩 라우트로 취급(NUXT_E4016) — 상세페이지가 전혀 마운트되지 않는 결함으로 실측 발견. Nuxt 공식 권장(index 파일로 형제 라우트화)에 따라 `index.vue`로 이동해 해결(최종 리뷰, 커밋 458da4a).
 - 데이터가 정적 import이므로 비동기 fetch 자체가 없다 — "화면 깜빡임 금지" 원칙이 요구하는 SSR 프리로드가 애초에 불필요할 만큼 안전하다(9절 참고).
 
 기각한 대안:

@@ -6,7 +6,7 @@
       :style="{ backgroundImage: `linear-gradient(to top, rgba(0,0,0,.6), rgba(0,0,0,.25)), url(/img/hero/${category.heroImages[0]})` }"
     >
       <div class="mx-auto w-full max-w-3xl px-4 pb-10">
-        <component :is="categoryIcon(category.icon)" class="mb-3 size-8" />
+        <component :is="CATEGORY_ICONS[category.icon]" class="mb-3 size-8" />
         <h1 class="text-3xl font-bold">{{ category.name[locale as Locale] }}</h1>
         <p class="mt-3 max-w-xl text-background/90">{{ category.intro[locale as Locale] }}</p>
       </div>
@@ -27,10 +27,11 @@
             <img
               :src="`/img/${item.imageCategory ?? category.slug}/${item.image}`"
               :alt="item.name[locale as Locale]"
+              loading="lazy"
               class="h-48 w-full rounded-lg object-cover sm:w-64 sm:shrink-0"
             >
             <div class="flex flex-1 flex-col gap-2">
-              <ul class="space-y-1 text-sm text-muted-foreground">
+              <ul v-if="item.concerns[locale as Locale]?.length" class="space-y-1 text-sm text-muted-foreground">
                 <li v-for="(concern, ci) in item.concerns[locale as Locale]" :key="ci">{{ concern }}</li>
               </ul>
               <h3 class="text-lg font-semibold text-foreground">{{ item.name[locale as Locale] }}</h3>
@@ -57,8 +58,8 @@
 </template>
 
 <script setup lang="ts">
-import * as icons from '@lucide/vue'
 import { findCategory, type Locale } from '~/data/procedures'
+import { CATEGORY_ICONS } from '~/utils/categoryIcons'
 
 definePageMeta({ layout: 'landing' })
 
@@ -70,10 +71,6 @@ const category = computed(() => findCategory(route.params.category as string))
 
 if (!category.value) {
   throw createError({ statusCode: 404, statusMessage: 'Category not found' })
-}
-
-function categoryIcon(name: string) {
-  return (icons as Record<string, unknown>)[name]
 }
 
 useSeo({

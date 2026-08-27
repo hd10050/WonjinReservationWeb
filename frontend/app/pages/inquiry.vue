@@ -21,6 +21,7 @@
           </p>
         </div>
 
+        <!-- novalidate — 브라우저 기본 검증 팝업(브라우저/OS 언어를 따름)을 끄고 아래 커스텀 검증으로 대체한다. -->
         <form v-else class="flex flex-col gap-4" novalidate @submit.prevent="submit">
           <div class="flex flex-col gap-2">
             <Label for="name">{{ t('landing.form.name') }}</Label>
@@ -65,6 +66,7 @@
             <p v-if="errors.contactTime" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
           </div>
 
+          <!-- honeypot(12-1절) — 사람에게는 보이지 않는 필드. 채워지면 봇으로 간주한다. -->
           <div class="absolute -left-[9999px]" aria-hidden="true">
             <label for="hpField">Website</label>
             <input id="hpField" v-model="honeypot" type="text" tabindex="-1" autocomplete="off">
@@ -73,6 +75,8 @@
           <div class="flex flex-col gap-1">
             <label class="flex items-start gap-2 text-sm">
               <input v-model="consent" type="checkbox" class="mt-1 accent-primary" required>
+              <!-- 🔴 태그 사이 줄바꿈이 공백 하나로 렌더링되어 "처리방침 에"처럼 어색한 공백이
+                   생긴다(실측 확인) — 세 조각을 한 줄로 이어붙여 불필요한 공백을 없앤다. -->
               <span>{{ t('landing.form.consentPrefix') }}<button type="button" class="underline" @click="privacyOpen = true">{{ t('landing.form.consentLink') }}</button>{{ t('landing.form.consentSuffix') }}</span>
             </label>
             <p v-if="errors.consent" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
@@ -149,6 +153,7 @@ const errors = reactive({
   consent: false,
 })
 
+// 브라우저 기본 검증(novalidate로 비활성화, 위 템플릿 참고)을 대체하는 커스텀 검증 —
 function validate(): boolean {
   errors.name = !name.value.trim()
   errors.birthDate = !birthDate.value

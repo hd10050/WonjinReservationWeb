@@ -16,7 +16,7 @@
             :to="localePath({ name: 'procedures-category', params: { category: category.slug } })"
             class="flex flex-col items-center gap-2 rounded-lg border bg-card p-3 text-center transition-colors hover:border-primary"
           >
-            <component :is="categoryIcon(category.icon)" class="size-6 text-primary" />
+            <component :is="CATEGORY_ICONS[category.icon]" class="size-6 text-primary" />
             <span class="text-xs font-medium text-foreground">{{ category.name[locale as Locale] }}</span>
           </NuxtLink>
         </div>
@@ -31,8 +31,8 @@
 </template>
 
 <script setup lang="ts">
-import * as icons from '@lucide/vue'
 import { PROCEDURE_CATEGORIES, type Locale } from '~/data/procedures'
+import { CATEGORY_ICONS } from '~/utils/categoryIcons'
 
 definePageMeta({ layout: 'landing' })
 
@@ -44,12 +44,8 @@ useSeo({
   description: () => t('landing.home.heroSubtitle'),
 })
 
-function categoryIcon(name: string) {
-  return (icons as Record<string, unknown>)[name]
-}
-
-// UTM 캡처(Task 3) — 이제 광고 랜딩 지점은 홈이므로 여기서 잡아 쿠키에 저장한다.
-captureUtm()
+// 🔴 UTM 캡처는 layouts/landing.vue로 옮겼다(최종 리뷰 발견) — 여기 홈에만 있으면
+// /procedures/eye/glam-eye?utm_source=... 같은 시술별 딥링크 광고의 UTM이 전부 유실된다.
 
 // 15-1절 — 랜딩 SSR 시점에 프론트 서버가 내부 시크릿 헤더와 함께 방문을 기록한다.
 // 🔴 await 하지 않는다(F6) — 방문 집계 실패·지연이 랜딩 렌더 응답 시간에 영향을 주면 안 된다.

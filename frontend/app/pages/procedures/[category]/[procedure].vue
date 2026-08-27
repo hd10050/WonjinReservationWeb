@@ -5,7 +5,7 @@
       <div>
         <p v-if="item.label?.[locale as Locale]" class="mb-2 text-sm text-muted-foreground">{{ item.label[locale as Locale] }}</p>
         <h1 class="text-3xl font-bold text-foreground">{{ item.name[locale as Locale] }}</h1>
-        <p class="mt-4 whitespace-pre-line text-muted-foreground">{{ item.description[locale as Locale] }}</p>
+        <p v-if="item.description[locale as Locale]" class="mt-4 whitespace-pre-line text-muted-foreground">{{ item.description[locale as Locale] }}</p>
         <Button as-child class="mt-6">
           <NuxtLink :to="localePath('inquiry')">{{ t('procedures.inquireCta') }}</NuxtLink>
         </Button>
@@ -49,5 +49,7 @@ const other = found.other
 useSeo({
   title: () => (item?.name[locale.value as Locale] ?? other?.name[locale.value as Locale] ?? ''),
   description: () => item?.description[locale.value as Locale] ?? '',
+  // "그 외"(콘텐츠 없음) 항목은 제목 한 줄뿐이라 검색 색인 대상에서 뺀다(최종 리뷰 발견).
+  noIndex: () => !item,
 })
 </script>

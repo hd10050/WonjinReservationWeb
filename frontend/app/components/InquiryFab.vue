@@ -2,6 +2,7 @@
 <template>
   <NuxtLink
     :to="localePath('inquiry')"
+    :aria-label="t('landing.nav.inquiryFab')"
     class="fixed right-5 bottom-5 z-40 flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-lg transition-transform hover:scale-105"
   >
     <MessageCircle class="size-5 shrink-0" />

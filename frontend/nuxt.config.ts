@@ -1,4 +1,5 @@
 import tailwindcss from '@tailwindcss/vite'
+import { PROCEDURE_CATEGORIES } from './app/data/procedures'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -125,8 +126,22 @@ export default defineNuxtConfig({
 
   sitemap: {
     hostname: process.env.NUXT_PUBLIC_SITE_URL,
-    // 공개 상세 페이지가 없는 구조(랜딩+privacy뿐)라 동적 URL 소스 불필요 — 파일기반 라우트를
-    // @nuxtjs/sitemap이 자동 포함한다(Phase 9 보안감사 시 확인).
+    // 🔴 최종 리뷰 발견(랜딩 재설계) — @nuxtjs/sitemap은 ":"를 포함한 동적 라우트(예:
+    // /procedures/[category])를 파일기반 자동수집 대상에서 제외한다. 카테고리(11)·시술 상세
+    // 페이지가 전부 동적 라우트가 된 이상 PROCEDURE_CATEGORIES를 펼쳐 직접 주입해야 한다.
+    // _i18nTransform:true로 4개 로케일 URL을 자동 생성한다(Context7 /nuxt-modules/sitemap
+    // 1.guides/3.i18n.md 패턴). 콘텐츠가 없는 "그 외" 시술(otherItems, useSeo noIndex 처리됨)은
+    // 검색엔진에 noindex 페이지를 제출하지 않도록 sitemap에서도 제외한다.
+    urls: () => {
+      const urls: { loc: string, _i18nTransform: true }[] = []
+      for (const category of PROCEDURE_CATEGORIES) {
+        urls.push({ loc: `/procedures/${category.slug}`, _i18nTransform: true })
+        for (const item of category.items) {
+          urls.push({ loc: `/procedures/${category.slug}/${item.slug}`, _i18nTransform: true })
+        }
+      }
+      return urls
+    },
     exclude: ['/admin/**'],
   },
 
