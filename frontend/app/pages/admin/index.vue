@@ -153,15 +153,18 @@ const showInactiveConsultants = ref(false)
 const [
   { data: summary, refresh: refreshSummary },
   { data, refresh: refreshData, pending: dataPending },
-  { data: consultants },
+  { data: consultantsPaged },
 ] = await Promise.all([
   useApi<ReservationSummary>('/api/admin/reservations/summary'),
   useApi<PagedResult<ReservationListItem>>('/api/admin/reservations', { query }),
-  useApi<ConsultantLookup[]>('/api/admin/consultants', {
-    query: () => ({ includeInactive: showInactiveConsultants.value }),
+  useApi<PagedResult<ConsultantLookup>>('/api/admin/consultants', {
+    // 필터 드롭다운은 "전체 목록"이 필요하다 — 백엔드 상한(100)과 동일한 pageSize로 명시 요청(2026-08-27
+    // 페이징 전면 적용). 단일 병원 실장 인원이 100명을 넘을 일은 없다(20-1절: 시딩 없음, 직접 등록).
+    query: () => ({ includeInactive: showInactiveConsultants.value, pageSize: 100 }),
   }),
 ])
 
+const consultants = computed(() => consultantsPaged.value?.items ?? [])
 const page = computed(() => query.value.page)
 const totalPages = computed(() => data.value ? Math.max(1, Math.ceil(data.value.total / data.value.pageSize)) : 1)
 

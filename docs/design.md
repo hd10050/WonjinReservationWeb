@@ -453,6 +453,7 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 | `admin-write` | 관리자 쓰기 전체(POST/PUT/PATCH/DELETE) | 사용자 ID | 분당 60 |
 | — | 관리자 읽기(GET) | 없음 | 인증으로 보호 |
 | — | `POST /api/internal/landing-visit` | 없음 | 내부 시크릿 헤더로 보호(11-1절) |
+| — | `GET /api/internal/influencer-links/{code}` | 없음 | 내부 시크릿 헤더로 보호(11-1절, B안 2026-08-27) — 프론트 서버만 호출해 남용 경로 자체가 없다 |
 
 **정책을 새로 만들 때 지킬 것**
 - **기존 정책을 습관적으로 재사용하지 말 것.** 호출 빈도·트리거가 다른 엔드포인트가 같은 정책을 공유하면, 한쪽의 정상 호출이 다른 쪽 한도를 소진시켜 세션이 통째로 튕긴다(`refresh`가 `auth`를 재사용하면 안 되는 이유와 같다).
@@ -744,6 +745,23 @@ var kstDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcN
 - **`MAX(code)+1` 방식 금지**(F4) — 조회와 삽입 사이에 다른 요청이 끼어들면 UNIQUE 위반 500이 난다.
 - 하루 **9999건**까지 수용한다. 초과하면 자리수를 늘려야 하므로, 그 규모에 도달하면 형식을 재검토한다(현재 광고 규모에서는 도달하지 않는다).
 
+### 8-12. `influencer_links` — 인플루언서 짧은 링크 매핑 (B안, 2026-08-27 신설)
+
+| 컬럼 | 타입 | 제약 |
+|---|---|---|
+| `id` | int | PK |
+| `code` | varchar(50) | **UNIQUE** — `/go/{code}` URL 경로 세그먼트. 영문·숫자·하이픈·언더스코어만 허용(URL 경로가 되므로), 생성 후 변경 불가 |
+| `display_name` | varchar(100) | NOT NULL — 관리 화면에 보이는 인플루언서 표시명 |
+| `utm_source` / `utm_campaign` | varchar(100) | NOT NULL DEFAULT `''` |
+| `utm_medium` | varchar(100) | NOT NULL DEFAULT `'influencer'` |
+| `locale` | varchar(10) | NOT NULL DEFAULT `'zh-CN'`, CHECK `IN ('zh-CN','zh-TW','en','ko')` — 리다이렉트 목적지 언어 |
+| `is_active` | boolean | NOT NULL DEFAULT true — 비활성화만, DELETE 없음(이 프로젝트 마스터 데이터 공통 관례, D13과 동일) |
+| `created_at` / `updated_at` | timestamptz | NOT NULL |
+
+**인덱스**: `ux_influencer_links_code`(UNIQUE, `/go/{code}` 조회가 이 컬럼 단독으로 조회), `ix_influencer_links_is_active_created_at`(관리 목록 기본 조회 `WHERE is_active=? ORDER BY created_at DESC`).
+
+> `reservations.referral_code`(자유 문자열)와 FK로 연결하지 않는다 — 이 매핑 없이 직접 `?ref=` 쿼리로 들어온 코드도 그대로 유입 경로 통계에 집계되어야 하기 때문(15-2절과 호환). 15-2절의 "매핑 테이블은 만들지 않는다"(2026-08-25 원문)는 **2026-08-27 사용자 요청으로 대체**됐다 — 아래 15-3절 참고.
+
 ---
 
 ## 9. 입력 값 규칙 (길이 제한 · 날짜/시간)
@@ -767,6 +785,8 @@ var kstDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcN
 | 처리 이력 메모 | `varchar(300)` | `[MaxLength(300)]` | `maxlength="300"` |
 | UTM 각 항목 | `varchar(100)` | 서버에서 100자로 **절단**(거부 아님) | — (URL 파라미터) |
 | 추천 코드 | `varchar(50)` | 서버에서 50자로 **절단** | — (URL 파라미터) |
+| 인플루언서 링크 코드(`influencer_links.code`) | `varchar(50)` | `[MaxLength(50), RegularExpression]` — 거부(위 추천 코드와 달리 관리자 직접 입력값이라 절단하지 않는다) | `maxlength="50"` |
+| 인플루언서 표시명 | `varchar(100)` | `[MaxLength(100)]` | `maxlength="100"` |
 
 > **비밀번호 상한 64자는 BCrypt 72바이트 한계 이내이면서 긴 패스프레이즈를 허용하는 값이다.** 서버만 64로 올리고 HTML `maxlength`를 옛 값으로 남겨두면 브라우저가 입력 자체를 잘라버려 사용자가 원인을 알 수 없는 로그인 실패를 겪는다(실제 발생한 버그).
 >
@@ -925,6 +945,8 @@ public record PagedResult<T>(IEnumerable<T> Items, int Total, int Page, int Page
 > **대신 프론트 서버(Nitro)만 호출할 수 있는 내부 전용 경로로 만든다.** 프록시가 백엔드로 전달할 때 쓰는 내부 공유 시크릿 헤더(`X-Internal-Secret`)를 함께 보내고, 백엔드는 그 헤더가 없거나 값이 다르면 **404**를 반환한다(401이 아니라 404 — 엔드포인트 존재 자체를 숨긴다). 브라우저는 이 경로를 호출할 방법이 없으므로 조작 경로가 원천적으로 닫힌다.
 >
 > 시크릿은 프론트에서 **`NUXT_PUBLIC_` 접두사가 없는 private 런타임 설정**으로만 둔다 — `public`에 두면 브라우저 번들에 그대로 노출되어 의미가 없어진다.
+>
+> 🔴 **`GET /api/internal/influencer-links/{code}`도 동일한 내부 전용 원칙**(B안, 2026-08-27 신설, 8-12·15-3절) — 프론트 서버(Nitro)의 `/go/{code}` 리다이렉트가 이 엔드포인트를 `X-Internal-Secret` 헤더로만 호출한다. 코드 없음·비활성·시크릿 불일치 모두 동일하게 404(엔드포인트 존재 자체를 숨김, 어드민 인증 API가 아니므로 11-5절 표가 아니라 여기 둔다).
 
 ### 11-2. 예약 운영 (Consultant 이상)
 
@@ -1003,8 +1025,8 @@ var summary = await db.Reservations
 
 | 메서드 | 경로 | 비고 |
 |---|---|---|
-| GET / POST / PUT | `/api/admin/consultants[/{id}]` | 실장 마스터 CRUD(D8). **DELETE 없음** — 비활성화는 `PUT`의 `isActive=false`로 (D13). 목록은 `includeInactive` 쿼리로 비활성 포함 여부 선택 |
-| GET / POST / PUT | `/api/admin/procedures[/{id}]` | 시술 마스터. **DELETE 없음** — `isActive=false`로 비활성화 |
+| GET / POST / PUT | `/api/admin/consultants[/{id}]` | 실장 마스터 CRUD(D8). **DELETE 없음** — 비활성화는 `PUT`의 `isActive=false`로 (D13). 목록은 `includeInactive`·`search`(이름) 쿼리 + `PagedResult`(기본 20건, 2026-08-27부터). 드롭다운·다중선택 등 "전체 목록"이 필요한 호출부는 `pageSize=100`을 명시로 요청 |
+| GET / POST / PUT | `/api/admin/procedures[/{id}]` | 시술 마스터. **DELETE 없음** — `isActive=false`로 비활성화. 목록은 `includeInactive`·`search`(코드+4언어명) 쿼리 + `PagedResult`(기본 20건, 2026-08-27부터), "전체 목록" 호출부는 `pageSize=100` |
 
 ### 11-4. 통계 (HospitalManager 이상)
 
@@ -1047,6 +1069,7 @@ ORDER BY week_start;
 | GET / POST / PATCH | `/api/admin/users[/{id}]` | 계정 발급·역할 변경·정지. 자기 자신 조작 차단 + RT 전량 폐기. **DELETE 없음** — 계정도 정지(`is_suspended`)로만 막는다(감사 로그 행위자 추적 유지) |
 | GET | `/api/admin/audit-logs` | 필터: `actorId`, `entityType`, `action`, `from`, `to`, `search` |
 | GET | `/api/admin/stats/referrals` | **어드민 전용(D5)** — 유입 경로별 방문수·예약수·전환율 |
+| GET / POST / PUT | `/api/admin/influencer-links[/{id}]` | **어드민 전용**(B안, 2026-08-27 신설, 8-12·15-3절) — 인플루언서 짧은 링크(`/go/{code}`) 매핑 관리. `includeInactive`·`search`(코드+표시명) 쿼리 + `PagedResult`(기본 20건). **DELETE 없음** — `isActive=false`로 비활성화. `code`는 PUT 대상이 아니다(생성 후 불변 — 이미 배포된 URL이 깨지지 않도록) |
 
 ### 11-6. 🔴 통계 쿼리 작성 시 함정
 
@@ -1235,6 +1258,8 @@ public record LoginRequest([Required, MaxLength(254)] string Email, [Required, M
 - 모든 시각은 KST로 표시(9-2절 `formatKst`)
 
 > 🔴 **검색 입력값을 반응형 데이터 페칭 훅의 `query`에 직접 물리지 말 것** — 글자 입력마다 API가 재호출된다. 그렇다고 비반응형 스냅샷으로 고정하면 이번엔 검색 버튼을 눌러도 재조회가 안 되는 새 회귀가 생긴다(같은 라우트로의 이동은 페이지를 리마운트하지 않기 때문). **정답은 URL 쿼리를 `computed`로 감싸 그것에만 반응하게 하는 것**이다.
+>
+> 🔴 **`useApi`의 자동 재조회 `watch`는 배치되지 않고 "바뀐 반응형 소스 하나당 즉시 1회"로 반응한다**(2026-08-27 실장·시술·인플루언서 링크 페이징 추가 후 자체 감사로 실측 확인). `query` getter가 `showInactive.value`·`page.value` 같은 **서로 다른 ref 2개 이상**을 참조하는 상태에서 "비활성 포함 토글 → 1페이지로 되돌리기"처럼 한 사용자 동작 안에서 그 ref들을 순서대로(같은 동기 함수 안이라도) 바꾸면, Vue의 배치를 기대하고 "한 번만 재조회되겠지"라고 가정하기 쉽지만 실제로는 중간 상태(옛 페이지+새 토글값)로 낭비 요청이 먼저 나간 뒤에야 최종 상태로 다시 요청된다. **해결은 그 필드들을 별도 ref로 나누지 않고 객체 하나에 담은 단일 ref로 묶어, 상태를 바꿀 때 그 객체를 통째로 새로 만들어 대입하는 것**이다(`filters.value = { ...filters.value, includeInactive: v, page: 1 }`) — 반응형 소스 자체가 1개뿐이라 대입도 항상 1번, 요청도 항상 1번으로 끝난다. `navigateTo`로 페이지 이동하는 케이스(실장 관리·시술 관리)는 `route.query`라는 단일 소스로 자연스럽게 이 조건을 만족해 원래도 안전했다 — 이 함정은 **URL을 안 쓰고 로컬 ref 여러 개로 페이징 상태를 관리하는 화면**(유입 경로 분석의 인플루언서 링크 섹션처럼 페이지 본문과 분리된 부가 목록)에서만 나타난다.
 
 ```ts
 const route = useRoute()
@@ -1295,7 +1320,7 @@ function submitSearch(value: string) {
 | 예약 통계 | **주(일~토) 단위** 추이(**표 + 라인 차트**) + 시술별 집계(**표 + 막대 차트**) + 언어별 분포(**표 + 도넛 차트**) + **담당 실장별 집계(표 + 막대 차트)**(D21) |
 | 계정 관리 | 계정 목록 + 발급 폼 + 역할 변경 + 정지 (어드민 전용) |
 | 로그 | 감사 로그 목록 + 필터 (어드민 전용) |
-| 유입 경로 분석 | 코드/캠페인별 방문수·예약수·전환율 (어드민 전용) |
+| 유입 경로 분석 | 코드/캠페인별 방문수·예약수·전환율 (어드민 전용) + 토글형 인플루언서 짧은 링크 관리 섹션(15-3절, `/go/{code}` 발급·복사) |
 
 ---
 
@@ -1382,6 +1407,8 @@ var statusCode = executed.Exception is not null ? 500 : context.HttpContext.Resp
 | `/api/admin/procedures` | PUT | `update` | `procedure` |
 | `/api/admin/users` | POST | `create` | `user` |
 | `/api/admin/users` | PATCH | `update` | `user` |
+| `/api/admin/influencer-links` | POST | `create` | `influencer_link` |
+| `/api/admin/influencer-links` | PUT | `update` | `influencer_link` |
 
 > 🔴 **`/notes`·`/status`가 붙은 항목은 세그먼트가 2개**라 `/api/admin/reservations` 단독 규칙과 **동시에 매치된다.** 구체성(세그먼트 개수) 내림차순 정렬이 없으면 배열 순서에 따라 상담 기록 추가가 "예약 수정"으로 오분류된다 — 14장의 정렬 규칙이 이 표에서 실제로 필요한 이유다.
 >
@@ -1444,7 +1471,31 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 
 > 이 메뉴는 **어드민에게만** 노출한다. 사이드바 조건부 렌더링과 **API 액션 레벨 `[Authorize(Roles="Admin")]`을 둘 다** 적용한다(6-3절 원칙 2).
 >
-> 추천코드 ↔ 인플루언서 표시명 매핑 테이블은 **요구되지 않았으므로 만들지 않는다.** 1차에는 코드 원본을 그대로 표시하고, 표시명 관리가 필요해지면 그때 마스터 테이블을 추가한다.
+> 🔴 **2026-08-27 대체**: "추천코드 ↔ 인플루언서 표시명 매핑 테이블은 요구되지 않았으므로 만들지 않는다"(2026-08-25 원문)는 사용자가 인플루언서에게 줄 URL이 너무 길어 다루기 어렵다는 문제를 제기하며 대체됐다. 아래 15-3절 참고.
+
+### 15-3. 인플루언서 짧은 링크 — `/go/{code}` (B안, 2026-08-27 신설)
+
+**문제**: 15-1절 원문 그대로면 인플루언서에게 `https://도메인/?ref=<코드>&utm_source=<채널>&utm_medium=influencer&utm_campaign=<캠페인명>`처럼 쿼리 파라미터 4개짜리 URL을 그대로 전달해야 한다 — 파라미터 이름·값을 인플루언서가 직접 다뤄야 해 오타·누락 위험이 크고(대소문자·공백 차이만으로 15-2절 집계가 갈라진다, 실측 확인 — `referral_code`엔 trim/lowercase 정규화가 없음), 공유하기에도 번거롭다.
+
+**해결**: `influencer_links`(8-12절) 매핑 테이블 + 짧은 리다이렉트 경로 `/go/{code}`.
+
+```
+인플루언서에게 주는 URL:  https://도메인/go/cathy-xhs
+                                   │
+                                   ▼
+프론트(Nitro) server/routes/go/[code].get.ts
+                                   │  GET /api/internal/influencer-links/{code} (X-Internal-Secret 헤더)
+                                   ▼
+백엔드가 influencer_links에서 UTM·locale 조회 → 302 리다이렉트
+                                   │
+                                   ▼
+실제 랜딩:  https://도메인{/zh-tw|/en|/ko}/?ref=cathy-xhs&utm_source=...&utm_medium=...&utm_campaign=...
+```
+
+- 인플루언서는 코드 하나(`cathy-xhs`)만 기억하면 된다 — UTM 파라미터 이름·값을 몰라도 되고, 로케일도 관리자가 미리 지정해둔 값을 자동으로 따라간다.
+- 코드가 없거나 비활성 상태면 11-1절 F11과 동일한 원칙으로 조용히 홈(`/`)으로 리다이렉트한다 — 원인을 노출하지 않는다.
+- `/go/{code}` → `?ref=` 이후의 흐름(방문 집계 UPSERT, 예약 신청 시 스냅샷 저장, 15-2절 노출)은 15-1·15-2절과 완전히 동일하다 — 이 기능은 URL을 짧게 만드는 앞단만 추가할 뿐, 집계 로직 자체는 바뀌지 않는다.
+- 관리 폼은 `/admin/referrals` 화면 안에 토글로 접어둔 별도 섹션이다(D5와 동일하게 어드민 전용, 새 상위 메뉴 아님) — 11-5절 `/api/admin/influencer-links` 참고.
 
 ---
 
@@ -1479,7 +1530,7 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 - [ ] 미들웨어 순서: `ForwardedHeaders` → 보안헤더 → CSRF Origin → CORS → Authentication → RateLimiter → Authorization
   - `UseAuthentication()` → `UseRateLimiter()` 순서를 지킬 것. 반대면 사용자 ID 기준 rate limit이 전부 IP 폴백된다.
 - [ ] 공개 예약 폼: rate limit + honeypot + 개인정보 동의 서버 재검증
-- [ ] **`/api/internal/landing-visit`이 내부 시크릿 헤더 없이는 404를 반환하는지**(F11) — 시크릿이 `NUXT_PUBLIC_`이 아닌 private 설정에 있는지 함께 확인
+- [ ] **`/api/internal/landing-visit`·`/api/internal/influencer-links/{code}`가 내부 시크릿 헤더 없이는 404를 반환하는지**(F11, 후자는 B안 2026-08-27) — 시크릿이 `NUXT_PUBLIC_`이 아닌 private 설정에 있는지 함께 확인
 - [ ] `.env`·`appsettings.Development.json`이 `.gitignore`에 포함됐는지
 
 ### 데이터 보존
@@ -1518,8 +1569,11 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 | 계정 관리 | `WHERE role=?` | `ix_users_role` |
 | 실장 배정 드롭다운 | `WHERE is_active ORDER BY sort_order` | `ix_consultants_is_active_sort_order` |
 | 상담 기록 조회 | `WHERE reservation_id=? ORDER BY created_at` | `ix_reservation_notes_reservation_id_created_at` |
+| 실장 관리 목록 | `WHERE is_active=? ORDER BY sort_order LIMIT 20` (+ `search` 시 이름 `ILIKE`) | `ix_consultants_is_active_sort_order` |
+| 시술 관리 목록 | `WHERE is_active=? ORDER BY sort_order LIMIT 20` (+ `search` 시 코드·4언어명 `ILIKE`) | `ix_procedures_is_active_sort_order` |
+| 인플루언서 링크 목록 | `WHERE is_active=? ORDER BY created_at DESC LIMIT 20` (+ `search` 시 코드·표시명 `ILIKE`) | `ix_influencer_links_is_active_created_at` |
 
-**명시적 한계**: 검색(`ILIKE '%키워드%'`)은 **B-tree 인덱스를 타지 않는다.** 예약이 수만 건을 넘어가면 검색이 느려지므로, 그 시점에 `pg_trgm` GIN 인덱스 도입을 검토한다. 지금 규모에서 미리 넣는 것은 과설계다.
+**명시적 한계**: 검색(`ILIKE '%키워드%'`)은 **B-tree 인덱스를 타지 않는다.** 예약이 수만 건을 넘어가면 검색이 느려지므로, 그 시점에 `pg_trgm` GIN 인덱스 도입을 검토한다. 지금 규모에서 미리 넣는 것은 과설계다 — 실장·시술·인플루언서 링크는 전부 어드민이 수동 등록하는 소규모 마스터 데이터라(20-1절: 시딩 없음) 이 한계에 해당 없음.
 
 **목록 조회 시 컬럼·관계 최소화**: 목록 API는 `reservation_notes`(건당 2000자, 예약당 여러 건)를 **아예 조인하지 않는다**. 상담 기록은 상세 화면에서만 로드한다. `Select`로 목록에 실제로 표시하는 필드만 프로젝션할 것.
 

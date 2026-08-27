@@ -127,6 +127,8 @@
       "title": "顧問管理",
       "addButton": "新增顧問",
       "includeInactive": "包含已停用",
+      "filterSearch": "搜尋",
+      "filterSearchPlaceholder": "顧問姓名",
       "colName": "姓名",
       "colSortOrder": "排序",
       "colActive": "狀態",
@@ -156,6 +158,8 @@
       "title": "療程管理",
       "addButton": "新增療程",
       "includeInactive": "包含已停用",
+      "filterSearch": "搜尋",
+      "filterSearchPlaceholder": "療程編號·名稱",
       "colCode": "編號",
       "colName": "療程名稱",
       "colSortOrder": "排序",
@@ -275,7 +279,23 @@
       "colConversionRate": "預約轉化率",
       "colConfirmedCount": "已確認數",
       "colConfirmedConversionRate": "確認轉化率",
-      "empty": "暫無資料。"
+      "empty": "暫無資料。",
+      "influencerLinks": {
+        "toggleButton": "網紅連結管理",
+        "title": "網紅連結",
+        "filterSearch": "搜尋",
+        "filterSearchPlaceholder": "代碼·網紅名稱",
+        "addButton": "新增連結",
+        "formTitleCreate": "新增連結",
+        "formTitleEdit": "編輯連結",
+        "formCodeLabel": "代碼（URL路徑）",
+        "formDisplayNameLabel": "網紅名稱",
+        "formLocaleLabel": "語言",
+        "colUrl": "分享連結",
+        "copy": "複製",
+        "copied": "已複製",
+        "empty": "尚無已註冊的連結。"
+      }
     }
   },
   "landing": {
@@ -407,6 +427,7 @@
     "EMAIL_ALREADY_EXISTS": "此電子郵件已被使用。",
     "INVALID_ROLE": "角色無效。",
     "CANNOT_MODIFY_SELF": "無法修改本人帳戶。",
-    "NO_CHANGES": "沒有需要變更的內容。"
+    "NO_CHANGES": "沒有需要變更的內容。",
+    "INFLUENCER_CODE_DUPLICATE": "該代碼已被使用。"
   }
 }

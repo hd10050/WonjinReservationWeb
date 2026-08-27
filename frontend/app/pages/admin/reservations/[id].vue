@@ -219,7 +219,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ConsultantLookup, ProcedureLookup, ReservationDetail, ReservationNote, ReservationNoteRevision } from '~/types/reservation'
+import type { ConsultantLookup, PagedResult, ProcedureLookup, ReservationDetail, ReservationNote, ReservationNoteRevision } from '~/types/reservation'
 import { Loader2 } from '@lucide/vue'
 
 definePageMeta({ middleware: 'admin', layout: 'admin', i18n: false })
@@ -234,8 +234,10 @@ const inputLang = useInputLang()
 const id = computed(() => Number(route.params.id))
 
 const { data: detail, refresh, error } = await useApi<ReservationDetail>(() => `/api/admin/reservations/${id.value}`)
-const { data: consultantsRaw } = await useApi<ConsultantLookup[]>('/api/admin/consultants', { query: { includeInactive: true } })
-const { data: proceduresRaw } = await useApi<ProcedureLookup[]>('/api/admin/procedures', { query: { includeInactive: true } })
+// 담당 배정·시술 다중선택은 "전체 목록"이 필요하다 — 백엔드 상한(100)과 동일한 pageSize로 명시
+// 요청(2026-08-27 페이징 전면 적용, AdminConsultantsController·AdminProceduresController 주석 참고).
+const { data: consultantsPaged } = await useApi<PagedResult<ConsultantLookup>>('/api/admin/consultants', { query: { includeInactive: true, pageSize: 100 } })
+const { data: proceduresPaged } = await useApi<PagedResult<ProcedureLookup>>('/api/admin/procedures', { query: { includeInactive: true, pageSize: 100 } })
 
 if (error.value) {
   throw createError({ statusCode: (error.value as any)?.statusCode ?? 404, statusMessage: 'Not Found', fatal: true })
@@ -256,10 +258,10 @@ const isVisitInfoLocked = computed(() => !isAssigned.value || isCancelled.value 
 // 상담 기록 섹션 — 취소면 잠그지만 방문완료는 예외로 계속 허용한다(#14, 사후 상담 기록 목적).
 const isNotesLocked = computed(() => !isAssigned.value || isCancelled.value)
 const assignableConsultants = computed(() =>
-  (consultantsRaw.value ?? []).filter(c => c.isActive || c.id === detail.value?.consultantId))
+  (consultantsPaged.value?.items ?? []).filter(c => c.isActive || c.id === detail.value?.consultantId))
 // 8-3절 — 이미 선택된 비활성 시술은 목록에 남겨야 한다(빼면 편집 화면에서 확인·해제가 불가능해진다)
 const visibleProcedures = computed(() =>
-  (proceduresRaw.value ?? []).filter(p => p.isActive || detail.value?.procedureIds.includes(p.id)))
+  (proceduresPaged.value?.items ?? []).filter(p => p.isActive || detail.value?.procedureIds.includes(p.id)))
 
 function procedureName(p: ProcedureLookup): string {
   const map: Record<string, string> = { 'zh-CN': p.nameZhCn, 'zh-TW': p.nameZhTw, en: p.nameEn, ko: p.nameKo }

@@ -42,6 +42,8 @@ public class AuditLogFilter(AppDbContext db, ILogger<AuditLogFilter> logger, ICo
         (["/api/admin/procedures"], "PUT", "update", "procedure"),
         (["/api/admin/users"], "POST", "create", "user"),
         (["/api/admin/users"], "PATCH", "update", "user"),
+        (["/api/admin/influencer-links"], "POST", "create", "influencer_link"),
+        (["/api/admin/influencer-links"], "PUT", "update", "influencer_link"),
     ];
 
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)

@@ -9,3 +9,6 @@ public record LandingVisitRequest(
     string? UtmMedium,
     string? UtmCampaign
 );
+
+// /go/{code} 리다이렉트 전용(B안, 2026-08-27 신설) — 프론트 서버(Nitro)만 X-Internal-Secret 헤더로 조회한다.
+public record InfluencerLinkResolveDto(string UtmSource, string UtmMedium, string UtmCampaign, string Locale);

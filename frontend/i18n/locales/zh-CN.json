@@ -127,6 +127,8 @@
       "title": "顾问管理",
       "addButton": "添加顾问",
       "includeInactive": "包含已停用",
+      "filterSearch": "搜索",
+      "filterSearchPlaceholder": "顾问姓名",
       "colName": "姓名",
       "colSortOrder": "排序",
       "colActive": "状态",
@@ -156,6 +158,8 @@
       "title": "项目管理",
       "addButton": "添加项目",
       "includeInactive": "包含已停用",
+      "filterSearch": "搜索",
+      "filterSearchPlaceholder": "项目编号·名称",
       "colCode": "编号",
       "colName": "项目名称",
       "colSortOrder": "排序",
@@ -275,7 +279,23 @@
       "colConversionRate": "预约转化率",
       "colConfirmedCount": "已确认数",
       "colConfirmedConversionRate": "确认转化率",
-      "empty": "暂无数据。"
+      "empty": "暂无数据。",
+      "influencerLinks": {
+        "toggleButton": "网红链接管理",
+        "title": "网红链接",
+        "filterSearch": "搜索",
+        "filterSearchPlaceholder": "代码·网红名称",
+        "addButton": "添加链接",
+        "formTitleCreate": "添加链接",
+        "formTitleEdit": "编辑链接",
+        "formCodeLabel": "代码（URL路径）",
+        "formDisplayNameLabel": "网红名称",
+        "formLocaleLabel": "语言",
+        "colUrl": "分享链接",
+        "copy": "复制",
+        "copied": "已复制",
+        "empty": "暂无已注册的链接。"
+      }
     }
   },
   "landing": {
@@ -407,6 +427,7 @@
     "EMAIL_ALREADY_EXISTS": "该邮箱已被使用。",
     "INVALID_ROLE": "角色无效。",
     "CANNOT_MODIFY_SELF": "无法修改本人账户。",
-    "NO_CHANGES": "没有需要更改的内容。"
+    "NO_CHANGES": "没有需要更改的内容。",
+    "INFLUENCER_CODE_DUPLICATE": "该代码已被使用。"
   }
 }

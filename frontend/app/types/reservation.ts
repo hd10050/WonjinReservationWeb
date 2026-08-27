@@ -178,6 +178,19 @@ export interface ReferralStat {
   confirmedConversionRate: number
 }
 
+// B안, 2026-08-27 신설 — 인플루언서 짧은 링크(/go/{code}) 매핑. code는 생성 후 변경 불가.
+export interface InfluencerLink {
+  id: number
+  code: string
+  displayName: string
+  utmSource: string
+  utmMedium: string
+  utmCampaign: string
+  locale: string
+  isActive: boolean
+  createdAt: string
+}
+
 export type AdminRole = 'Admin' | 'HospitalManager' | 'Consultant'
 
 export interface AdminUser {

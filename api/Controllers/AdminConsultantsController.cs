@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WonjinApi.Data;
 using WonjinApi.DTOs;
 using WonjinApi.Models;
+using WonjinApi.Utils;
 
 namespace WonjinApi.Controllers;
 
@@ -17,25 +18,38 @@ namespace WonjinApi.Controllers;
 [Authorize(Roles = "Admin,HospitalManager,Consultant")]
 public class AdminConsultantsController(AppDbContext db) : ControllerBase
 {
-    // 🔴 보안감사(2026-08-26) 발견 — 페이징이 전혀 없어 테이블이 커지면 매 호출마다 전량 스캔+응답이
-    // 된다(DB성능 절대원칙). 다만 이 API는 예약 배정 드롭다운·시술 다중선택 등 4곳에서 "전체 목록"을
-    // 배열 그대로 기대하며 재사용 중이라(응답을 PagedResult로 바꾸면 그 호출부가 전부 깨진다), 페이징
-    // UI 대신 안전 상한을 둔다 — 실장은 어드민이 관리 화면에서 수동 등록하는 단일 병원 인력이라 500명을
-    // 넘을 일이 사실상 없다(design.md 20-1절: 시딩 없음, 직접 등록).
+    // 🔴 2026-08-27 페이징 전면 적용(DB성능 절대원칙) — 예약 배정 드롭다운·시술 다중선택 등 "전체 목록"이
+    // 필요한 호출부(index.vue·reservations/[id].vue)는 pageSize=100(다른 목록 API와 동일한 상한, 실장은
+    // 단일 병원 인력이라 이 안에서 충분함)을 명시로 넘기고 .items를 읽도록 함께 수정했다 — 그 호출부들이
+    // 깨진다는 이유로 페이징 자체를 안 넣던 이전 결정(2026-08-26)을 대체.
     [HttpGet]
-    public async Task<ActionResult<List<ConsultantLookupDto>>> GetList([FromQuery] bool includeInactive = false)
+    public async Task<ActionResult<PagedResult<ConsultantLookupDto>>> GetList(
+        [FromQuery] bool includeInactive = false,
+        [FromQuery] string? search = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var query = db.Consultants.AsQueryable();
         if (!includeInactive)
             query = query.Where(c => c.IsActive);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var keyword = LikeEscape.Escape(search.Trim());
+            query = query.Where(c => EF.Functions.ILike(c.Name, $"%{keyword}%", "\\"));
+        }
 
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(page, 1);
+
+        var total = await query.CountAsync();
         var items = await query
             .OrderBy(c => c.SortOrder)
-            .Take(500)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(c => new ConsultantLookupDto(c.Id, c.Name, c.IsActive, c.SortOrder))
             .ToListAsync();
 
-        return Ok(items);
+        return Ok(new PagedResult<ConsultantLookupDto>(items, total, page, pageSize));
     }
 
     [HttpPost]

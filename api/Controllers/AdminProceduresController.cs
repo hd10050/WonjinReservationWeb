@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WonjinApi.Data;
 using WonjinApi.DTOs;
 using WonjinApi.Models;
+using WonjinApi.Utils;
 
 namespace WonjinApi.Controllers;
 
@@ -16,24 +17,42 @@ namespace WonjinApi.Controllers;
 [Authorize(Roles = "Admin,HospitalManager,Consultant")]
 public class AdminProceduresController(AppDbContext db) : ControllerBase
 {
-    // 🔴 보안감사(2026-08-26) 발견 — 페이징이 전혀 없어 테이블이 커지면 매 호출마다 전량 스캔+응답이
-    // 된다(DB성능 절대원칙). 이 API는 예약 상세의 시술 다중선택 등에서 "전체 목록"을 배열 그대로
-    // 기대하며 재사용 중이라(PagedResult로 바꾸면 호출부가 깨진다), 페이징 UI 대신 안전 상한을 둔다 —
-    // 시술은 어드민이 직접 등록하는 마스터 데이터라 500건을 넘을 일이 사실상 없다(20-1절: 시딩 없음).
+    // 🔴 2026-08-27 페이징 전면 적용(DB성능 절대원칙) — 예약 상세의 시술 다중선택(reservations/[id].vue)은
+    // pageSize=100(다른 목록 API와 동일한 상한)을 명시로 넘기고 .items를 읽도록 함께 수정했다 — 그
+    // 호출부가 깨진다는 이유로 페이징 자체를 안 넣던 이전 결정(2026-08-26)을 대체.
     [HttpGet]
-    public async Task<ActionResult<List<ProcedureLookupDto>>> GetList([FromQuery] bool includeInactive = false)
+    public async Task<ActionResult<PagedResult<ProcedureLookupDto>>> GetList(
+        [FromQuery] bool includeInactive = false,
+        [FromQuery] string? search = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var query = db.Procedures.AsQueryable();
         if (!includeInactive)
             query = query.Where(p => p.IsActive);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var keyword = LikeEscape.Escape(search.Trim());
+            query = query.Where(p =>
+                EF.Functions.ILike(p.Code, $"%{keyword}%", "\\")
+                || EF.Functions.ILike(p.NameZhCn, $"%{keyword}%", "\\")
+                || EF.Functions.ILike(p.NameZhTw, $"%{keyword}%", "\\")
+                || EF.Functions.ILike(p.NameEn, $"%{keyword}%", "\\")
+                || EF.Functions.ILike(p.NameKo, $"%{keyword}%", "\\"));
+        }
 
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(page, 1);
+
+        var total = await query.CountAsync();
         var items = await query
             .OrderBy(p => p.SortOrder)
-            .Take(500)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(p => new ProcedureLookupDto(p.Id, p.Code, p.NameZhCn, p.NameZhTw, p.NameEn, p.NameKo, p.IsActive, p.SortOrder))
             .ToListAsync();
 
-        return Ok(items);
+        return Ok(new PagedResult<ProcedureLookupDto>(items, total, page, pageSize));
     }
 
     [HttpPost]

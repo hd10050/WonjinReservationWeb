@@ -18,6 +18,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<LandingDailyStat> LandingDailyStats => Set<LandingDailyStat>();
     public DbSet<ReservationCodeCounter> ReservationCodeCounters => Set<ReservationCodeCounter>();
     public DbSet<WebPushSubscription> WebPushSubscriptions => Set<WebPushSubscription>();
+    public DbSet<InfluencerLink> InfluencerLinks => Set<InfluencerLink>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -236,6 +237,25 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(s => s.Endpoint).IsUnique().HasDatabaseName("ux_web_push_subscriptions_endpoint");
             // 발송 시 UserId로 JOIN해 활성 계정만 거르므로(4-9절) 인덱스 필요
             e.HasIndex(s => s.UserId).HasDatabaseName("ix_web_push_subscriptions_user_id");
+        });
+
+        // ── influencer_links — 인플루언서 짧은 링크 매핑(B안, 2026-08-27 신설, 15-2절 연장) ──
+        modelBuilder.Entity<InfluencerLink>(e =>
+        {
+            e.Property(l => l.Code).HasMaxLength(50).IsRequired();
+            e.Property(l => l.DisplayName).HasMaxLength(100).IsRequired();
+            e.Property(l => l.UtmSource).HasMaxLength(100).IsRequired().HasDefaultValue("");
+            e.Property(l => l.UtmMedium).HasMaxLength(100).IsRequired().HasDefaultValue("influencer");
+            e.Property(l => l.UtmCampaign).HasMaxLength(100).IsRequired().HasDefaultValue("");
+            e.Property(l => l.Locale).HasMaxLength(10).IsRequired().HasDefaultValue("zh-CN");
+            e.Property(l => l.IsActive).HasDefaultValue(true);
+
+            // /go/{code} 리다이렉트가 이 컬럼 단독으로 조회한다 — UNIQUE 인덱스가 이미 커버.
+            e.HasIndex(l => l.Code).IsUnique().HasDatabaseName("ux_influencer_links_code");
+            // 관리 목록 기본 조회: WHERE is_active=? ORDER BY created_at DESC(17장 원칙 — 실제 쿼리에서 역산).
+            e.HasIndex(l => new { l.IsActive, l.CreatedAt }).HasDatabaseName("ix_influencer_links_is_active_created_at");
+
+            e.ToTable(t => t.HasCheckConstraint("ck_influencer_links_locale", "locale IN ('zh-CN','zh-TW','en','ko')"));
         });
     }
 }

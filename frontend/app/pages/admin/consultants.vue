@@ -56,9 +56,20 @@
       </CardContent>
     </Card>
 
-    <div class="flex items-center gap-1.5">
-      <Checkbox id="f-show-inactive" v-model="showInactive" />
-      <Label for="f-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.consultants.includeInactive') }}</Label>
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="flex items-center gap-1.5">
+        <Checkbox id="f-show-inactive" v-model="showInactive" />
+        <Label for="f-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.consultants.includeInactive') }}</Label>
+      </div>
+      <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
+        <Label for="f-search">{{ t('admin.consultants.filterSearch') }}</Label>
+        <Input
+          id="f-search" v-model="formSearch" maxlength="200"
+          :placeholder="t('admin.consultants.filterSearchPlaceholder')"
+          @keyup.enter="applySearch"
+        />
+      </div>
+      <Button @click="applySearch">{{ t('admin.reservations.filterApply') }}</Button>
     </div>
 
     <Card v-if="showForm">
@@ -109,24 +120,53 @@
         </tbody>
       </table>
     </div>
+
+    <Pagination :page="page" :total-pages="totalPages" @update:page="goPage" />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { ConsultantLookup } from '~/types/reservation'
+import type { ConsultantLookup, PagedResult } from '~/types/reservation'
 
 definePageMeta({ middleware: 'admin', layout: 'admin', i18n: false })
 useHead({ title: '실장 관리 | Admin', meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
 
 const { t } = useI18n()
 const { authFetch } = useAuthFetch()
+const route = useRoute()
 
 // 6-2절 메뉴 매트릭스로 이미 Admin/HospitalManager만 이 경로에 도달한다(middleware/admin.ts) — 화면 안에서
 // 역할별 버튼을 다시 가릴 필요가 없다. 실제 방어선은 컨트롤러 액션 레벨 Authorize(11-3절).
-const showInactive = ref(false)
-const { data: consultants, refresh } = await useApi<ConsultantLookup[]>('/api/admin/consultants', {
-  query: () => ({ includeInactive: showInactive.value }),
+//
+// 🔴 검색 입력을 반응형 query에 직접 물리지 말 것(12-4절) — URL 쿼리를 computed로 감싸 제출 시에만 반응.
+// includeInactive도 page와 함께 URL 쿼리로 둔다(로컬 ref + 별도 watch로 "1페이지로 되돌리기"를 하면,
+// ref 변경 시 useApi 쿼리 watcher와 그 watch가 서로 다른 타이밍에 반응해 "이전 페이지 값으로 1번 →
+// 되돌린 1페이지 값으로 1번" 낭비 요청이 실제로 중복 발생한다(실측 확인). 토글을 이 computed
+// getter/setter로 route.query에 직접 반영하면 navigateTo 1회 = 요청 1회로 끝난다.
+const query = computed(() => ({
+  page: Number(route.query.page) || 1,
+  pageSize: 20,
+  includeInactive: route.query.includeInactive === '1',
+  search: (route.query.search as string) || undefined,
+}))
+const showInactive = computed({
+  get: () => query.value.includeInactive,
+  set: (v: boolean) => navigateTo({ query: { ...route.query, page: 1, includeInactive: v ? '1' : undefined } }),
 })
+
+const { data: consultantsPaged, refresh } = await useApi<PagedResult<ConsultantLookup>>('/api/admin/consultants', { query })
+
+const consultants = computed(() => consultantsPaged.value?.items ?? [])
+const page = computed(() => query.value.page)
+const totalPages = computed(() => consultantsPaged.value ? Math.max(1, Math.ceil(consultantsPaged.value.total / consultantsPaged.value.pageSize)) : 1)
+
+const formSearch = ref(query.value.search ?? '')
+function applySearch() {
+  navigateTo({ query: { ...route.query, page: 1, search: formSearch.value || undefined } })
+}
+function goPage(p: number) {
+  navigateTo({ query: { ...route.query, page: p } })
+}
 
 const editingId = ref<number | null>(null)
 const formName = ref('')
