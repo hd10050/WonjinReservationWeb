@@ -114,8 +114,8 @@ const { t, locale } = useI18n()
 const inputLang = useInputLang()
 
 useSeo({
-  title: () => t('landing.hero.title'),
-  description: () => t('landing.hero.subtitle'),
+  title: () => t('inquiry.seoTitle'),
+  description: () => t('inquiry.seoDescription'),
 })
 
 const name = ref('')

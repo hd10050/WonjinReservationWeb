@@ -311,6 +311,10 @@
       "address": "Address"
     }
   },
+  "inquiry": {
+    "seoTitle": "Book a Consultation",
+    "seoDescription": "Fill out the form below and our consultant will contact you via WeChat."
+  },
   "privacy": {
     "title": "Privacy Policy",
     "intro": "원진성형외과의원 (\"the Clinic\") values and carefully handles users' personal information in providing its consultation reservation service, in compliance with applicable law. This policy explains the items, purposes, and retention period of the personal information processed by the Clinic.",
