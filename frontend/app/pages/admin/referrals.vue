@@ -10,10 +10,21 @@
         <CardTitle>{{ t('admin.referrals.influencerLinks.title') }}</CardTitle>
       </CardHeader>
       <CardContent class="space-y-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-1.5">
-            <Checkbox id="f-il-show-inactive" v-model="showInactive" />
-            <Label for="f-il-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.consultants.includeInactive') }}</Label>
+        <div class="flex flex-wrap items-end justify-between gap-4">
+          <div class="flex flex-wrap items-end gap-4">
+            <div class="flex items-center gap-1.5">
+              <Checkbox id="f-il-show-inactive" v-model="showInactive" />
+              <Label for="f-il-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.consultants.includeInactive') }}</Label>
+            </div>
+            <div class="flex min-w-[200px] flex-col gap-1.5">
+              <Label for="f-il-search">{{ t('admin.referrals.influencerLinks.filterSearch') }}</Label>
+              <Input
+                id="f-il-search" v-model="formLinksSearch" maxlength="200"
+                :placeholder="t('admin.referrals.influencerLinks.filterSearchPlaceholder')"
+                @keyup.enter="applyLinksSearch"
+              />
+            </div>
+            <Button @click="applyLinksSearch">{{ t('admin.reservations.filterApply') }}</Button>
           </div>
           <Button @click="startCreate">{{ t('admin.referrals.influencerLinks.addButton') }}</Button>
         </div>
@@ -99,6 +110,8 @@
             </tbody>
           </table>
         </div>
+
+        <Pagination :page="linksPage" :total-pages="linksTotalPages" @update:page="goLinksPage" />
       </CardContent>
     </Card>
 
@@ -197,9 +210,24 @@ function localeName(code: string): string {
 }
 const showLinks = ref(false)
 const showInactive = ref(false)
+// 이 섹션은 페이지 본문(from/to로 URL 쿼리를 이미 쓰는 통계표)과 독립된 접힘형 부가 섹션이라, 페이징·검색
+// 상태는 URL이 아니라 로컬 상태로 둔다(from/to와 이름 충돌 없이 더 단순 — index.vue류 1화면 1목록 패턴과는
+// 다른 구조적 위치라 route.query 동기화의 이점인 북마크·뒤로가기가 여기선 크지 않다).
+const linksPage = ref(1)
+const linksSearch = ref('')
+const formLinksSearch = ref('')
 const { data: links, refresh: refreshLinks } = await useApi<PagedResult<InfluencerLink>>('/api/admin/influencer-links', {
-  query: () => ({ includeInactive: showInactive.value, pageSize: 100 }),
+  query: () => ({ includeInactive: showInactive.value, search: linksSearch.value || undefined, page: linksPage.value, pageSize: 20 }),
 })
+const linksTotalPages = computed(() => links.value ? Math.max(1, Math.ceil(links.value.total / links.value.pageSize)) : 1)
+function applyLinksSearch() {
+  linksSearch.value = formLinksSearch.value
+  linksPage.value = 1
+}
+function goLinksPage(p: number) {
+  linksPage.value = p
+}
+watch(showInactive, () => { linksPage.value = 1 })
 
 const editingId = ref<number | null>(null)
 const formCode = ref('')

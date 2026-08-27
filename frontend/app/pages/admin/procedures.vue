@@ -64,9 +64,20 @@
       </CardContent>
     </Card>
 
-    <div class="flex items-center gap-1.5">
-      <Checkbox id="f-show-inactive" v-model="showInactive" />
-      <Label for="f-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.procedures.includeInactive') }}</Label>
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="flex items-center gap-1.5">
+        <Checkbox id="f-show-inactive" v-model="showInactive" />
+        <Label for="f-show-inactive" class="text-sm font-normal text-muted-foreground">{{ t('admin.procedures.includeInactive') }}</Label>
+      </div>
+      <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
+        <Label for="f-search">{{ t('admin.procedures.filterSearch') }}</Label>
+        <Input
+          id="f-search" v-model="formSearch" maxlength="200"
+          :placeholder="t('admin.procedures.filterSearchPlaceholder')"
+          @keyup.enter="applySearch"
+        />
+      </div>
+      <Button @click="applySearch">{{ t('admin.reservations.filterApply') }}</Button>
     </div>
 
     <Card v-if="showForm">
@@ -142,17 +153,20 @@
         </tbody>
       </table>
     </div>
+
+    <Pagination :page="page" :total-pages="totalPages" @update:page="goPage" />
   </div>
 </template>
 
 <script setup lang="ts">
-import type { ProcedureLookup } from '~/types/reservation'
+import type { PagedResult, ProcedureLookup } from '~/types/reservation'
 
 definePageMeta({ middleware: 'admin', layout: 'admin', i18n: false })
 useHead({ title: '시술·수술 관리 | Admin', meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
 
 const { t, locale } = useI18n()
 const { authFetch } = useAuthFetch()
+const route = useRoute()
 
 type NameLocale = 'zh-CN' | 'zh-TW' | 'en' | 'ko'
 const NAME_TABS: { locale: NameLocale, label: string }[] = [
@@ -165,9 +179,29 @@ const NAME_TABS: { locale: NameLocale, label: string }[] = [
 // 6-2절 메뉴 매트릭스로 이미 Admin/HospitalManager만 이 경로에 도달한다(middleware/admin.ts) — 화면 안에서
 // 역할별 버튼을 다시 가릴 필요가 없다. 실제 방어선은 컨트롤러 액션 레벨 Authorize(11-3절).
 const showInactive = ref(false)
-const { data: procedures, refresh } = await useApi<ProcedureLookup[]>('/api/admin/procedures', {
-  query: () => ({ includeInactive: showInactive.value }),
-})
+
+// 🔴 검색 입력을 반응형 query에 직접 물리지 말 것(12-4절) — consultants.vue와 동일 패턴.
+const query = computed(() => ({
+  page: Number(route.query.page) || 1,
+  pageSize: 20,
+  includeInactive: showInactive.value,
+  search: (route.query.search as string) || undefined,
+}))
+
+const { data: proceduresPaged, refresh } = await useApi<PagedResult<ProcedureLookup>>('/api/admin/procedures', { query })
+
+const procedures = computed(() => proceduresPaged.value?.items ?? [])
+const page = computed(() => query.value.page)
+const totalPages = computed(() => proceduresPaged.value ? Math.max(1, Math.ceil(proceduresPaged.value.total / proceduresPaged.value.pageSize)) : 1)
+
+const formSearch = ref(query.value.search ?? '')
+function applySearch() {
+  navigateTo({ query: { ...route.query, page: 1, search: formSearch.value || undefined } })
+}
+function goPage(p: number) {
+  navigateTo({ query: { ...route.query, page: p } })
+}
+watch(showInactive, () => { if (page.value !== 1) navigateTo({ query: { ...route.query, page: 1 } }) })
 
 function procedureName(p: ProcedureLookup): string {
   const map: Record<string, string> = { 'zh-CN': p.nameZhCn, 'zh-TW': p.nameZhTw, en: p.nameEn, ko: p.nameKo }

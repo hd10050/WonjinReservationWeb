@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WonjinApi.Data;
 using WonjinApi.DTOs;
 using WonjinApi.Models;
+using WonjinApi.Utils;
 
 namespace WonjinApi.Controllers;
 
@@ -21,12 +22,20 @@ public class AdminInfluencerLinksController(AppDbContext db) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<PagedResult<InfluencerLinkDto>>> GetList(
         [FromQuery] bool includeInactive = false,
+        [FromQuery] string? search = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
         var query = db.InfluencerLinks.AsQueryable();
         if (!includeInactive)
             query = query.Where(l => l.IsActive);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var keyword = LikeEscape.Escape(search.Trim());
+            query = query.Where(l =>
+                EF.Functions.ILike(l.Code, $"%{keyword}%", "\\")
+                || EF.Functions.ILike(l.DisplayName, $"%{keyword}%", "\\"));
+        }
 
         pageSize = Math.Clamp(pageSize, 1, 100);
         page = Math.Max(page, 1);

@@ -1022,8 +1022,8 @@ var summary = await db.Reservations
 
 | 메서드 | 경로 | 비고 |
 |---|---|---|
-| GET / POST / PUT | `/api/admin/consultants[/{id}]` | 실장 마스터 CRUD(D8). **DELETE 없음** — 비활성화는 `PUT`의 `isActive=false`로 (D13). 목록은 `includeInactive` 쿼리로 비활성 포함 여부 선택 |
-| GET / POST / PUT | `/api/admin/procedures[/{id}]` | 시술 마스터. **DELETE 없음** — `isActive=false`로 비활성화 |
+| GET / POST / PUT | `/api/admin/consultants[/{id}]` | 실장 마스터 CRUD(D8). **DELETE 없음** — 비활성화는 `PUT`의 `isActive=false`로 (D13). 목록은 `includeInactive`·`search`(이름) 쿼리 + `PagedResult`(기본 20건, 2026-08-27부터). 드롭다운·다중선택 등 "전체 목록"이 필요한 호출부는 `pageSize=100`을 명시로 요청 |
+| GET / POST / PUT | `/api/admin/procedures[/{id}]` | 시술 마스터. **DELETE 없음** — `isActive=false`로 비활성화. 목록은 `includeInactive`·`search`(코드+4언어명) 쿼리 + `PagedResult`(기본 20건, 2026-08-27부터), "전체 목록" 호출부는 `pageSize=100` |
 
 ### 11-4. 통계 (HospitalManager 이상)
 
@@ -1066,7 +1066,7 @@ ORDER BY week_start;
 | GET / POST / PATCH | `/api/admin/users[/{id}]` | 계정 발급·역할 변경·정지. 자기 자신 조작 차단 + RT 전량 폐기. **DELETE 없음** — 계정도 정지(`is_suspended`)로만 막는다(감사 로그 행위자 추적 유지) |
 | GET | `/api/admin/audit-logs` | 필터: `actorId`, `entityType`, `action`, `from`, `to`, `search` |
 | GET | `/api/admin/stats/referrals` | **어드민 전용(D5)** — 유입 경로별 방문수·예약수·전환율 |
-| GET / POST / PUT | `/api/admin/influencer-links[/{id}]` | **어드민 전용**(B안, 2026-08-27 신설, 8-12·15-3절) — 인플루언서 짧은 링크(`/go/{code}`) 매핑 관리. `PagedResult` 페이징 적용. **DELETE 없음** — `isActive=false`로 비활성화. `code`는 PUT 대상이 아니다(생성 후 불변 — 이미 배포된 URL이 깨지지 않도록) |
+| GET / POST / PUT | `/api/admin/influencer-links[/{id}]` | **어드민 전용**(B안, 2026-08-27 신설, 8-12·15-3절) — 인플루언서 짧은 링크(`/go/{code}`) 매핑 관리. `includeInactive`·`search`(코드+표시명) 쿼리 + `PagedResult`(기본 20건). **DELETE 없음** — `isActive=false`로 비활성화. `code`는 PUT 대상이 아니다(생성 후 불변 — 이미 배포된 URL이 깨지지 않도록) |
 
 ### 11-6. 🔴 통계 쿼리 작성 시 함정
 
@@ -1561,8 +1561,11 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 | 계정 관리 | `WHERE role=?` | `ix_users_role` |
 | 실장 배정 드롭다운 | `WHERE is_active ORDER BY sort_order` | `ix_consultants_is_active_sort_order` |
 | 상담 기록 조회 | `WHERE reservation_id=? ORDER BY created_at` | `ix_reservation_notes_reservation_id_created_at` |
+| 실장 관리 목록 | `WHERE is_active=? ORDER BY sort_order LIMIT 20` (+ `search` 시 이름 `ILIKE`) | `ix_consultants_is_active_sort_order` |
+| 시술 관리 목록 | `WHERE is_active=? ORDER BY sort_order LIMIT 20` (+ `search` 시 코드·4언어명 `ILIKE`) | `ix_procedures_is_active_sort_order` |
+| 인플루언서 링크 목록 | `WHERE is_active=? ORDER BY created_at DESC LIMIT 20` (+ `search` 시 코드·표시명 `ILIKE`) | `ix_influencer_links_is_active_created_at` |
 
-**명시적 한계**: 검색(`ILIKE '%키워드%'`)은 **B-tree 인덱스를 타지 않는다.** 예약이 수만 건을 넘어가면 검색이 느려지므로, 그 시점에 `pg_trgm` GIN 인덱스 도입을 검토한다. 지금 규모에서 미리 넣는 것은 과설계다.
+**명시적 한계**: 검색(`ILIKE '%키워드%'`)은 **B-tree 인덱스를 타지 않는다.** 예약이 수만 건을 넘어가면 검색이 느려지므로, 그 시점에 `pg_trgm` GIN 인덱스 도입을 검토한다. 지금 규모에서 미리 넣는 것은 과설계다 — 실장·시술·인플루언서 링크는 전부 어드민이 수동 등록하는 소규모 마스터 데이터라(20-1절: 시딩 없음) 이 한계에 해당 없음.
 
 **목록 조회 시 컬럼·관계 최소화**: 목록 API는 `reservation_notes`(건당 2000자, 예약당 여러 건)를 **아예 조인하지 않는다**. 상담 기록은 상세 화면에서만 로드한다. `Select`로 목록에 실제로 표시하는 필드만 프로젝션할 것.
 
