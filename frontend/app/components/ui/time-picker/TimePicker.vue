@@ -47,7 +47,7 @@ const timeValue = computed<Time | undefined>({
     v-slot="{ segments }"
     v-model="timeValue"
     :locale="locale"
-    hour-cycle="h23"
+    :hour-cycle="24"
     :disabled="disabled"
     :aria-invalid="invalid"
     granularity="minute"
@@ -60,19 +60,10 @@ const timeValue = computed<Time | undefined>({
     )"
   >
     <template v-for="segment in segments" :key="segment.part">
-      <!-- 🔴 실측(2026-08-27) — hour-cycle="h23"를 줘도 라이브러리가 로케일에 따라 segments에
-           dayPeriod("AM"/"PM") 파트를 함께 내보낸다(ko-KR 실측 확인). 24시간제 고정 취지(위 주석)를
+      <!-- 🔴 실측(2026-08-27) — granularity="minute"인데도 라이브러리가 로케일에 따라 segments에
+           dayPeriod("AM"/"PM") 파트를 함께 내보낸다(ko-KR 확인). 24시간제 고정 취지(위 주석)를
            지키려면 hour/minute/literal 세 파트만 그리고 dayPeriod는 명시적으로 걸러야 한다. -->
       <span v-if="segment.part === 'literal'" class="text-muted-foreground">{{ segment.value }}</span>
-      <!-- 🔴 [미확인] 실측 중 발견(2026-08-27, 실브라우저 재확인 필요) — hour-cycle="h23"라도
-           자정(hour=0)의 표시 텍스트가 내부값(aria-valuenow=0)과 달리 "12"로 렌더링됨(포맷터가
-           12시간제로 hour=0→12 변환하는 것으로 추정, 24시간제 고정 취지에 어긋남). 숫자 폼
-           (:hour-cycle="24")으로 바꾸면 반대로 자정이 빈 칸("––")으로 보이는 별도 결함이 있어
-           대안이 못 됨 — 두 폼 다 이 라이브러리 버전(reka-ui 2.10.4)의 hour=0 엣지케이스
-           렌더링이 불완전한 것으로 보인다. 값 자체(aria-valuenow·실제 제출 데이터)는 두 폼
-           모두 0으로 정확해 데이터 손실은 아니지만, 자정을 입력한 사용자에게 "12"가 보이는
-           화면 표시 오류는 남아있다 — 실제 사용 빈도(자정 예약)가 낮다고 판단해 이번엔 미수정,
-           재발 시 우선순위 재검토할 것. -->
       <TimeFieldInput
         v-else-if="segment.part === 'hour' || segment.part === 'minute'"
         :part="segment.part"
