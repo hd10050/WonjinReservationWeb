@@ -102,6 +102,7 @@
 - **로컬 dev docker 컨테이너는 소스 바인드마운트가 없음**(`docker-compose.yml`, `build:`만 지정) — 코드 수정 후 반드시 `docker compose up -d --build`로 재빌드해야 반영됨. `restart`만으로는 이미지가 그대로라 안 바뀜(2026-08-27 세션 중 여러 차례 재확인)
 - **PostgreSQL 시스템 컬럼(`xmin` 등)을 EF Core `IsRowVersion()`으로 매핑하면 마이그레이션 파일엔 `AddColumn`이 생성되지만 실제 적용 시 DDL이 안 나가는 게 정상** — Npgsql이 시스템 컬럼명을 인식해 건너뛰도록 설계됨(`AssignConsultant` 동시성에 이 패턴 도입, 2026-08-27)
 - 🔴 **새 SSR 직접 백엔드 호출(프록시 안 거치는 경로)엔 반드시 `X-Internal-Secret` 헤더를 실을 것** — CSRF 미들웨어가 Origin 없는 요청을 이 시크릿으로만 통과시킴(재감사 2026-08-27 강화). **새 관리자 쓰기 API 추가 시 `[EnableRateLimiting("admin-write")]`도 함께 걸 것** — RouteMap 등록과 별개라 놓치기 쉬움
+- 🔴 **전역 로딩/전환 상태를 직접 만들 땐 `page:start`/`page:finish`(Suspense pending/resolve) 대신 `useLoadingIndicator()`(`page:loading:*`)를 쓸 것**(2026-08-27) — 전자는 전환이 다른 전환에 가로채이면 카운터가 불균형해져 영영 안 걷힘(`RouteOverlay` 실제 재현). 후자는 `router.afterEach`의 취소·중복 실패도 별도로 커버해 프레임워크가 이 문제를 이미 해결해둠
 
 ## 절대 원칙 이행 (루트 CLAUDE.md)
 - **화면 깜빡임 금지** — 데이터 페이지는 `<script setup>` 최상위 `await useApi(...)` SSR 프리로드. `onMounted`+client fetch 금지. 전환 오버레이는 `<Transition>` 금지, 항상 마운트 + `pointer-events`를 상태값에 직접 클래스 바인딩
@@ -144,5 +145,5 @@
 `docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종)
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
-## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (32)까지 이동 완료)
-- **2026-08-27 (29)~(32) 이 세션 통합 요약** — 전부 완료, 상세 시행착오는 `docs/session-log.md` (29)~(32) 참고. 순서대로 진행: ①하네스(메모리·훅) 정상 확인 ②푸터 카피라이트 4로케일 보강 ③운영 DB에 최초 부트스트랩 계정 3개(Admin/HospitalManager/Consultant) 직접 SQL 부트스트랩(앱과 동일 BCrypt로 해시 생성, 로그인 실측 확인) ④어드민 로그인 페이지 언어 전환 select 추가(기존엔 로그인 이후 페이지에만 있었음) ⑤로컬 dev 테스트 데이터 전량 삭제 ⑥로고 2배 확대 ⑦배경색 채도 낮춤(`#FEFAE0`→`#FEFDF7`) ⑧`PATCH /consultant` RouteMap 세분화 + `emitRouteChunkError` 추가 ⑨`AssignConsultant`에 `xmin` 기반 RowVersion 낙관적 동시성 도입(SQL 레벨 실측 증명) ⑩모바일 사이드바 애니메이션 사용자 확인으로 TODO 종결 ⑪날짜·시간 피커 언어는 D11 트레이드오프로 코드 수정 불가 확인(사용자 결정 대기로 전환) ⑫M12 OG 이미지 임시본을 최종본으로 확정 ⑬**보안감사 Low 12건 원본 목록 유실 발견 → 1~21절 전체 재감사 → 신규 9건 발견·전부 수정**(로그인 타이밍 사이드채널·X-Forwarded-For 전체신뢰·admin-write rate limit 누락·CSRF Origin-없음 무검증·EscapeLike 중복·비활성 실장 배정 미차단·모델검증 응답포맷 불일치·프론트 보안헤더 전무·언어감지 오픈리다이렉트). 전 항목 `dotnet build`/`npm run build` + curl·브라우저 실측 확인 후 커밋 8건 전부 origin/main push 완료(해시는 session-log.md 참고).
+## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (33)까지 이동 완료)
+- **2026-08-27 (33) — 페이지네이션 UI 통일 + 로딩 오버레이 스피너 + 전환 중 재전환 시 오버레이 고착 버그 수정**(`session-2026-08-27` 워크트리, main 미병합) — 3개 목록 페이지(대시보드·계정관리·감사로그)의 중복 페이지네이션 마크업을 공용 `Pagination.vue`(VixWeb 구조 참고, 색상은 기존 `Button` 컴포넌트로 팔레트 자동반영)로 통일 + `RouteOverlay`에 `Loader2` 스피너 추가 + 오버레이 고착 버그를 `useLoadingIndicator`(Nuxt 내장, `page:loading:*`)로 교체해 근본 수정(원인: 기존 `page:start`/`page:finish` 카운터가 전환 가로채임 시 불균형해짐 — Nuxt 소스 직접 확인). 격리 docker 스택+시드데이터로 브라우저 실측(팔레트 색상 OKLCH 일치·연속 클릭 후 오버레이 정상 해제) 후 정리 완료. 상세: `docs/session-log.md` (33).

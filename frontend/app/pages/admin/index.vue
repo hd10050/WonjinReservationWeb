@@ -90,11 +90,7 @@
       </table>
     </div>
 
-    <div class="flex items-center justify-between">
-      <Button variant="outline" size="sm" :disabled="page <= 1" @click="goPage(page - 1)">{{ t('admin.reservations.prev') }}</Button>
-      <span class="text-sm text-muted-foreground">{{ t('admin.reservations.pageInfo', { page, total: totalPages }) }}</span>
-      <Button variant="outline" size="sm" :disabled="page >= totalPages" @click="goPage(page + 1)">{{ t('admin.reservations.next') }}</Button>
-    </div>
+    <Pagination :page="page" :total-pages="totalPages" @update:page="goPage" />
   </div>
 </template>
 
