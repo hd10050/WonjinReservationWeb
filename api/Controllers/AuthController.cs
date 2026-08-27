@@ -24,6 +24,12 @@ public class AuthController(
     private const string RtCookie = "wj_rt";
     private static readonly string[] SupportedLocales = ["zh-CN", "zh-TW", "en", "ko"];
 
+    // 재감사(2026-08-27, web-security-audit-guide.md 2장 관련) — 존재하지 않는 이메일은 BCrypt
+    // 연산 자체를 건너뛰어 존재하는 이메일(느린 BCrypt 검증 수행)과 응답 시간이 달라, 그 차이로
+    // 이메일 존재 여부를 추정할 수 있는 타이밍 사이드채널이었다. 실제 비밀번호와는 무관한
+    // 더미 해시로 항상 동일한 연산을 수행해 시간을 맞춘다.
+    private const string DummyPasswordHash = "$2a$12$k5.U4Dck4.OXc.piWc.QiuSuBW4kxka/CSO7qb51c1ljMZgCsWdi.";
+
     // 회원가입 엔드포인트는 존재하지 않는다(D6) — 계정 생성은 POST /api/admin/users(Phase 7) 하나뿐.
 
     [HttpPost("login")]
@@ -33,7 +39,8 @@ public class AuthController(
         var email = req.Email.Trim().ToLowerInvariant();
         var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email);
 
-        if (user is null || !pwd.Verify(req.Password, user.PasswordHash))
+        var passwordOk = pwd.Verify(req.Password, user?.PasswordHash ?? DummyPasswordHash);
+        if (user is null || !passwordOk)
             return Unauthorized(new { code = "INVALID_CREDENTIALS" });
 
         if (user.IsSuspended)

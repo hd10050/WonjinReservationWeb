@@ -1,10 +1,12 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using WonjinApi.Data;
 using WonjinApi.DTOs;
 using WonjinApi.Models;
+using WonjinApi.Utils;
 
 namespace WonjinApi.Controllers;
 
@@ -46,7 +48,7 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
         }
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var keyword = EscapeLike(search.Trim());
+            var keyword = LikeEscape.Escape(search.Trim());
             query = query.Where(r =>
                 EF.Functions.ILike(r.Name, $"%{keyword}%", "\\")
                 || EF.Functions.ILike(r.WechatId, $"%{keyword}%", "\\")
@@ -151,6 +153,7 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
     // 방문일시·시술·예약금 저장. 미배정이면 400(D17, 10-1절).
     [HttpPatch("{id:int}")]
     [Authorize(Roles = "Admin,Consultant")]
+    [EnableRateLimiting("admin-write")]
     public async Task<ActionResult<ReservationDetailDto>> UpdateReservation(int id, [FromBody] UpdateReservationRequest req)
     {
         if (req.DepositCurrency is not ("CNY" or "KRW"))
@@ -230,10 +233,16 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
     // 담당 실장 배정·변경 전용. 미배정 상태에서도 허용되는 유일한 쓰기다(D17) — 처리 이력 필수 기록.
     [HttpPatch("{id:int}/consultant")]
     [Authorize(Roles = "Admin,Consultant")]
+    [EnableRateLimiting("admin-write")]
     public async Task<ActionResult<ReservationDetailDto>> AssignConsultant(int id, [FromBody] AssignConsultantRequest req)
     {
         var consultant = await db.Consultants.AsNoTracking().FirstOrDefaultAsync(c => c.Id == req.ConsultantId);
         if (consultant is null) return BadRequest(new { code = "CONSULTANT_NOT_FOUND" });
+        // 🔴 web-security-audit-guide.md 17장 재감사(2026-08-27) 발견 — 비활성 실장은 신규 배정
+        // 드롭다운에서만 제외됐고(D13, 화면 UX) 서버는 존재 여부만 검사해 API 직접 호출로 비활성
+        // 실장에게도 배정이 가능했다. D17("화면 비활성화는 UX일 뿐, 실제 차단은 서버가 한다")과
+        // 동일 원칙을 여기도 적용.
+        if (!consultant.IsActive) return BadRequest(new { code = "CONSULTANT_INACTIVE" });
 
         var now = DateTimeOffset.UtcNow;
         var (userId, userName) = await GetCurrentUserAsync();
@@ -287,6 +296,7 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
     // 상태 전이(10장). Confirmed→Visited 또는 (New|Consulting|Confirmed)→Cancelled만 허용. 미배정이면 400(D17).
     [HttpPost("{id:int}/status")]
     [Authorize(Roles = "Admin,Consultant")]
+    [EnableRateLimiting("admin-write")]
     public async Task<ActionResult<ReservationDetailDto>> ChangeStatus(int id, [FromBody] ChangeStatusRequest req)
     {
         var now = DateTimeOffset.UtcNow;
@@ -346,6 +356,7 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
     // 상담 기록 추가(누적, D14). 미배정이면 400(D17). 최초 기록이면 New→Consulting 자동 전이(10장).
     [HttpPost("{id:int}/notes")]
     [Authorize(Roles = "Admin,Consultant")]
+    [EnableRateLimiting("admin-write")]
     public async Task<ActionResult<ReservationNoteDto>> AddNote(int id, [FromBody] AddNoteRequest req)
     {
         var now = DateTimeOffset.UtcNow;
@@ -396,6 +407,7 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
     // 상담 기록 수정. 작성자 본인 또는 Admin만 — 삭제 엔드포인트는 만들지 않는다(D14).
     [HttpPatch("{id:int}/notes/{noteId:int}")]
     [Authorize(Roles = "Admin,Consultant")]
+    [EnableRateLimiting("admin-write")]
     public async Task<ActionResult<ReservationNoteDto>> UpdateNote(int id, int noteId, [FromBody] UpdateNoteRequest req)
     {
         var note = await db.ReservationNotes.FirstOrDefaultAsync(n => n.Id == noteId && n.ReservationId == id);
@@ -416,6 +428,7 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
     // 소프트 삭제(D15) — 상담 기록이 0건일 때만. 미배정이어도 허용(D17, 중복·장난 신청 정리 목적).
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "Admin,Consultant")]
+    [EnableRateLimiting("admin-write")]
     public async Task<IActionResult> SoftDelete(int id)
     {
         var now = DateTimeOffset.UtcNow;
@@ -483,7 +496,4 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
         var name = await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => u.Name).FirstOrDefaultAsync() ?? "SYSTEM";
         return (userId, name);
     }
-
-    // 검색어의 %, _, \ 가 그대로 들어가면 LIKE 패턴이 깨지거나 의도치 않은 광범위 매칭이 된다.
-    private static string EscapeLike(string s) => s.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
 }

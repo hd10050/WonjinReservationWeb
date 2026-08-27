@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WonjinApi.Data;
 using WonjinApi.DTOs;
+using WonjinApi.Utils;
 
 namespace WonjinApi.Controllers;
 
@@ -47,7 +48,7 @@ public class AdminAuditLogsController(AppDbContext db) : ControllerBase
         }
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var keyword = EscapeLike(search.Trim());
+            var keyword = LikeEscape.Escape(search.Trim());
             query = query.Where(a =>
                 EF.Functions.ILike(a.Summary, $"%{keyword}%", "\\")
                 || EF.Functions.ILike(a.ActorEmail, $"%{keyword}%", "\\"));
@@ -68,6 +69,4 @@ public class AdminAuditLogsController(AppDbContext db) : ControllerBase
 
         return Ok(new PagedResult<AuditLogDto>(items, total, page, pageSize));
     }
-
-    private static string EscapeLike(string s) => s.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
 }

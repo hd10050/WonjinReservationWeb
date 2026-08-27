@@ -1,8 +1,10 @@
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -33,6 +35,14 @@ builder.Services.AddControllers(options =>
     // 정지된 요청은 AccountStateFilter가 next()를 호출하지 않고 여기서 먼저 차단해 감사 로그까지 가지 않는다.
     options.Filters.Add<AccountStateFilter>();
     options.Filters.Add<AuditLogFilter>();
+})
+// 🔴 web-security-audit-guide.md 19장 재감사(2026-08-27) 발견 — 이 설정이 없으면 [Required]/
+// [MaxLength] 등 DTO 애노테이션 위반이 컨트롤러 코드에 닿기도 전에 [ApiController]가 자동으로
+// 가로채 기본 ValidationProblemDetails({type,title,status,errors,traceId})로 응답한다. 이 프로젝트의
+// 모든 실패 응답은 {code:"..."} 고정 포맷이므로 이 경로만 형식이 어긋나 있었다.
+.ConfigureApiBehaviorOptions(options =>
+{
+    options.InvalidModelStateResponseFactory = _ => new BadRequestObjectResult(new { code = "VALIDATION_FAILED" });
 });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -127,14 +137,36 @@ builder.Services.AddRateLimiter(options =>
             Window = TimeSpan.FromMinutes(1),
             QueueLimit = 0,
         }));
+
+    // 🔴 web-security-audit-guide.md 4장 재감사(2026-08-27) 발견 — design.md 7-5절 표에 이미
+    // 명시돼 있었지만 실제로는 구현이 안 돼있어 관리자 쓰기 API 전체(예약 수정·실장 배정·상태전이·
+    // 상담기록·삭제·계정/실장/시술 CRUD)에 rate limit이 전혀 없었다. UseRateLimiter()가
+    // UseAuthentication() 다음에 등록돼 있어(아래) 이 시점엔 context.User가 이미 채워져 있다.
+    options.AddPolicy("admin-write", context =>
+    {
+        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anon";
+        return RateLimitPartition.GetFixedWindowLimiter(userId, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 60,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+        });
+    });
 });
 
-// ── 리버스 프록시(Render/Cloudflare) 뒤에서 실제 클라이언트 IP·스킴 복원 ──
+// ── 리버스 프록시(Render/Cloudflare) 뒤에서 실제 클라이언트 스킴 복원 ──
+// 🔴 web-security-audit-guide.md 3장 재감사(2026-08-27) 발견 — 이전엔 XForwardedFor도 함께
+// 신뢰(KnownIPNetworks/KnownProxies 둘 다 Clear = 전체 신뢰)했다. Context7(공식 문서, ASP.NET Core
+// Forwarded Headers Middleware)로 확인한 결과 이 설정은 X-Forwarded-For 헤더값으로
+// HttpContext.Connection.RemoteIpAddress 자체를 덮어쓴다 — 그런데 Render 백엔드는 CF-Connecting-IP와
+// 마찬가지로 공개 URL로 직접 호출 가능해(H1 원인과 동일 전제), 공격자가 이 헤더를 조작하면
+// GetClientIp()의 "신뢰 안 되면 RemoteIpAddress로 폴백" 안전망 자체가 무력화되어 H1 수정 이전과
+// 동일하게 Rate Limit을 무제한 우회할 수 있었다(3-1절과 완전히 같은 취약점 클래스, 헤더만 다름).
+// XForwardedProto는 스킴 판별(HTTPS 리다이렉트)에만 쓰이고 IP 기반 보안 결정에 관여하지 않아
+// 낮은 위험이라 유지, XForwardedFor만 제거해 RemoteIpAddress를 실제 TCP 연결값 그대로 보존한다.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    // PaaS 컨테이너는 내부망으로만 접근 가능하므로 전체 신뢰가 안전(auth-pattern-reference.md 5장) —
-    // 특정 CIDR로 좁히면 내부 로드밸런서 IP가 그 범위 밖이라 스킴 판별이 깨질 수 있다.
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedProto;
     options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
 });
@@ -198,17 +230,39 @@ app.Use(async (ctx, next) =>
 });
 
 // CSRF 방어 — 상태변경 요청의 Origin 검증. 인증·인가보다 반드시 앞단(16장).
+// 🔴 web-security-audit-guide.md 6장 재감사(2026-08-27) 발견 — Origin 헤더가 아예 없는 요청을
+// 무조건 통과시키고 있었다(가이드가 명시적으로 경고하는 패턴). 실제로 이 구멍을 타는 경로를
+// 찾음: 프론트 SSR이 성능을 위해 프록시를 건너뛰고 백엔드를 직접 호출하는 지점들
+// (useAuth.ts fetchMe/ssrRefreshCookie, useApi.ts fetchOnce)이 Origin도 X-Internal-Secret도
+// 없이 호출하고 있었다 — 함께 수정해 이제 그 호출들도 시크릿을 보낸다. Origin 없는 요청은
+// 이제 그 시크릿이 유효할 때만 통과한다(GetClientIp와 동일한 신뢰 메커니즘 재사용).
 app.Use(async (ctx, next) =>
 {
     var method = ctx.Request.Method;
     if (HttpMethods.IsPost(method) || HttpMethods.IsPut(method) || HttpMethods.IsPatch(method) || HttpMethods.IsDelete(method))
     {
         var origin = ctx.Request.Headers.Origin.ToString();
-        if (!string.IsNullOrEmpty(origin) && !allowedOrigins.Contains(origin))
+        if (!string.IsNullOrEmpty(origin))
         {
-            ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
-            await ctx.Response.WriteAsJsonAsync(new { code = "ORIGIN_NOT_ALLOWED" });
-            return;
+            if (!allowedOrigins.Contains(origin))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await ctx.Response.WriteAsJsonAsync(new { code = "ORIGIN_NOT_ALLOWED" });
+                return;
+            }
+        }
+        else
+        {
+            var provided = ctx.Request.Headers["X-Internal-Secret"].FirstOrDefault();
+            var trusted = !string.IsNullOrEmpty(internalSecret) && !string.IsNullOrEmpty(provided)
+                && System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
+                    Encoding.UTF8.GetBytes(provided), Encoding.UTF8.GetBytes(internalSecret));
+            if (!trusted)
+            {
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await ctx.Response.WriteAsJsonAsync(new { code = "ORIGIN_NOT_ALLOWED" });
+                return;
+            }
         }
     }
     await next();

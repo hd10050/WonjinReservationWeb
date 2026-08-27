@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using WonjinApi.Data;
 using WonjinApi.DTOs;
@@ -42,6 +43,7 @@ public class AdminUsersController(AppDbContext db, IPasswordService pwd, IRefres
     }
 
     [HttpPost]
+    [EnableRateLimiting("admin-write")]
     public async Task<ActionResult<AdminUserDto>> Create([FromBody] CreateUserRequest req)
     {
         if (!ValidRoles.Contains(req.Role))
@@ -71,6 +73,7 @@ public class AdminUsersController(AppDbContext db, IPasswordService pwd, IRefres
     }
 
     [HttpPatch("{id:int}")]
+    [EnableRateLimiting("admin-write")]
     public async Task<ActionResult<AdminUserDto>> Update(int id, [FromBody] UpdateUserRequest req)
     {
         if (req.Role is null && req.IsSuspended is null)

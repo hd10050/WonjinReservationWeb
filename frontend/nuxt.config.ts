@@ -40,6 +40,11 @@ export default defineNuxtConfig({
     if (manual) {
       var m = document.cookie.match(/(?:^|; )wj_lang=([^;]*)/);
       t = m ? decodeURIComponent(m[1]) : 'zh-CN';
+      // 🔴 web-security-audit-guide.md 21장 재감사(2026-08-27) 발견 — wj_lang은 httpOnly가 아니라
+      // 검증 없이 그대로 쓰면 리다이렉트 경로에 이어붙는 값을 임의 조작할 수 있다(예: '/evil.com' →
+      // '//evil.com' → location.replace가 프로토콜 상대 URL로 해석해 외부 도메인 이동). else 분기와
+      // 동일한 4개 화이트리스트로 검증.
+      if (t !== 'ko' && t !== 'zh-TW' && t !== 'zh-CN' && t !== 'en') t = 'zh-CN';
     } else {
       var l = navigator.language || '';
       if (l.indexOf('ko') === 0) t = 'ko';
@@ -60,6 +65,24 @@ export default defineNuxtConfig({
 
   nitro: {
     preset: 'cloudflare_module',
+  },
+
+  // 🔴 web-security-audit-guide.md 5장 재감사(2026-08-27) 발견 — 백엔드(API)는 이미 보안 헤더가
+  // 있었지만(Program.cs) HTML을 실제로 렌더링하는 이 프론트(어드민 패널 포함)엔 전혀 없었다.
+  // Content-Security-Policy는 여기 포함하지 않음(의도적 보류) — 이 프로젝트엔 이미 인라인
+  // 스크립트가 2곳 있는데(이 파일의 언어감지 스크립트는 정적이라 해시 지정 가능하지만,
+  // landing.vue의 JSON-LD는 예약마다 내용이 달라 매번 해시가 바뀌어 정적 해시 방식이 안 통하고
+  // nonce는 Nuxt 통합이 더 큰 작업이라) 섣불리 걸면 그 스크립트들이 깨질 수 있어 별도 설계
+  // 결정으로 미룸(가이드 5장이 요구하는 "추측 방치 금지, 의도적 결정"에 따른 명시적 보류).
+  routeRules: {
+    '/**': {
+      headers: {
+        'x-content-type-options': 'nosniff',
+        'x-frame-options': 'DENY',
+        'referrer-policy': 'strict-origin-when-cross-origin',
+        'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+      },
+    },
   },
 
   // D19 — shadcn-vue. 컴포넌트는 `npx shadcn-vue add <name>`으로 소스를 직접 복사해 여기 쌓인다.

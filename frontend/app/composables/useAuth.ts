@@ -17,8 +17,16 @@ export async function ssrRefreshCookie(baseURL: string, headers: Record<string, 
   const cached = useState<string | null>('auth:ssrRefreshedCookie', () => null)
   if (cached.value) return cached.value
 
+  // 🔴 web-security-audit-guide.md 6장 재감사(2026-08-27) 발견 — 이 SSR 직접호출은 Origin이
+  // 원천적으로 없는데 내부시크릿도 안 보내고 있었다. 백엔드 CSRF 미들웨어가 Origin 없는 요청을
+  // 이제 이 시크릿으로만 신뢰하므로 함께 실어야 한다(server/api/[...].ts와 동일 패턴).
+  const config = useRuntimeConfig()
+  const secretHeaders = config.internalSecret
+    ? { ...headers, 'x-internal-secret': config.internalSecret as string }
+    : headers
+
   const event = useRequestEvent()
-  const refreshRes = await $fetch.raw(`${baseURL}/api/auth/refresh`, { method: 'POST', headers })
+  const refreshRes = await $fetch.raw(`${baseURL}/api/auth/refresh`, { method: 'POST', headers: secretHeaders })
   const setCookies = typeof refreshRes.headers.getSetCookie === 'function'
     ? refreshRes.headers.getSetCookie()
     : (refreshRes.headers.get('set-cookie') ? [refreshRes.headers.get('set-cookie') as string] : [])

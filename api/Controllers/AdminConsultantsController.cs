@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using WonjinApi.Data;
 using WonjinApi.DTOs;
@@ -39,6 +40,7 @@ public class AdminConsultantsController(AppDbContext db) : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin,HospitalManager")]
+    [EnableRateLimiting("admin-write")]
     public async Task<ActionResult<ConsultantLookupDto>> Create([FromBody] CreateConsultantRequest req)
     {
         var now = DateTimeOffset.UtcNow;
@@ -52,6 +54,7 @@ public class AdminConsultantsController(AppDbContext db) : ControllerBase
     // 비활성화도 이 엔드포인트다(D13) — isActive=false로 PUT.
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin,HospitalManager")]
+    [EnableRateLimiting("admin-write")]
     public async Task<ActionResult<ConsultantLookupDto>> Update(int id, [FromBody] UpdateConsultantRequest req)
     {
         var consultant = await db.Consultants.FirstOrDefaultAsync(c => c.Id == id);

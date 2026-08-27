@@ -313,6 +313,8 @@
     "RESERVATION_HAS_NOTES": "存在咨询记录的预约无法删除。",
     "RESERVATION_STATE_CHANGED": "状态已在其他地方被变更，请刷新后重试。",
     "CONSULTANT_NOT_FOUND": "找不到该顾问。",
+    "CONSULTANT_INACTIVE": "无法分配给已停用的顾问。",
+    "VALIDATION_FAILED": "输入内容不正确，请检查后重试。",
     "INVALID_STATUS_TRANSITION": "不允许此状态变更。",
     "CANCEL_REASON_REQUIRED": "请输入取消原因。",
     "INVALID_DEPOSIT_CURRENCY": "定金币种不正确。",

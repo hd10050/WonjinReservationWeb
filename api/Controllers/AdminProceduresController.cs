@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using WonjinApi.Data;
 using WonjinApi.DTOs;
@@ -37,6 +38,7 @@ public class AdminProceduresController(AppDbContext db) : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin,HospitalManager")]
+    [EnableRateLimiting("admin-write")]
     public async Task<ActionResult<ProcedureLookupDto>> Create([FromBody] CreateProcedureRequest req)
     {
         if (await db.Procedures.AnyAsync(p => p.Code == req.Code))
@@ -64,6 +66,7 @@ public class AdminProceduresController(AppDbContext db) : ControllerBase
     // 비활성화도 이 엔드포인트다 — isActive=false로 PUT. code 변경 시에도 UNIQUE 재검증(자기 자신 제외).
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin,HospitalManager")]
+    [EnableRateLimiting("admin-write")]
     public async Task<ActionResult<ProcedureLookupDto>> Update(int id, [FromBody] UpdateProcedureRequest req)
     {
         var procedure = await db.Procedures.FirstOrDefaultAsync(p => p.Id == id);

@@ -313,6 +313,8 @@
     "RESERVATION_HAS_NOTES": "Reservations with notes cannot be deleted.",
     "RESERVATION_STATE_CHANGED": "The status was already changed elsewhere. Refresh and try again.",
     "CONSULTANT_NOT_FOUND": "Consultant not found.",
+    "CONSULTANT_INACTIVE": "Cannot assign to an inactive consultant.",
+    "VALIDATION_FAILED": "Invalid input. Please check and try again.",
     "INVALID_STATUS_TRANSITION": "This status change is not allowed.",
     "CANCEL_REASON_REQUIRED": "Please enter a cancellation reason.",
     "INVALID_DEPOSIT_CURRENCY": "Invalid deposit currency.",
