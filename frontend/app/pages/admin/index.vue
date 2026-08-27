@@ -144,13 +144,23 @@ const query = computed(() => ({
   search: (route.query.search as string) || undefined,
 }))
 
-const { data: summary, refresh: refreshSummary } = await useApi<ReservationSummary>('/api/admin/reservations/summary')
-const { data, refresh: refreshData, pending: dataPending } = await useApi<PagedResult<ReservationListItem>>('/api/admin/reservations', { query })
 // 8-4절/12-4절 — 대시보드 필터는 기본 활성 실장만, "비활성 포함" 체크 시 퇴사자도 필터 대상에 노출
 const showInactiveConsultants = ref(false)
-const { data: consultants } = await useApi<ConsultantLookup[]>('/api/admin/consultants', {
-  query: () => ({ includeInactive: showInactiveConsultants.value }),
-})
+
+// 🔴 성능(2026-08-27, "로그인이 느림" 조사) — 아래 3개 API는 서로 의존성이 없는데
+// 각각 await로 순차 실행되고 있었다. 로그인 직후 가장 먼저 뜨는 이 페이지가 왕복을
+// 3번 직렬로 기다려 체감 지연의 직접 원인이었음 — Promise.all로 동시 시작해 왕복 1회로 단축.
+const [
+  { data: summary, refresh: refreshSummary },
+  { data, refresh: refreshData, pending: dataPending },
+  { data: consultants },
+] = await Promise.all([
+  useApi<ReservationSummary>('/api/admin/reservations/summary'),
+  useApi<PagedResult<ReservationListItem>>('/api/admin/reservations', { query }),
+  useApi<ConsultantLookup[]>('/api/admin/consultants', {
+    query: () => ({ includeInactive: showInactiveConsultants.value }),
+  }),
+])
 
 const page = computed(() => query.value.page)
 const totalPages = computed(() => data.value ? Math.max(1, Math.ceil(data.value.total / data.value.pageSize)) : 1)
