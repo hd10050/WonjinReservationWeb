@@ -460,13 +460,16 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 - `UseAuthentication()` → `UseRateLimiter()` 순서를 반드시 지킨다. 반대면 사용자 ID 파티션이 전부 IP로 폴백된다.
 
 > 🔴 **인증 초기화(`fetchMe()`)를 전 페이지에서 실행하지 말 것**(F5). 표준 Nuxt 인증 플러그인은 모든 라우트에서 `fetchMe()`를 호출하지만, **이 프로젝트는 공개 랜딩에 광고 트래픽이 몰리는 구조**라 그대로 두면 방문자 수만큼 `/api/auth/me` 401 요청이 백엔드로 간다(부하 + 로그 오염 + 랜딩 응답 지연). 인증 상태가 필요한 곳은 관리자 화면뿐이므로 경로로 게이팅한다.
+>
+> 🔴 **로그인 페이지(`/admin/login`) 자신은 이 게이팅에서도 제외할 것**(성능, 2026-08-27 "로그인이 느림" 재조사로 발견·수정). `/admin/login`도 문자열상 `/admin`으로 시작해 아래 가드에 걸리는데, 로그인 페이지는 애초에 미인증 방문자가 오는 곳이라 `fetchMe()`는 항상 401로 실패하고 SSR 경로는 그 뒤 `ssrRefreshCookie()`로 refresh까지 재시도해 또 실패한다 — 로그인 폼이 뜨기도 전에 매번 백엔드 왕복을 순차로 기다리는 것이 실제 지연의 근본 원인이었다. `middleware/admin.ts`(6-3절)는 이미 로그인 페이지를 제외하는데 이 플러그인만 빠져 있었다.
 
 ```ts
 // app/plugins/01.auth.ts
 export default defineNuxtPlugin(async (nuxtApp) => {
   // 관리자 경로에서만 인증을 초기화한다. 공개 랜딩은 인증 상태를 알 필요가 없다.
+  // 로그인 페이지 자신도 제외 — 미인증 방문자 전용이라 fetchMe()가 항상 헛되이 401로 실패한다.
   const path = useRoute().path
-  if (!path.startsWith('/admin')) return
+  if (!path.startsWith('/admin') || path === '/admin/login') return
 
   const { fetchMe, user } = useAuth()
   if (import.meta.server) { await fetchMe(); return }
