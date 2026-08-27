@@ -3,6 +3,7 @@
     "appName": "WonJin",
     "save": "Save",
     "cancel": "Cancel",
+    "close": "Close",
     "loading": "Loading..."
   },
   "admin": {
@@ -276,7 +277,39 @@
   },
   "privacy": {
     "title": "Privacy Policy",
-    "pending": "This page's content is being prepared."
+    "intro": "원진성형외과의원 (\"the Clinic\") values and carefully handles users' personal information in providing its consultation reservation service, in compliance with applicable law. This policy explains the items, purposes, and retention period of the personal information processed by the Clinic.",
+    "lastUpdatedLabel": "Last Updated",
+    "lastUpdated": "2026-08-27",
+    "sections": [
+      {
+        "heading": "1. Personal Information We Collect",
+        "body": "To process consultation reservation requests, the Clinic collects the following information.\nRequired: name, date of birth, gender, WeChat ID, preferred contact time\nAutomatically collected: referral information (ad source, referral code), IP address, service usage records"
+      },
+      {
+        "heading": "2. Purpose of Collection and Use",
+        "body": "Collected personal information is used only for the following purposes.\nReceiving and confirming consultation/procedure reservation requests\nContacting you via WeChat for consultation through your assigned consultant\nManaging reservation records and checking for duplicates or errors\nPreventing fraudulent use and maintaining stable service operation\nImproving the service by analyzing advertising referral sources"
+      },
+      {
+        "heading": "3. Retention and Use Period",
+        "body": "In principle, the Clinic destroys personal information without delay once the purpose of collection and use has been achieved. Where retention is required under applicable law, the information is securely kept for the period required by law before being destroyed."
+      },
+      {
+        "heading": "4. Third-Party Disclosure and Outsourcing",
+        "body": "The Clinic does not provide users' personal information to external parties, in principle. The collected WeChat ID is used solely for your assigned consultant to contact you directly for consultation, and is not outsourced to any external processor."
+      },
+      {
+        "heading": "5. User Rights and How to Exercise Them",
+        "body": "Users may at any time request to view, correct, or delete their personal information. Such requests may be submitted through the contact information below, and the Clinic will act on legitimate requests without delay."
+      },
+      {
+        "heading": "6. Destruction Procedure and Method",
+        "body": "Personal information stored in electronic file form is permanently deleted using a technical method that prevents recovery. Personal information recorded or stored on paper is destroyed by shredding or incineration."
+      },
+      {
+        "heading": "7. Contact",
+        "body": "For inquiries regarding the processing of personal information, please contact:\n원진성형외과의원 · Business Registration No. 824-67-00414"
+      }
+    ]
   },
   "errorPage": {
     "notFoundTitle": "Page Not Found",

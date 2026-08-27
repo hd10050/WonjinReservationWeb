@@ -103,7 +103,6 @@
 - **PostgreSQL 시스템 컬럼(`xmin` 등)을 EF Core `IsRowVersion()`으로 매핑하면 마이그레이션 파일엔 `AddColumn`이 생성되지만 실제 적용 시 DDL이 안 나가는 게 정상** — Npgsql이 시스템 컬럼명을 인식해 건너뛰도록 설계됨(`AssignConsultant` 동시성에 이 패턴 도입, 2026-08-27)
 - 🔴 **새 SSR 직접 백엔드 호출(프록시 안 거치는 경로)엔 반드시 `X-Internal-Secret` 헤더를 실을 것** — CSRF 미들웨어가 Origin 없는 요청을 이 시크릿으로만 통과시킴(재감사 2026-08-27 강화). **새 관리자 쓰기 API 추가 시 `[EnableRateLimiting("admin-write")]`도 함께 걸 것** — RouteMap 등록과 별개라 놓치기 쉬움
 - 🔴 **전역 로딩/전환 상태를 직접 만들 땐 `page:start`/`page:finish`(Suspense pending/resolve) 대신 `useLoadingIndicator()`(`page:loading:*`)를 쓸 것**(2026-08-27) — 전자는 전환이 다른 전환에 가로채이면 카운터가 불균형해져 영영 안 걷힘(`RouteOverlay` 실제 재현). 후자는 `router.afterEach`의 취소·중복 실패도 별도로 커버해 프레임워크가 이 문제를 이미 해결해둠
-
 ## 절대 원칙 이행 (루트 CLAUDE.md)
 - **화면 깜빡임 금지** — 데이터 페이지는 `<script setup>` 최상위 `await useApi(...)` SSR 프리로드. `onMounted`+client fetch 금지. 전환 오버레이는 `<Transition>` 금지, 항상 마운트 + `pointer-events`를 상태값에 직접 클래스 바인딩
 - **입력 길이 3곳 일치** — DB `varchar(N)` / 백엔드 `[MaxLength(N)]` / 프론트 `maxlength` 항상 세트로 수정. 전체 표는 `docs/design.md` 9장
@@ -139,11 +138,11 @@
 - **비밀번호 분실 복구 / 계정 발급 시 초기 비밀번호 전달** — 프로젝트 관리자가 직접 처리, 시스템 기능으로 만들지 않음
 - **실장 평균 최초응대 소요시간** — 구현하지 않음
 - **시술 마스터 시딩** — 없음, [시술·수술 관리] 메뉴에서 직접 등록
-- **개인정보 처리방침 문안·보유기간 / DB 백업 정책** — 범위 외
+- **개인정보 처리방침 법률 검토 거친 최종본·정확한 보유기간 수치 / DB 백업 정책** — 범위 외(예문은 2026-08-27 작성 완료, 20-1절)
 
 ## 참고 문서
 `docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종)
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
-## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (33)까지 이동 완료)
-- **2026-08-27 (33) — 페이지네이션 UI 통일 + 로딩 오버레이 스피너 + 전환 중 재전환 시 오버레이 고착 버그 수정**(`session-2026-08-27` 워크트리, main 미병합) — 3개 목록 페이지(대시보드·계정관리·감사로그)의 중복 페이지네이션 마크업을 공용 `Pagination.vue`(VixWeb 구조 참고, 색상은 기존 `Button` 컴포넌트로 팔레트 자동반영)로 통일 + `RouteOverlay`에 `Loader2` 스피너 추가 + 오버레이 고착 버그를 `useLoadingIndicator`(Nuxt 내장, `page:loading:*`)로 교체해 근본 수정(원인: 기존 `page:start`/`page:finish` 카운터가 전환 가로채임 시 불균형해짐 — Nuxt 소스 직접 확인). 격리 docker 스택+시드데이터로 브라우저 실측(팔레트 색상 OKLCH 일치·연속 클릭 후 오버레이 정상 해제) 후 정리 완료. 상세: `docs/session-log.md` (33).
+## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (34)까지 이동 완료)
+- **2026-08-27 (34) — 개인정보 처리방침 예문 작성(범위외 결정 번복) + 랜딩 동의 링크 모달화 + 어드민 헤더 개편**(`session-2026-08-27` 워크트리, main 미병합) — 20-1절 "범위 외" 결정을 사용자 지시로 번복해 7개 섹션 예문을 4개 로케일에 작성(`PrivacyContent.vue` 신규, `privacy.vue`·랜딩 모달이 공유해 문안 이중관리 방지) + 랜딩 폼의 처리방침 링크를 새탭 대신 네이티브 `<dialog>` 모달로 교체(신규 의존성 없음) + 어드민 헤더 좌측 고정 "Admin" 텍스트 제거·계정정보를 배지 스타일로 로그아웃 버튼 바로 왼쪽에 재배치. 격리 docker 재검증(팔레트 색상 OKLCH 일치·헤더 DOM순서 실측) 완료. 상세 시행착오(네이티브 dialog close 이벤트 함정 포함): `docs/session-log.md` (34).

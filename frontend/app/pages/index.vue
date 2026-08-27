@@ -70,8 +70,26 @@
             <input v-model="consent" type="checkbox" class="mt-1 accent-primary" required>
             <!-- 🔴 태그 사이 줄바꿈이 공백 하나로 렌더링되어 "처리방침 에"처럼 어색한 공백이
                  생긴다(실측 확인) — 세 조각을 한 줄로 이어붙여 불필요한 공백을 없앤다. -->
-            <span>{{ t('landing.form.consentPrefix') }}<NuxtLink :to="localePath('privacy')" class="underline" target="_blank">{{ t('landing.form.consentLink') }}</NuxtLink>{{ t('landing.form.consentSuffix') }}</span>
+            <span>{{ t('landing.form.consentPrefix') }}<button type="button" class="underline" @click="privacyOpen = true">{{ t('landing.form.consentLink') }}</button>{{ t('landing.form.consentSuffix') }}</span>
           </label>
+
+          <!-- 페이지 이동·새탭 대신 모달로 표시(2026-08-27) — 본문은 privacy.vue와 PrivacyContent 공유 -->
+          <dialog
+            ref="privacyDialogEl"
+            class="w-[calc(100%-2rem)] max-w-2xl rounded-lg border border-border bg-card p-0 text-foreground backdrop:bg-black/50"
+            @click="onPrivacyBackdropClick"
+            @close="privacyOpen = false"
+          >
+            <div class="flex items-center justify-between border-b border-border px-5 py-3">
+              <h2 class="font-semibold text-foreground">{{ t('privacy.title') }}</h2>
+              <button type="button" class="text-muted-foreground hover:text-foreground" :aria-label="t('common.close')" @click="privacyOpen = false">
+                <X class="size-5" />
+              </button>
+            </div>
+            <div class="max-h-[70vh] overflow-y-auto px-5 py-4">
+              <PrivacyContent />
+            </div>
+          </dialog>
 
           <p v-if="errorMessage" class="text-sm text-destructive">{{ errorMessage }}</p>
 
@@ -83,12 +101,13 @@
 </template>
 
 <script setup lang="ts">
+import { X } from '@lucide/vue'
+
 // 랜딩(12-1절) — 헤더+히어로+예약 폼+푸터 중 히어로/폼/성공 안내. 헤더·푸터는 layouts/landing.vue.
 // 히어로 문구는 최소 기능 설명이며, 실제 마케팅 카피·이미지(M6)는 범위 외(20장)로 보류된 상태다.
 definePageMeta({ layout: 'landing' })
 
 const { t, locale, locales } = useI18n()
-const localePath = useLocalePath()
 const route = useRoute()
 const config = useRuntimeConfig()
 
@@ -112,6 +131,18 @@ const wechatId = ref('')
 const contactTime = ref('')
 const consent = ref(false)
 const honeypot = ref('')
+
+// 개인정보 처리방침 모달(2026-08-27) — 네이티브 <dialog>: ESC 닫힘·포커스 트랩이 기본 제공되어
+// 별도 UI 라이브러리 도입 없이 이 한 곳의 용도에 충분하다.
+const privacyOpen = ref(false)
+const privacyDialogEl = ref<HTMLDialogElement | null>(null)
+watch(privacyOpen, (open) => {
+  if (open) privacyDialogEl.value?.showModal()
+  else privacyDialogEl.value?.close()
+})
+function onPrivacyBackdropClick(e: MouseEvent) {
+  if (e.target === privacyDialogEl.value) privacyOpen.value = false
+}
 
 const submitting = ref(false)
 const errorMessage = ref('')
