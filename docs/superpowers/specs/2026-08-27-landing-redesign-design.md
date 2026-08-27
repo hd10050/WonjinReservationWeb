@@ -93,10 +93,8 @@ interface ProcedureCategory {
 
 참고사이트에서 BEFORE/AFTER·WJ 원진 Shorts·함께하면 좋은 수술을 빼면 남는 것:
 
-1. **히어로**: 라벨(대체 명칭, 선택) + 시술명 + 짧은 설명 + 인물사진 1장 (좌: 텍스트, 우: 사진 — 참고사이트 `zygoma` 페이지 레이아웃)
+1. **히어로**: 라벨(대체 명칭, 선택) + 시술명 + 짧은 설명 + 인물사진 1장 (좌: 텍스트, 우: 사진 — 참고사이트 `zygoma` 페이지 레이아웃) + **"지금 문의하기" CTA 버튼**(`/inquiry`로 이동, 확정)
 2. **푸터**
-
-제안(확인 필요, 10절): 히어로 안에 "지금 문의하기" CTA 버튼을 넣어 `/inquiry`로 바로 연결할지, 상시 FAB만으로 충분할지.
 
 ### 5.4 문의 페이지 (`/inquiry`)
 
@@ -108,12 +106,12 @@ interface ProcedureCategory {
 
 이 FAB는 "화면 깜빡임 금지" 절의 전환 차단 오버레이(9절 참고)와는 별개 컴포넌트다 — 단순 상시 표시 링크이며 `<Transition>`으로 마운트/언마운트되는 대상이 아니므로 그 사고 패턴(9-3절)이 적용되지 않는다.
 
-## 7. 내비게이션 (제안, 확인 필요 — 10절)
+## 7. 내비게이션 (확정)
 
 - **데스크톱**: "시술안내" 드롭다운 메뉴 안에 11개 카테고리 나열 + 홈 + 문의하기
 - **모바일**: 햄버거 메뉴
 
-참고사이트는 11개를 전부 가로로 펼쳐놓지만(WJ코스메틱·의료진소개·원진TV까지 총 14개), 우리는 그런 부가 메뉴가 없고 화면 폭도 더 좁을 수 있어 드롭다운으로 묶는 안을 제안한다.
+참고사이트는 11개를 전부 가로로 펼쳐놓지만(WJ코스메틱·의료진소개·원진TV까지 총 14개), 우리는 그런 부가 메뉴가 없고 화면 폭도 더 좁을 수 있어 드롭다운으로 묶었다.
 
 ## 8. i18n / 콘텐츠 전략
 
@@ -133,12 +131,10 @@ interface ProcedureCategory {
 
 ## 10. 미해결 항목 (Open Items)
 
-1. **카테고리 소개문·시술 짧은 설명** — 사용자가 "사진과 시술 목록은 준비해줄게"라고 했으나, 이건 시술 *이름* 목록이었고 카테고리 히어로 소개문·시술별 짧은 설명 문구는 별개다. 병원이 작성/제공하는지, 우리가 초안을 잡는지 확인 필요.
-2. **"OO에 어떤 고민이 있으신가요?" 불릿 카피** (시술당 3~4개) — 의료 마케팅 카피라 위와 동일하게 병원 확인 필요. 임의로 지어내지 않는다.
-3. **사진 자료** — 카테고리 히어로 배경 11장 + 시술별 인물사진 76장, 아직 미제공.
-4. **내비게이션 패턴** (7절) — 드롭다운 제안, 명시적 확인 안 됨.
-5. **상세 페이지 내 CTA 버튼 추가 여부** (5.3절) — 상시 FAB로 충분한지, 페이지 안에도 별도 "문의하기" 버튼을 둘지.
-6. **홈 병원소개 섹션 콘텐츠** — 참고사이트의 층별 시설 소개 등, 실제 문구·사진은 병원 제공 필요.
+1. **카테고리 소개문·시술 짧은 설명·고민 불릿** — 새로 작성하지 않고 참고사이트(k-wonjin.co.kr) 원문을 그대로 재사용하는 것으로 확정(2026-08-27, 같은 병원 소유 콘텐츠). 11개 카테고리 전체를 병렬 에이전트로 추출 중 — 완료되면 부록 D로 이 문서에 추가.
+   - **4개 언어 중 3개(zh-CN/zh-TW/en) 소싱 방법은 별도 확인 필요**: 원진은 중국어(wonjincn.com)·영어(wonjinbeauty.com/en) 자매 사이트를 이미 운영 중이라 그쪽 원문을 그대로 가져올지, 이번에 추출한 한국어 원문을 번역할지 결정 필요.
+2. **사진 자료** — 카테고리 히어로 배경 11장 + 시술별 인물사진 76장. 파일명 목록을 채팅으로 전달 — 병원 측 준비 대기.
+3. **홈 병원소개 섹션 콘텐츠** — 참고사이트의 층별 시설 소개 등, 실제 문구·사진은 병원 제공 필요.
 
 ## 부록 A. 카테고리 목록 및 슬러그
 
@@ -290,3 +286,125 @@ interface ProcedureCategory {
 | 귀성형 | 耳部整形 | 耳部整形 | Ear Reconstruction / Ear Surgery |
 
 **합계: 11개 카테고리, 76개 시술, 4개 언어 항목 수 전수 일치 확인 완료.**
+
+## 부록 C. 이미지 파일명 목록 (병원 준비용)
+
+명명 규칙: 카테고리 히어로는 `{category}-hero`, 시술 사진은 `{category}-{procedure-slug}`. 확장자는 jpg/png/webp 무엇이든 상관없음(파일명만 아래와 일치시키면 됨). 총 11(히어로) + 76(시술) = 87장.
+
+### 카테고리 히어로 (11)
+
+```
+eye-hero
+nose-hero
+ent-hero
+lifting-hero
+dermatology-hero
+stemcell-hero
+breast-hero
+contour-hero
+bodyline-hero
+men-hero
+reconstruction-hero
+```
+
+### 시술 사진 (76, 카테고리별)
+
+```
+# eye (10)
+eye-glam-eye
+eye-double-adhesion
+eye-angel-eye
+eye-open-eye
+eye-eye-revision
+eye-severe-ptosis-correction
+eye-lower-eyelid-fat-repositioning
+eye-middle-aged-eye-surgery
+eye-asymmetrical-eye-correction
+eye-congenital-ptosis-children
+
+# nose (9)
+nose-upturned-short-nose
+nose-alar-reduction
+nose-hump-nose
+nose-deviated-nose
+nose-nose-revision
+nose-non-implant-rhinoplasty
+nose-bulbous-nose
+nose-tip-plasty
+nose-male-rhinoplasty
+
+# ent (5)
+ent-deviated-septum
+ent-nasal-valve-stenosis
+ent-tonsillectomy
+ent-rhinitis
+ent-sinusitis
+
+# lifting (6)
+lifting-elastigum-lifting
+lifting-facelift
+lifting-forehead-lift
+lifting-forehead-reduction
+lifting-mint-lifting
+lifting-fat-grafting
+
+# dermatology (7)
+dermatology-ulthera-prime
+dermatology-thermage-flx
+dermatology-volnewmer
+dermatology-laser-anti-aging
+dermatology-skin-booster
+dermatology-pigmentation-pores
+dermatology-acne-redness
+
+# stemcell (5)
+stemcell-injection
+stemcell-fat-grafting
+stemcell-lifting
+stemcell-hair-loss
+stemcell-mens-wellness
+
+# breast (10)
+breast-augmentation
+breast-hybrid-augmentation
+breast-reduction
+breast-lift
+breast-revision
+breast-fat-grafting
+breast-postpartum
+breast-nipple-surgery
+breast-gynecomastia
+breast-stemcell-augmentation
+
+# contour (14)
+contour-long-face-surgery
+contour-facial-asymmetry-correction
+contour-protruding-mouth-correction
+contour-comprehensive-facial-contouring
+contour-jaw-angle-surgery
+contour-zygoma-reduction
+contour-chin-surgery
+contour-facial-contouring-reconstruction
+contour-self-designed-double-jaw
+contour-underbite-surgery
+contour-receding-chin
+contour-facial-contouring-revision
+contour-double-jaw-revision
+contour-postoperative-orthodontics
+
+# bodyline (3)
+bodyline-liposuction
+bodyline-abdominoplasty
+bodyline-hip-augmentation
+
+# men (4)
+men-eye-surgery
+men-rhinoplasty
+men-facial-contouring
+men-gynecomastia
+
+# reconstruction (3)
+reconstruction-cleft-lip-palate
+reconstruction-cleft-lip-rhinoplasty
+reconstruction-ear-reconstruction
+```
