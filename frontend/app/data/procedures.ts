@@ -40,8 +40,8 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
     heroImages: ['eye-hero.jpg'],
     intro: {
       ko: '눈은 첫인상을 결정하는 데 가장 중요한 부분으로 손꼽히는부위입니다. WJ 원진은 개인마다 지니고 있는 얼굴의 밸런스와 피부타입이다른 점을 고려하여 상담을 통해 본인의 개성을 살리면서 자연스럽고조화가 잘 이루어질 수 있는 수술법을 추천해드립니다. WJ 원진의 눈 성형은정밀한 진단과 상담을 바탕으로 가장 적합한 수술 방법을 선택해완성도 높은 수술 결과를 보장합니다.',
-      'zh-CN': '',
-      'zh-TW': '',
+      'zh-CN': '眼部是决定一个人第一印象的重要部位。WJ原辰考虑到每个人面部及皮肤类型的差异，通过咨询推荐可以彰显个性的同时追求自然跟面部协调的手术方案。WJ原辰的眼部整形以精密诊断及详细咨询为基础，选择最适合的手术方案，保障高满意度的手术效果。',
+      'zh-TW': '眼部是決定一個人第一印象的重要部位。WJ原辰考慮到每個人面部及皮膚類型的差異，通過諮詢推薦可以彰顯個性的同時追求自然跟面部協調的手術方案。WJ原辰的眼部整形以精密診斷及詳細諮詢為基礎，選擇最適合的手術方案，保障高滿意度的手術效果。',
       en: "The eyes are considered one of the most important features in shaping a first impression. Because every face has its own unique balance and skin type, WJ WonJin recommends the surgical approach that best suits your individual features through in-depth consultation, aiming for a natural, harmonious result. Based on precise diagnosis and consultation, WJ WonJin's eye surgery selects the most suitable surgical method to guarantee a highly refined outcome.",
     },
     items: [
@@ -233,8 +233,8 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
     heroImages: ['nose-hero.jpg'],
     intro: {
       ko: 'WJ 원진성형외과에서는 단순히 코를 높여 이미지를변화시키는 것이 아니라 얼굴 전체의 밸런스를 고려하여당신에게 가장 이상적인 비율과 각도를 찾아 드립니다.미용과 기능 모두 고려한 만족스러운 수술 결과를 자부합니다.',
-      'zh-CN': '',
-      'zh-TW': '',
+      'zh-CN': '在WJ原辰整形外科，鼻整形不是单纯地提高鼻梁而是根据面部整体帮您打造最理想的比例和角度，在考虑鼻部审美与功能的双重基础上，为您献上满意的手术结果。',
+      'zh-TW': '在WJ原辰整形外科，鼻整形不是單純地提高鼻樑而是根據面部整體幫您打造最理想的比例和角度，在考慮鼻部審美與功能的雙重基礎上，為您獻上滿意的手術結果。',
       en: "At WJ WonJin Plastic Surgery, we don't simply raise the bridge of your nose to change your image — we consider the balance of your entire face to find the ideal proportion and angle for you. We take pride in delivering satisfying results that consider both aesthetics and function.",
     },
     items: [
@@ -399,8 +399,8 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
     heroImages: ['ent-hero.jpg'],
     intro: {
       ko: 'WJ 원진성형외과에서는 개개인이 가지고 있는 기능적인 문제를 개선하기 위해,코의 해부학적 구조를 잘 알고 있는 숙련된 의료진이 직접집도하여 안전하고 만족스러운 결과를 자부합니다.',
-      'zh-CN': '',
-      'zh-TW': '',
+      'zh-CN': 'WJ原辰整形外科为了改善个人的功能性鼻部问题，由熟悉鼻子解剖学构造的熟练医疗团队亲自主刀，保证安全，为给出满意的效果而全力以赴。',
+      'zh-TW': 'WJ原辰整形外科為了改善個人的功能性鼻部問題，由熟悉鼻子解剖學構造的熟練醫療團隊親自主刀，保證安全，為給出滿意的效果而全力以赴。',
       en: 'At WJ WonJin Plastic Surgery, to improve each patient\'s individual functional issues, experienced medical staff who thoroughly understand the anatomical structure of the nose perform every procedure personally, ensuring safe and satisfying results.',
     },
     items: [
@@ -504,8 +504,8 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
     heroImages: ['lifting-hero.jpg'],
     intro: {
       ko: '세대별, 개인별로 차이가 있는 피부탄력도를 진단하고파악하는 것은 리프팅 시술의 기본입니다.자연스러우면서도 조화로운 동안을 위해, WJ 원진은 개인별로최적의 리프팅 수술법을 추천합니다.',
-      'zh-CN': '',
-      'zh-TW': '',
+      'zh-CN': '诊断并掌握不同年龄段不同个人的皮肤弹性度是面部提升的基本。为打造自然和谐的童颜，WJ原辰针对个人推荐最佳的提升手术方案。通过WJ原辰的面部提升术一起来体验时光倒流般梦幻的瞬间吧。高弹性、组织损伤最小化、快速恢复以及长效维持。',
+      'zh-TW': '診斷並掌握不同年齡段不同個人的皮膚彈性度是面部提升的基本。為打造自然和諧的童顏，WJ原辰針對個人推薦最佳的提升手術方案。通過WJ原辰的面部提升術一起來體驗時光倒流般夢幻的瞬間吧。高彈性、組織損傷最小化、快速恢復以及長效維持。',
       en: 'Diagnosing and understanding skin elasticity, which varies by generation and individual, is the foundation of any lifting procedure. For a natural yet harmonious youthful look, WJ WonJin recommends the optimal lifting method for each individual.',
     },
     items: [
@@ -627,8 +627,8 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
     heroImages: ['dermatology-hero.jpg'],
     intro: {
       ko: '피부 고민은 단순한 미용이 아니라, 개인별 상태에 맞춘체계적인 관리가 필요합니다. WJ 원진은 최신 의료 장비와숙련된 의료진을 통해 색소, 모공, 여드름, 홍조 등 다양한피부 문제를 효과적으로 개선하며, 리프팅 시술을 통해피부 탄력을 높이고 건강한 피부로 가꿔드립니다.레이저 치료, 스킨부스터, 맞춤형 피부 재생 프로그램까지안전하고 정교한 치료로 근본적인 피부 개선을 제공합니다.',
-      'zh-CN': '',
-      'zh-TW': '',
+      'zh-CN': '皮肤问题不仅是简单的美容需求，更需要根据个人状况进行系统性管理。WJ原辰通过最新医疗设备和资深医疗团队，有效改善色素、毛孔、痘痘、泛红等多种皮肤问题，并通过提升紧致疗程增强皮肤弹性，打造健康肌肤。从激光治疗、营养针剂套餐到定制化肌肤再生方案，我们以安全精细的治疗提供根本性的肌肤改善。',
+      'zh-TW': '皮膚問題不僅是簡單的美容需求，更需要根據個人狀況進行系統性管理。WJ原辰通過最新醫療設備和資深醫療團隊，有效改善色素、毛孔、痘痘、泛紅等多種皮膚問題，並通過提升緊緻療程增強皮膚彈性，打造健康肌膚。從激光治療、營養針劑套餐到定制化肌膚再生方案，我們以安全精細的治療提供根本性的肌膚改善。',
       en: "Skin concerns aren't just a matter of cosmetics — they require systematic care tailored to each individual's condition. Using the latest medical equipment and experienced medical staff, WJ WonJin effectively treats pigmentation, enlarged pores, acne, and redness, and improves skin elasticity through lifting procedures. From laser treatments and skin boosters to customized skin regeneration programs, we provide safe, precise treatment for fundamental skin improvement.",
     },
     items: [
@@ -768,8 +768,8 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
     heroImages: ['stemcell-hero.png'],
     intro: {
       ko: '줄기세포는 소실된 세포를 재공급해주는 근원 에너지로서 손상되고 약해진 세포를 복원해 노화의 근본 원인을 해결하고 새로운 신생 세포를 재생시키는 최첨단 안티에이징 치료입니다.',
-      'zh-CN': '',
-      'zh-TW': '',
+      'zh-CN': '干细胞是重新供应流失细胞的根源能量，修复受损脆弱的细胞，解决老化的根本原因，再生新生细胞的抗老治疗。逆转细胞生命力，重现年轻肌肤的高端手术。',
+      'zh-TW': '幹細胞是重新供應流失細胞的根源能量，修復受損脆弱的細胞，解決老化的根本原因，再生新生細胞的抗老治療。逆轉細胞生命力，重現年輕肌膚的高端手術。',
       en: 'Stem cells are a fundamental source of energy that resupplies lost cells, restoring damaged and weakened cells to address the root cause of aging and regenerate new cells — a state-of-the-art anti-aging treatment.',
     },
     items: [
@@ -873,8 +873,8 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
     heroImages: ['breast-hero.jpg'],
     intro: {
       ko: '당신은 충분히 아름다울 권리가 있고 또 아름다워질 수 있습니다. WJ 원진은 가슴에 대한 솔직한 이야기를 들어줌으로써여자의 마음을 이해하겠습니다. 20년 이상 대한민국 가슴성형의 정상을 지켜온 프리미엄가슴 성형 센터를 WJ 원진에서 만나보세요.',
-      'zh-CN': '',
-      'zh-TW': '',
+      'zh-CN': '您有变美的权利，也可以变美丽。WJ原辰愿意和您共享关于胸部的小秘密，理解女人的心情。20多年来WJ原辰一直引领着韩国胸部整形的发展，我们相约在WJ原辰高端胸部整形中心邂逅。',
+      'zh-TW': '您有變美的權利，也可以變美麗。WJ原辰願意和您共享關於胸部的小秘密，理解女人的心情。20多年來WJ原辰一直引領著韓國胸部整形的發展，我們相約在WJ原辰高端胸部整形中心邂逅。',
       en: "You have every right to be beautiful, and you can be. WJ WonJin will listen to your honest concerns about your breasts to truly understand a woman's heart. Meet a premium breast surgery center at WJ WonJin, one that has stood at the top of Korean breast surgery for over 20 years.",
     },
     items: [
@@ -889,9 +889,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '품질과 만족도가 우수한 보형물과프리미엄 가슴 성형센터 WJ 원진이 만났습니다.',
-          'zh-CN': '',
+          'zh-CN': '品质优秀，满意度高的假体与您邂逅在WJ原辰专业胸部整形中心。曼托圆形光面假体受用保障政策，手术后有破裂及3,4级的包膜挛缩时可以免费换假体。曼托圆形光面假体是经过长时间的临床试验拿到美国FDA认证的假体，表面非常光滑，材质柔软，无论在哪种姿势下模样及律动都非常自然，与真实胸部类似，是非常安全的假体。MOTIVA魔滴假体若在5年以内发生3,4级的包膜挛缩时可以支援修复手术，最高端的假体，根据重力原理硅胶随着身体律动而自然移动，线条均衡，手感柔软，弹性好，只需切开2.5cm~3cm即可植入。曼托XTRA（曼托高端记忆假体）：在相同的胸距下可以达到更加丰满的效果，胸围小的女性也可以拥有自然丰满的胸部曲线，可以根据个人胸围及大小要求来调节硅胶的量，打造丰满曲线的同时保证柔软的手感。',
           en: 'High-quality, highly satisfying implants meet the premium breast surgery center, WJ WonJin.',
-          'zh-TW': '',
+          'zh-TW': '品質優秀，滿意度高的假體與您邂逅在WJ原辰專業胸部整形中心。曼托圓形光面假體受用保障政策，手術後有破裂及3,4級的包膜攣縮時可以免費換假體。曼托圓形光面假體是經過長時間的臨床試驗拿到美國FDA認證的假體，表面非常光滑，材質柔軟，無論在哪種姿勢下模樣及律動都非常自然，與真實胸部類似，是非常安全的假體。MOTIVA魔滴假體若在5年以內發生3,4級的包膜攣縮時可以支援修復手術，最高端的假體，根據重力原理硅膠隨著身體律動而自然移動，線條均衡，手感柔軟，彈性好，只需切開2.5cm~3cm即可植入。曼托XTRA（曼托高端記憶假體）：在相同的胸距下可以達到更加豐滿的效果，胸圍小的女性也可以擁有自然豐滿的胸部曲線，可以根據個人胸圍及大小要求來調節硅膠的量，打造豐滿曲線的同時保證柔軟的手感。',
         },
         label: { ko: '보형물 삽입술', en: 'Implant Insertion' },
         image: 'breast-augmentation.png',
@@ -907,9 +907,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '풍만한 볼륨과 자연스러운 가슴골, 부드러운 촉감으로 완성할 수 있습니다.',
-          'zh-CN': '',
+          'zh-CN': '饱满的弧度，自然的乳沟，打造自然柔软触感。饱满的胸部，深邃的乳沟，自然的模样与触感。合适的胸部假体与脂肪填充一起进行，先进行假体植入后，用脂肪解决假体填充不了的部位，打造自然完美胸部。WJ原辰的Hybrid胸部整形通过1:1定制检查选择最适合您的假体，把不需要的脂肪抽取后填充，能同时拥有想要的形状，自然的触感及律动。',
           en: 'You can achieve full volume, a natural cleavage, and a soft feel.',
-          'zh-TW': '',
+          'zh-TW': '飽滿的弧度，自然的乳溝，打造自然柔軟觸感。飽滿的胸部，深邃的乳溝，自然的模樣與觸感。合適的胸部假體與脂肪填充一起進行，先進行假體植入後，用脂肪解決假體填充不了的部位，打造自然完美胸部。WJ原辰的Hybrid胸部整形通過1:1定製檢查選擇最適合您的假體，把不需要的脂肪抽取後填充，能同時擁有想要的形狀，自然的觸感及律動。',
         },
         label: { ko: '가슴 보형물과 지방 이식 장점만을 담은', en: 'Combining Only the Advantages of Breast Implants and Fat Grafting' },
         image: 'breast-hybrid-augmentation.png',
@@ -925,9 +925,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '안전한 유선조직 절제로 몸의 건강은 물론비율까지 생각합니다.',
-          'zh-CN': '',
+          'zh-CN': '安全地切开乳腺组织，既考虑身体健康，同时考虑身材比例。切除多余皮肤的同时矫正组织，增加弹性。巨乳的标准按照每个人的身体比例来定，一般是单侧乳房体积在250-300cc属于理想型胸部，一般超过400cc属于巨乳，胸部上方到下方的距离超过20cm（E罩杯以上）的情况可以称为巨乳症。',
           en: 'Safe removal of glandular tissue considers not only your physical health but also your body proportions.',
-          'zh-TW': '',
+          'zh-TW': '安全地切開乳腺組織，既考慮身體健康，同時考慮身材比例。切除多餘皮膚的同時矯正組織，增加彈性。巨乳的標準按照每個人的身體比例來定，一般是單側乳房體積在250-300cc屬於理想型胸部，一般超過400cc屬於巨乳，胸部上方到下方的距離超過20cm（E罩杯以上）的情況可以稱為巨乳症。',
         },
         label: { ko: "수직·유륜·'오'자형 절개법", en: 'Vertical, Periareolar, and "Anchor"-Shaped Incision Methods' },
         image: 'breast-reduction.png',
@@ -943,9 +943,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '간단한 유선조직 교정으로 처진 탄력과볼륨을 올려줍니다.',
-          'zh-CN': '',
+          'zh-CN': '通过简单的乳腺组织矫正，提高胸部弹性，增加饱满度，增加弹性，减少副作用。胸部下垂是根据乳头到胸部底线的距离来判断的，正常的乳头离胸部底线的距离是4~5cm，呈45度角，乳头严重靠下，需要进行WJ原辰下垂胸部矫正。',
           en: 'A simple correction of the glandular tissue restores lost elasticity and volume.',
-          'zh-TW': '',
+          'zh-TW': '通過簡單的乳腺組織矯正，提高胸部彈性，增加飽滿度，增加彈性，減少副作用。胸部下垂是根據乳頭到胸部底線的距離來判斷的，正常的乳頭離胸部底線的距離是4~5cm，呈45度角，乳頭嚴重靠下，需要進行WJ原辰下垂胸部矯正。',
         },
         label: { ko: '처진 가슴 교정술', en: 'Breast Lift Surgery' },
         image: 'breast-lift.png',
@@ -961,9 +961,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: 'WJ 원진은 정밀 진단을 통해 철저한 재수술 원인을 분석하여 안전하고 정확하게 재수술을 진행합니다.',
-          'zh-CN': '',
+          'zh-CN': 'WJ原辰通过精密诊断分析修复手术的原因后安全准确地进行修复手术。最后一次胸部手术，自然的触感及模样，满意的效果——"胸部修复手术不是单纯的更换假体"。建议第一次手术6个月~1年后进行修复手术，因为这段时期胸部组织基本恢复、模样定型，便于准确掌握问题原因；根据个体差异手术方法不同，需与院长充分咨询后确定时间。植入假体后身体会把假体当做异物，为保护身体使免疫细胞活性化，围着假体会形成保护膜（包膜）。充分掌握修复原因后去除变厚的包膜，充分剥离假体空间，换上与本人体型相匹配的假体，可获得柔软触感、深邃自然乳沟的最理想手术效果。',
           en: 'Through precise diagnosis, WJ WonJin thoroughly analyzes the cause requiring revision and carries out the procedure safely and accurately.',
-          'zh-TW': '',
+          'zh-TW': 'WJ原辰通過精密診斷分析修復手術的原因後安全準確地進行修復手術。最後一次胸部手術，自然的觸感及模樣，滿意的效果——"胸部修復手術不是單純的更換假體"。建議第一次手術6個月~1年後進行修復手術，因為這段時期胸部組織基本恢復、模樣定型，便於準確掌握問題原因；根據個體差異手術方法不同，需與院長充分諮詢後確定時間。植入假體後身體會把假體當做異物，為保護身體使免疫細胞活性化，圍著假體會形成保護膜（包膜）。充分掌握修復原因後去除變厚的包膜，充分剝離假體空間，換上與本人體型相匹配的假體，可獲得柔軟觸感、深邃自然乳溝的最理想手術效果。',
         },
         label: { ko: '가슴 재수술은 더 신중하고 정확하게!', en: 'Revision Breast Surgery, Done More Carefully and Precisely!' },
         image: 'breast-revision.png',
@@ -974,9 +974,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         concerns: { ko: [], en: [], 'zh-CN': [], 'zh-TW': [] },
         description: {
           ko: '완벽한 가슴을 만들어드립니다! 가슴은 볼륨만 풍만하다고 예쁜 것이 아니라, 가슴 크기와 어울리는 유두·유륜이 있어야 완벽한 가슴이 완성됩니다. 유두 지름은 약 1cm, 유륜 너비는 약 3.5~4.5cm가 가장 이상적입니다. 함몰 유두, 비대 유두를 개선하는 동시에 기능적·미용적 문제를 함께 해결해드립니다. (하위: 함몰유두·유두축소·유륜축소)',
-          'zh-CN': '',
+          'zh-CN': '打造完美胸部！胸部的形态并不是饱满就好看，有与乳房大小相匹配的乳头及乳晕才是完美胸部。乳头的直径1cm左右，乳晕的宽度3.5~4.5cm左右是最合适的。改善凹陷乳头、肥大乳头，同时解决机能性、美观性问题。（下设：凹陷乳头矫正、乳头缩小、乳晕缩小）',
           en: "We create the perfect breast! A beautiful breast isn't just about ample volume — a nipple and areola that suit the breast's size are essential. The ideal nipple diameter is about 1 cm, and the ideal areola width is about 3.5-4.5 cm. We correct inverted or enlarged nipples while resolving functional and aesthetic concerns. (Subtypes: Inverted Nipple Correction, Nipple Reduction, Areola Reduction)",
-          'zh-TW': '',
+          'zh-TW': '打造完美胸部！胸部的形態並不是飽滿就好看，有與乳房大小相匹配的乳頭及乳暈才是完美胸部。乳頭的直徑1cm左右，乳暈的寬度3.5~4.5cm左右是最合適的。改善凹陷乳頭、肥大乳頭，同時解決機能性、美觀性問題。（下設：凹陷乳頭矯正、乳頭縮小、乳暈縮小）',
         },
         image: 'breast-nipple-surgery.png',
       },
@@ -991,9 +991,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '가리고 감춰야만 했던 여성형 가슴, WJ 원진에서 자신감 넘치는 남자다운 가슴으로 만들어 드립니다.',
-          'zh-CN': '',
+          'zh-CN': '从像女性的胸部打造成男性的胸部！是指男性的乳房因为乳腺或脂肪发达像女性乳房似的突出的情况，出现此状况的原因可能是内分泌问题导致荷尔蒙分泌异常或者其他原因，不仅是美观上的问题，精神上也会有很多压力，建议尽快矫正。',
           en: "The feminized chest you've had to hide and cover up — WJ WonJin will transform it into a confident, masculine chest.",
-          'zh-TW': '',
+          'zh-TW': '從像女性的胸部打造成男性的胸部！是指男性的乳房因為乳腺或脂肪發達像女性乳房似的突出的情況，出現此狀況的原因可能是內分泌問題導致荷爾蒙分泌異常或者其他原因，不僅是美觀上的問題，精神上也會有很多壓力，建議儘快矯正。',
         },
         label: { ko: '남자들의 말 못할 고민', en: "A Concern Men Don't Like to Talk About" },
         image: 'men-gynecomastia.png',
@@ -1013,8 +1013,8 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
     heroImages: ['contour-hero.jpg'],
     intro: {
       ko: '틀어진 얼굴뼈를 바로잡는 양악수술, 시선을 잡아끄는 자연스럽고아름다운 페이스라인을 디자인해야 하는 윤곽수술은 그 어떤 수술보다전문적이고 고도의 의술을 필요로 하는 수술입니다. WJ 원진에서는 완성도높은 양악, 윤곽 수술을 위해 전문의의 진료 연계 시스템을 제공합니다.고난이도 수술인 양악, 윤곽 수술. WJ 원진이라면 안심하셔도 됩니다.',
-      'zh-CN': '',
-      'zh-TW': '',
+      'zh-CN': '通过双颚手术调整面部弯曲的骨骼问题，通过轮廓手术提高面部的流畅度，打造自然又精致的脸庞。骨骼类手术是比其他手术更需要拥有专业的手术经验和专业知识，WJ原辰为了达到最佳的手术效果，提供专业院长共同协诊系统。双颚、轮廓手术是高难度手术，选择WJ原辰可以使您放心。',
+      'zh-TW': '通過雙顎手術調整面部彎曲的骨骼問題，通過輪廓手術提高面部的流暢度，打造自然又精緻的臉龐。骨骼類手術是比其他手術更需要擁有專業的手術經驗和專業知識，WJ原辰為了達到最佳的手術效果，提供專業院長共同協診系統。雙顎、輪廓手術是高難度手術，選擇WJ原辰可以使您放心。',
       en: 'Double jaw surgery corrects a misaligned facial skeleton, and facial contouring surgery designs a natural, beautiful facial line — both require more specialized, advanced surgical skill than almost any other procedure. WJ WonJin provides a coordinated specialist care system to ensure highly refined results. Double jaw and contouring surgery are highly demanding procedures — but with WJ WonJin, you can feel at ease.',
     },
     items: [
@@ -1029,9 +1029,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '턱의 길이를 줄임과 동시에 얼굴뼈에 관련된 모든문제를 해결하여 숨어있는 황금비율을 찾아드립니다.',
-          'zh-CN': '',
+          'zh-CN': '缩短下巴长度同时解决关于面部骨骼方面相关的所有问题，找出黄金比率。横向纵向均衡，黄金比例，均衡又协调。1:1个人定制双颚手术系统——将手术前-手术中-手术后全过程数字化，通过3D模拟手术提前确认并研究手术结果，同时确立最适合患者手术计划的手术方法。进行诊断所需的3D CT拍摄→通过R2 GATE程序结合评估审美性和功能问题制定手术方案→利用3D技术制作符合患者骨骼的SAW GUIDE和FACE PLATE→使用1:1量身定制的FACE GUIDE（面部固定钉）进行精密安全的手术。',
           en: 'By shortening the length of the jaw while resolving every issue related to the facial bones, we uncover your hidden golden ratio.',
-          'zh-TW': '',
+          'zh-TW': '縮短下巴長度同時解決關於面部骨骼方面相關的所有問題，找出黃金比率。橫向縱向均衡，黃金比例，均衡又協調。1:1個人定製雙顎手術系統——將手術前-手術中-手術後全過程數字化，通過3D模擬手術提前確認並研究手術結果，同時確立最適合患者手術計劃的手術方法。進行診斷所需的3D CT拍攝→通過R2 GATE程序結合評估審美性和功能問題制定手術方案→利用3D技術製作符合患者骨骼的SAW GUIDE和FACE PLATE→使用1:1量身定製的FACE GUIDE（面部固定釘）進行精密安全的手術。',
         },
         label: { ko: '턱 끝 수술 or 양악 수술', en: 'Chin Surgery or Double Jaw Surgery' },
         image: 'contour-long-face-surgery.png',
@@ -1047,9 +1047,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '얼굴의 중심을 잡아 크고 비대칭인 얼굴도작고 균형있는 얼굴로 완성해 드립니다.',
-          'zh-CN': '',
+          'zh-CN': '找到面部中心，将大且不对称的脸变成小巧均衡的脸。为您塑造面部中心比例均衡、小巧精致的脸庞。1:1个人量身定制的双颚手术系统，通过3D模拟手术提前确认并审核手术结果，制定最适合患者的手术方式。',
           en: 'By aligning the center of the face, even a large, asymmetrical face can be transformed into a smaller, well-balanced one.',
-          'zh-TW': '',
+          'zh-TW': '找到面部中心，將大且不對稱的臉變成小巧均衡的臉。為您塑造面部中心比例均衡、小巧精緻的臉龐。1:1個人量身定製的雙顎手術系統，通過3D模擬手術提前確認並審核手術結果，制定最適合患者的手術方式。',
         },
         label: { ko: '사각 턱 수술 or 턱 끝 수술 or 양악 수술', en: 'Jaw Angle Surgery, Chin Surgery, or Double Jaw Surgery' },
         image: 'contour-facial-asymmetry-correction.png',
@@ -1065,9 +1065,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '치아와 골격교정으로 작고 갸름한 얼굴로완성해 드립니다.',
-          'zh-CN': '',
+          'zh-CN': '通过牙齿和骨骼矫正，完成较小纤柔的面部轮廓，符合现代审美，改善牙齿咬合功能。东洋人的凸嘴现象中，比起牙齿凸出，牙槽骨本身凸出造成的凸嘴情况更多，这种情况仅通过牙齿矫正不能有效矫正，牙槽骨凸出需将牙槽骨向后移进行上下颌前部骨切开术（ASO），复合性的凸嘴则需要进行双颚手术。',
           en: 'Correcting both the teeth and the skeletal structure completes a smaller, slimmer face.',
-          'zh-TW': '',
+          'zh-TW': '通過牙齒和骨骼矯正，完成較小纖柔的面部輪廓，符合現代審美，改善牙齒咬合功能。東洋人的凸嘴現象中，比起牙齒凸出，牙槽骨本身凸出造成的凸嘴情況更多，這種情況僅通過牙齒矯正不能有效矯正，牙槽骨凸出需將牙槽骨向後移進行上下顎前部骨切開術（ASO），複合性的凸嘴則需要進行雙顎手術。',
         },
         label: { ko: '전방분절 절골술 or 양악 수술', en: 'Anterior Segmental Osteotomy or Double Jaw Surgery' },
         image: 'contour-protruding-mouth-correction.png',
@@ -1083,9 +1083,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '개인의 이목구비와 이미지 등 여러 여건을 고려해내 얼굴에 맞는 에그라인을 찾아드립니다.',
-          'zh-CN': '',
+          'zh-CN': '根据个人的五官及形象等多种要素，找出适合的完美脸型。小脸效果，有立体感的面部，小而纤长的下颌线条，童颜效果。',
           en: 'Considering various factors such as your individual features and image, we find the egg-shaped facial line that suits you best.',
-          'zh-TW': '',
+          'zh-TW': '根據個人的五官及形象等多種要素，找出適合的完美臉型。小臉效果，有立體感的面部，小而纖長的下顎線條，童顏效果。',
         },
         label: { ko: 'U라인·V라인 복합 안면 윤곽', en: 'Combined U-Line/V-Line Facial Contouring' },
         image: 'contour-comprehensive-facial-contouring.png',
@@ -1101,9 +1101,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '무조건 턱의 각을 없애는 것이 아니라얼굴과 조화로운 V라인을 살리는 것이 포인트입니다.',
-          'zh-CN': '',
+          'zh-CN': '不是单纯的去掉下颌角，而是按照面部比例达到最佳的V脸效果，考虑面部均衡的自然V脸，和谐的面部线条，自信感上升。①避开神经线位置进行下巴T型截骨→取出下巴中间骨头→截断下巴尖聚拢后行下颌角切除术，去除凸出侧面骨头→固定钉固定 ②截断上端及中间骨头取出→截断下巴尖聚拢后行下颌角切除术→固定钉固定 ③截断骨骼移动到面部中央→下颌角切除术→固定钉固定',
           en: "The key isn't simply eliminating the angle of the jaw, but bringing out a V-line that's in harmony with your face.",
-          'zh-TW': '',
+          'zh-TW': '不是單純的去掉下顎角，而是按照面部比例達到最佳的V臉效果，考慮面部均衡的自然V臉，和諧的面部線條，自信感上升。①避開神經線位置進行下巴T型截骨→取出下巴中間骨頭→截斷下巴尖聚攏後行下顎角切除術，去除凸出側面骨頭→固定釘固定 ②截斷上端及中間骨頭取出→截斷下巴尖聚攏後行下顎角切除術→固定釘固定 ③截斷骨骼移動到面部中央→下顎角切除術→固定釘固定',
         },
         label: { ko: '피질골 절제술, T 절제술', en: 'Cortical Bone Ostectomy, T-Osteotomy' },
         image: 'contour-jaw-angle-surgery.png',
@@ -1119,9 +1119,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '옆 광대의 크기를 줄이고 앞 광대의 볼륨은 살려, 작고 갸름한 얼굴을 기대할 수 있습니다.',
-          'zh-CN': '',
+          'zh-CN': '保持正面颧骨饱满度的同时把侧面颧骨内推使面部变小。①3D颧骨缩小术——把截断的骨头截短后旋转，保持正面颧骨饱满度的同时把侧面颧骨往里推，得到立体小巧的脸型 ②I QUICK颧骨缩小术（第四代）——使用3D HD内视镜以最小切口进行手术，将颧骨以L字型截骨后向内推入使其紧密粘连，无需固定 ③颧骨假体——增加前颧骨部分的饱满感 ④自体脂肪填充/玻尿酸——增加饱满度',
           en: 'By reducing the side cheekbones while preserving front volume, you can expect a smaller, slimmer face.',
-          'zh-TW': '',
+          'zh-TW': '保持正面顴骨飽滿度的同時把側面顴骨內推使面部變小。①3D顴骨縮小術——把截斷的骨頭截短後旋轉，保持正面顴骨飽滿度的同時把側面顴骨往裡推，得到立體小巧的臉型 ②I QUICK顴骨縮小術（第四代）——使用3D HD內視鏡以最小切口進行手術，將顴骨以L字型截骨後向內推入使其緊密粘連，無需固定 ③顴骨假體——增加前顴骨部分的飽滿感 ④自體脂肪填充/玻尿酸——增加飽滿感',
         },
         label: { ko: '3D 광대 축소술, 아이퀵 광대 축소술, 앞 광대 보형물', en: '3D Zygoma Reduction, iQuick Zygoma Reduction, Front Cheekbone Implant' },
         image: 'contour-zygoma-reduction.png',
@@ -1137,9 +1137,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '살짝만 채워도 몰라보게 달라져요. 양악 수술 필요 없는 뚜렷한 변화, WJ 원진의 턱 끝 수술.',
-          'zh-CN': '',
+          'zh-CN': '稍微填充一点就会变得不一样，无需双颚手术的明显变化，WJ原辰的下巴手术。修长的小V脸，精巧脸型，形成立体感，精致的形象。下巴手术是从下巴截骨的方法到简单的假体或脂肪移植的手术方法等，可根据情况适用多种方法，存在咬合不正、严重的下巴后缩的情况需要进行双颚手术。',
           en: 'Even a small addition makes a dramatic difference — a clear transformation without needing double jaw surgery.',
-          'zh-TW': '',
+          'zh-TW': '稍微填充一點就會變得不一樣，無需雙顎手術的明顯變化，WJ原辰的下巴手術。修長的小V臉，精巧臉型，形成立體感，精緻的形象。下巴手術是從下巴截骨的方法到簡單的假體或脂肪移植的手術方法等，可根據情況適用多種方法，存在咬合不正、嚴重的下巴後縮的情況需要進行雙顎手術。',
         },
         label: { ko: '보형물·지방이식, 턱뼈 절골', en: 'Implant/Fat Grafting, Chin Bone Osteotomy' },
         image: 'contour-chin-surgery.png',
@@ -1155,9 +1155,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '윤곽수술로 인한 불만족, 불편함을 턱의 형태와 기능을 고려하여 원하는 모양으로 재수술 및 복원이 가능합니다.',
-          'zh-CN': '',
+          'zh-CN': '因轮廓手术引起的不满意、不便之处，同时顾虑到骨头的功能性和形态，以想要的形态进行修复手术。面部轮廓需要重建的情况：[下颌角] 因过度V型而变尖的下巴/下颌角手术之后出现二次角/因过度切除导致下颌线条凹陷。[颧骨] 颧骨拱形部分不贴合/因过度切除凹陷/手术后颧骨脱落。[下巴] 下巴手术后出现骨头凹陷、变形/植入的假体有副作用/下巴短且向后凹陷。为了这次是最后的手术，我们将承诺进行正确的诊断和安全的手术。',
           en: 'Dissatisfaction caused by contouring surgery can be corrected through revision and restoration to achieve your desired look.',
-          'zh-TW': '',
+          'zh-TW': '因輪廓手術引起的不滿意、不便之處，同時顧慮到骨頭的功能性和形態，以想要的形態進行修復手術。面部輪廓需要重建的情況：[下顎角] 因過度V型而變尖的下巴/下顎角手術之後出現二次角/因過度切除導致下顎線條凹陷。[顴骨] 顴骨拱形部分不貼合/因過度切除凹陷/手術後顴骨脫落。[下巴] 下巴手術後出現骨頭凹陷、變形/植入的假體有副作用/下巴短且向後凹陷。為了這次是最後的手術，我們將承諾進行正確的診斷和安全的手術。',
         },
         label: { ko: '정확하고 안전한 맞춤형 재건복원술', en: 'Precise, Safe, Customized Reconstruction and Restoration' },
         image: 'contour-facial-contouring-reconstruction.png',
@@ -1179,8 +1179,8 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
     heroImages: ['bodyline-hero.jpg'],
     intro: {
       ko: 'WJ 원진의 체형 성형은 단순히 지방을 제거하는 것이 아닌, 고객의 니즈 및 개인별 갖고 있는 체형 밸런스를 고려하여 가장 이상적인 바디라인을 완성합니다.',
-      'zh-CN': '',
-      'zh-TW': '',
+      'zh-CN': '瘦身整形，打造吸睛的理想身材曲线——WJ原辰的瘦身整形不是单纯的去除脂肪，而是根据顾客的需求和个人的体型比例打造最理想的身材曲线。',
+      'zh-TW': '瘦身整形，打造吸睛的理想身材曲線——WJ原辰的瘦身整形不是單純的去除脂肪，而是根據顧客的需求和個人的體型比例打造最理想的身材曲線。',
       en: "WJ WonJin's body contouring surgery isn't just about removing fat — it considers each client's needs and their individual body balance to complete the most ideal body line.",
     },
     items: [
@@ -1195,9 +1195,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '단순히 사이즈 감소가 아닌 개인의 체형을 고려한 균형 잡힌 바디라인을 완성합니다.',
-          'zh-CN': '',
+          'zh-CN': '不是单纯地缩小尺寸，而是根据每个人的体型打造匀称的身材曲线。WJ原辰的吸脂从术前到术后都有各领域的专业医生团队管理和监督，通过精密的脂肪细胞分离破坏术，最小化组织损伤。（부위별: 手臂吸脂——选择性去除保留 / 腹部抽脂——保持无下垂同时打造平滑线条 / 大腿抽脂——最大限度去除深层脂肪打造无凹凸线条）',
           en: 'Rather than simply reducing size, this completes a balanced body line that considers your individual body type.',
-          'zh-TW': '',
+          'zh-TW': '不是單純地縮小尺寸，而是根據每個人的體型打造勻稱的身材曲線。WJ原辰的吸脂從術前到術後都有各領域的專業醫生團隊管理和監督，通過精密的脂肪細胞分離破壞術，最小化組織損傷。（부위별: 手臂吸脂——選擇性去除保留 / 腹部抽脂——保持無下垂同時打造平滑線條 / 大腿抽脂——最大限度去除深層脂肪打造無凹凸線條）',
         },
         label: { ko: '성형외과 전문의 집도, 지방·체형 성형', en: 'Performed by a Plastic Surgery Specialist — Fat and Body Contouring' },
         image: 'bodyline-liposuction.png',
@@ -1213,9 +1213,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '잦은 체중 변화나 출산, 노화현상으로 인해 늘어지고 처진 살은 지방흡입만으로는 개선이 어렵습니다. 이미 탄력을 잃고 복부 피부가 늘어져 있는 경우, 늘어진 피부를 잘라내고 벌어진 복직근을 모아줌으로 탄력 있고 매끈한 라인으로 개선할 수 있습니다.',
-          'zh-CN': '',
+          'zh-CN': '不是单纯地抽脂，让下垂的腹部有弹力。经常的体重变化或妊娠、衰老引起的松弛和下垂仅通过抽脂是较难改善的，对于腹部皮肤失去弹力且下垂的情况，通过去除下垂的皮肤并聚拢分离的腹直肌，打造有弹力且平滑的曲线。',
           en: 'Loose, sagging skin from weight changes, childbirth, or aging is difficult to improve with liposuction alone — cutting away excess skin and bringing together the abdominal muscles creates a firm, smooth line.',
-          'zh-TW': '',
+          'zh-TW': '不是單純地抽脂，讓下垂的腹部有彈力。經常的體重變化或妊娠、衰老引起的鬆弛和下垂僅通過抽脂是較難改善的，對於腹部皮膚失去彈力且下垂的情況，通過去除下垂的皮膚並聚攏分離的腹直肌，打造有彈力且平滑的曲線。',
         },
         label: { ko: '단순 지방흡입이 아닌, 처지고 늘어진 복부를 탄력 있게', en: 'More Than Just Liposuction — Firming a Sagging, Loose Abdomen' },
         image: 'bodyline-abdominoplasty.png',
@@ -1231,9 +1231,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '탄력 있고 볼륨감 있는 힙은 가슴과 더불어 여성스러운 S라인을 완성하는 데 빼놓을 수 없는 포인트입니다. 힙이 처지고 볼륨이 없으면 옷맵시가 살지 않고 다리도 짧아 보이므로, 힙을 위로 끌어올려 매력적인 힙 라인을 만들어드립니다. (세부 기법: 하비스트젯 자가지방이식/보형물 삽입/복합)',
-          'zh-CN': '',
+          'zh-CN': '胸部再加上有弹力和饱满感的臀部是打造女性S线条必不可缺的亮点，如果臀部下垂没有丰满感，穿衣服体态不会好看而且看起来腿短，所以将臀部向上提起打造魅力的臀部线条。（세부 기법: Harvest-jet脂肪移植——自体脂肪提臀 / 假体植入——永久性提臀 / 多功能——假体+脂肪移植）',
           en: "Along with the chest, firm, voluminous hips are essential for a feminine S-line figure. We lift the hips upward to create an attractive hip line. (Specific techniques: Harvest Jet Autologous Fat Grafting / Implant Insertion / Combined Approach)",
-          'zh-TW': '',
+          'zh-TW': '胸部再加上有彈力和飽滿感的臀部是打造女性S線條必不可缺的亮點，如果臀部下垂沒有豐滿感，穿衣服體態不會好看而且看起來腿短，所以將臀部向上提起打造魅力的臀部線條。（세부 기법: Harvest-jet脂肪移植——自體脂肪提臀 / 假體植入——永久性提臀 / 多功能——假體+脂肪移植）',
         },
         image: 'bodyline-hip-augmentation.png',
       },
@@ -1247,8 +1247,8 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
     heroImages: ['men-hero.jpg'],
     intro: {
       ko: 'WJ 원진의 남자성형은 여성과는 다른 개개인에 골격과 피부 특성 등을 체계적으로 분석하고 남성만을 위한 디자인과 수술 방법을 계획하여 만족 그 이상의 자신감을 찾아드립니다.',
-      'zh-CN': '',
-      'zh-TW': '',
+      'zh-CN': 'WJ原辰的男士整形与女性不同，系统分析每位客人独特的骨骼和皮肤特性，为男性量身规划专属的设计和手术方法，帮您找回超越满足感的自信。',
+      'zh-TW': 'WJ原辰的男士整形與女性不同，系統分析每位客人獨特的骨骼和皮膚特性，為男性量身規劃專屬的設計和手術方法，幫您找回超越滿足感的自信。',
       en: "WJ WonJin's surgery for men systematically analyzes each individual's bone structure and skin characteristics — which differ from women's — and plans designs and surgical methods made specifically for men.",
     },
     items: [
@@ -1317,9 +1317,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '가리고 감춰야만 했던 여성형 가슴, WJ 원진에서 자신감 넘치는 남자다운 가슴으로 만들어 드립니다.',
-          'zh-CN': '',
+          'zh-CN': '从像女性的胸部打造成男性的胸部！是指男性的乳房因为乳腺或脂肪发达像女性乳房似的突出的情况，出现此状况的原因可能是内分泌问题导致荷尔蒙分泌异常或者其他原因，不仅是美观上的问题，精神上也会有很多压力，建议尽快矫正。',
           en: "The feminized chest you've had to hide and cover up — WJ WonJin will transform it into a confident, masculine chest.",
-          'zh-TW': '',
+          'zh-TW': '從像女性的胸部打造成男性的胸部！是指男性的乳房因為乳腺或脂肪發達像女性乳房似的突出的情況，出現此狀況的原因可能是內分泌問題導致荷爾蒙分泌異常或者其他原因，不僅是美觀上的問題，精神上也會有很多壓力，建議儘快矯正。',
         },
         label: { ko: '남자들의 말 못할 고민', en: "A Concern Men Don't Like to Talk About" },
         image: 'men-gynecomastia.png',
@@ -1334,8 +1334,8 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
     heroImages: ['reconstruction-hero01.jpg', 'reconstruction-hero02.jpg', 'reconstruction-hero03.jpg'],
     intro: {
       ko: 'WJ 원진은 수년간의 경험과 끊임 없는 연구를 통해 미용성형 뿐만 아니라 재건성형의 풍부한 경험을 가지고 있습니다. WJ 원진만의 노하우로 상처받은 마음까지 치료하고자 노력합니다.',
-      'zh-CN': '',
-      'zh-TW': '',
+      'zh-CN': '重建整形——梦想着平凡的外貌和平凡生活的您，WJ原辰与您同行。WJ原辰经过多年的经验和不断的研究不仅具有美容整形的经验，还具有重建整形的丰富经验，WJ原辰通过独有的技术诀窍尽最大的努力治疗您受伤的心灵。',
+      'zh-TW': '重建整形——夢想著平凡的外貌和平凡生活的您，WJ原辰與您同行。WJ原辰經過多年的經驗和不斷的研究不僅具有美容整形的經驗，還具有重建整形的豐富經驗，WJ原辰通過獨有的技術訣竅盡最大的努力治療您受傷的心靈。',
       en: 'Through years of experience and continuous research, WJ WonJin has built extensive expertise not only in cosmetic surgery but also in reconstructive surgery. With our own unique know-how, we strive to heal even the wounded heart.',
     },
     items: [
@@ -1350,9 +1350,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '코, 인중은 물론 입술까지 종합적인 치료를 필요로 하는 수술입니다.',
-          'zh-CN': '',
+          'zh-CN': '自然、精巧的复原是核心，鼻子、人中乃至嘴唇都需要综合治疗的手术。唇腭裂2次变形症状：第一次手术即使在婴幼儿期完美完成，也因生长组织速度差异和生长潜力不足会导致鼻子软骨变形或嘴唇侧面出现斑痕等二次变形症状，第二次手术在鼻子成长、脸部骨骼发育全部结束后的16岁以后进行最好。',
           en: 'This surgery requires comprehensive treatment covering the nose and philtrum as well as the lips.',
-          'zh-TW': '',
+          'zh-TW': '自然、精巧的復原是核心，鼻子、人中乃至嘴唇都需要綜合治療的手術。唇顎裂2次變形症狀：第一次手術即使在嬰幼兒期完美完成，也因生長組織速度差異和生長潛力不足會導致鼻子軟骨變形或嘴唇側面出現斑痕等二次變形症狀，第二次手術在鼻子成長、臉部骨骼發育全部結束後的16歲以後進行最好。',
         },
         label: { ko: '자연스럽고 정교한 복원이 핵심', en: 'Natural, Precise Restoration Is Key' },
         image: 'reconstruction-cleft-lip-palate.png',
@@ -1368,9 +1368,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '외관상의 문제뿐만 아니라 코의 기능까지 회복 시켜 자연스러운 아름다움과 편안한 일상생활을 드립니다.',
-          'zh-CN': '',
+          'zh-CN': '改善变形的鼻部，不仅能改善外观问题，还能恢复鼻部功能，让您拥有自然美丽的鼻子，也让您过上舒适的日常生活。',
           en: 'By restoring not only appearance but also nasal function, we give you back natural beauty and a comfortable daily life.',
-          'zh-TW': '',
+          'zh-TW': '改善變形的鼻部，不僅能改善外觀問題，還能恢復鼻部功能，讓您擁有自然美麗的鼻子，也讓您過上舒適的日常生活。',
         },
         label: { ko: '변형된 코 개선', en: 'Correcting a Deformed Nose' },
         image: 'reconstruction-cleft-lip-rhinoplasty.png',
@@ -1386,9 +1386,9 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         },
         description: {
           ko: '귀성형의 핵심은 조화로운 이목구비와 자연스러움입니다.',
-          'zh-CN': '',
+          'zh-CN': '匀称的面部协调，耳朵整形的核心是打造协调自然的五官。（수술법: 埋线刀耳矫正术, 耳后三角皮瓣切开术）',
           en: 'The key to ear surgery is harmonious features and a natural look.',
-          'zh-TW': '',
+          'zh-TW': '勻稱的面部協調，耳朵整形的核心是打造協調自然的五官。（수술법: 埋線刀耳矯正術, 耳後三角皮瓣切開術）',
         },
         label: { ko: '균형 잡힌 얼굴의 조화', en: 'Balanced Harmony for the Face' },
         image: 'reconstruction-ear-reconstruction.png',
