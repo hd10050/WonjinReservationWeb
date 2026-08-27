@@ -4,7 +4,7 @@
 ## 개요
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원 · 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO(`useSeo`·hreflang·OG이미지), 보안감사 1라운드(High2·Medium5) + **재감사**(원본 Low 12건 목록 유실 발견 → 재감사로 신규 9건 발견·전부 수정). 운영 DB 최초 부트스트랩 계정 3개 생성 완료. 어드민 사이드바·로그인 페이지 언어전환·로고 2배·배경색 조정·`AssignConsultant` RowVersion 동시성까지 반영(상세는 세션 요약). **남은 건 CSP 도입 여부·날짜시간 피커 D11 재검토 사용자 결정, 실배포 도메인 라이브 curl 검증(design.md Phase 9 완료기준)뿐** — git 상태 clean, origin과 완전 동기화 확인 후 세션 종료
+- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO(`useSeo`·hreflang·OG이미지), 보안감사 1라운드(High2·Medium5) + **재감사**(원본 Low 12건 목록 유실 발견 → 재감사로 신규 9건 발견·전부 수정). 운영 DB 최초 부트스트랩 계정 3개 생성 완료. 어드민 사이드바·로그인 페이지 언어전환·로고 2배·배경색 조정·`AssignConsultant` RowVersion 동시성까지 반영(상세는 세션 요약). **남은 건 CSP 도입 여부·날짜시간 피커 D11 재검토 사용자 결정, 실배포 도메인 라이브 curl 검증(design.md Phase 9 완료기준)뿐**. 이후 `session-2026-08-27` 워크트리에서 페이지네이션·로딩오버레이·개인정보방침·어드민헤더 개선(세션요약 (33)~(34)) 완료·커밋했으나 **main 미병합**(병합·워크트리 정리는 사용자 명시 지시 시에만) — 새 세션은 main 기준 위 남은 항목부터, 이 워크트리 이어받으려면 병합 여부 먼저 확인할 것
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -103,6 +103,7 @@
 - **PostgreSQL 시스템 컬럼(`xmin` 등)을 EF Core `IsRowVersion()`으로 매핑하면 마이그레이션 파일엔 `AddColumn`이 생성되지만 실제 적용 시 DDL이 안 나가는 게 정상** — Npgsql이 시스템 컬럼명을 인식해 건너뛰도록 설계됨(`AssignConsultant` 동시성에 이 패턴 도입, 2026-08-27)
 - 🔴 **새 SSR 직접 백엔드 호출(프록시 안 거치는 경로)엔 반드시 `X-Internal-Secret` 헤더를 실을 것** — CSRF 미들웨어가 Origin 없는 요청을 이 시크릿으로만 통과시킴(재감사 2026-08-27 강화). **새 관리자 쓰기 API 추가 시 `[EnableRateLimiting("admin-write")]`도 함께 걸 것** — RouteMap 등록과 별개라 놓치기 쉬움
 - 🔴 **전역 로딩/전환 상태를 직접 만들 땐 `page:start`/`page:finish`(Suspense pending/resolve) 대신 `useLoadingIndicator()`(`page:loading:*`)를 쓸 것**(2026-08-27) — 전자는 전환이 다른 전환에 가로채이면 카운터가 불균형해져 영영 안 걷힘(`RouteOverlay` 실제 재현). 후자는 `router.afterEach`의 취소·중복 실패도 별도로 커버해 프레임워크가 이 문제를 이미 해결해둠
+
 ## 절대 원칙 이행 (루트 CLAUDE.md)
 - **화면 깜빡임 금지** — 데이터 페이지는 `<script setup>` 최상위 `await useApi(...)` SSR 프리로드. `onMounted`+client fetch 금지. 전환 오버레이는 `<Transition>` 금지, 항상 마운트 + `pointer-events`를 상태값에 직접 클래스 바인딩
 - **입력 길이 3곳 일치** — DB `varchar(N)` / 백엔드 `[MaxLength(N)]` / 프론트 `maxlength` 항상 세트로 수정. 전체 표는 `docs/design.md` 9장
@@ -145,4 +146,4 @@
 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
 
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (34)까지 이동 완료)
-- **2026-08-27 (34) — 개인정보 처리방침 예문 작성(범위외 결정 번복) + 랜딩 동의 링크 모달화 + 어드민 헤더 개편**(`session-2026-08-27` 워크트리, main 미병합) — 20-1절 "범위 외" 결정을 사용자 지시로 번복해 7개 섹션 예문을 4개 로케일에 작성(`PrivacyContent.vue` 신규, `privacy.vue`·랜딩 모달이 공유해 문안 이중관리 방지) + 랜딩 폼의 처리방침 링크를 새탭 대신 네이티브 `<dialog>` 모달로 교체(신규 의존성 없음) + 어드민 헤더 좌측 고정 "Admin" 텍스트 제거·계정정보를 배지 스타일로 로그아웃 버튼 바로 왼쪽에 재배치. 격리 docker 재검증(팔레트 색상 OKLCH 일치·헤더 DOM순서 실측) 완료. 상세 시행착오(네이티브 dialog close 이벤트 함정 포함): `docs/session-log.md` (34).
+- **2026-08-27 (33)~(34) 이 세션 통합 요약**(`session-2026-08-27` 워크트리, main 미병합·미push) — ①페이지네이션 UI 통일: 3개 목록 페이지(대시보드·계정관리·감사로그)를 공용 `Pagination.vue`(VixWeb 구조 참고, 팔레트는 기존 `Button` 컴포넌트 재사용)로 교체 ②`RouteOverlay`에 `Loader2` 스피너 추가 ③전환 중 재전환 시 오버레이가 안 걷히는 버그를 `useLoadingIndicator`(Nuxt 내장)로 교체해 근본 수정(`page:start`/`page:finish` 카운터 불균형이 원인) ④20-1절 "범위 외" 결정을 사용자 지시로 번복해 개인정보 처리방침 예문 7개 섹션을 4개 로케일 작성(`PrivacyContent.vue` 신규, `privacy.vue`·랜딩 모달이 공유) ⑤랜딩 폼 동의 링크를 네이티브 `<dialog>` 모달로 교체(신규 의존성 없음 — 재오픈 실패 버그를 발견해 이벤트 왕복 대신 상태 직접 갱신으로 수정) ⑥어드민 헤더 좌측 "Admin" 텍스트 제거 + 계정정보 배지화·로그아웃 버튼 왼쪽 재배치. 매 단계 `npm run build` + 격리 docker 브라우저 실측(기존 공유 컨테이너 무중단 확인) 후 정리 완료. 상세 시행착오: `docs/session-log.md` (33)(34).
