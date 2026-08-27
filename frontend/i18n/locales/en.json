@@ -9,7 +9,10 @@
     "common": {
       "logout": "Log out",
       "language": "Language",
-      "menu": "Menu"
+      "menu": "Menu",
+      "pushOn": "New reservation alerts on",
+      "pushOff": "New reservation alerts off",
+      "pushDenied": "Notifications blocked — enable them in your browser settings"
     },
     "nav": {
       "dashboard": "Dashboard",

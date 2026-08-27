@@ -91,7 +91,12 @@ const query = computed(() => ({
   month: Number(route.query.month) || today.month,
 }))
 
-const { data } = await useApi<ReservationCalendarItem[]>('/api/admin/reservations/calendar', { query })
+const { data, refresh } = await useApi<ReservationCalendarItem[]>('/api/admin/reservations/calendar', { query })
+
+// 예약 확정 시 조용히 새로고침(2026-08-27) — admin.vue 레이아웃이 연결한 SSE를 여기서 구독만 한다.
+// 이 페이지가 마운트돼 있는 동안만 watch가 살아있어 "달력을 보고 있는 계정만" 반응하는 게 자동으로 됨.
+const reservationConfirmedTick = useState('sse:reservationConfirmedTick', () => 0)
+watch(reservationConfirmedTick, () => { refresh() })
 
 const selectedDate = ref(
   query.value.year === today.year && query.value.month === today.month

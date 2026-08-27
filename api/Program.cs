@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -175,6 +176,9 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+builder.Services.AddScoped<IPushSender, PushSender>();
+// Singleton 필수 — 연결된 SSE 구독자 목록을 프로세스 생존 기간 내내 들고 있어야 한다(Scoped/Transient면 요청마다 새로 생겨 무의미).
+builder.Services.AddSingleton<IAdminEventBroadcaster, AdminEventBroadcaster>();
 builder.Services.AddHostedService<RefreshTokenCleanupService>();
 
 var app = builder.Build();
@@ -300,6 +304,28 @@ app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// 예약 확정 시 [예약 달력] 조용히 새로고침용 SSE(2026-08-27, 스파이크 테스트로 프록시 통과 확인 완료).
+// 한 종류(reservation_confirmed)만 흘려보낸다 — 새 예약 접수는 별도 웹 푸시(PushSender)로 처리.
+app.MapGet("/api/admin/events", (IAdminEventBroadcaster broadcaster, CancellationToken ct) =>
+{
+    var reader = broadcaster.Subscribe(out var subscriptionId);
+
+    async IAsyncEnumerable<string> Read([EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        try
+        {
+            await foreach (var msg in reader.ReadAllAsync(cancellationToken))
+                yield return msg;
+        }
+        finally
+        {
+            broadcaster.Unsubscribe(subscriptionId);
+        }
+    }
+
+    return TypedResults.ServerSentEvents(Read(ct), eventType: "reservation_confirmed");
+}).RequireAuthorization();
 
 app.Run();
 

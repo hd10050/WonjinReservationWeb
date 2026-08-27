@@ -16,6 +16,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<LandingDailyStat> LandingDailyStats => Set<LandingDailyStat>();
     public DbSet<ReservationCodeCounter> ReservationCodeCounters => Set<ReservationCodeCounter>();
+    public DbSet<WebPushSubscription> WebPushSubscriptions => Set<WebPushSubscription>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -205,6 +206,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<ReservationCodeCounter>(e =>
         {
             e.HasKey(c => c.CodeDate);
+        });
+
+        // ── web_push_subscriptions — 새 예약 접수 알림 전용(어드민 내부, 공개 마케팅 아님) ──
+        modelBuilder.Entity<WebPushSubscription>(e =>
+        {
+            e.Property(s => s.Endpoint).HasMaxLength(500).IsRequired();
+            e.Property(s => s.P256dh).HasMaxLength(200).IsRequired();
+            e.Property(s => s.Auth).HasMaxLength(200).IsRequired();
+
+            e.HasOne(s => s.User).WithMany()
+                .HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(s => s.Endpoint).IsUnique().HasDatabaseName("ux_web_push_subscriptions_endpoint");
+            // 발송 시 UserId로 JOIN해 활성 계정만 거르므로(4-9절) 인덱스 필요
+            e.HasIndex(s => s.UserId).HasDatabaseName("ix_web_push_subscriptions_user_id");
         });
     }
 }

@@ -4,12 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using WonjinApi.Data;
 using WonjinApi.DTOs;
 using WonjinApi.Models;
+using WonjinApi.Services;
 
 namespace WonjinApi.Controllers;
 
 [ApiController]
 [Route("api/reservations")]
-public class ReservationsController(AppDbContext db) : ControllerBase
+public class ReservationsController(AppDbContext db, IPushSender pushSender, ILogger<ReservationsController> logger) : ControllerBase
 {
     private static readonly TimeZoneInfo Kst = TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul");
     private static readonly string[] SupportedLocales = ["zh-CN", "zh-TW", "en", "ko"];
@@ -83,6 +84,17 @@ public class ReservationsController(AppDbContext db) : ControllerBase
             CreatedAt = now,
         });
         await db.SaveChangesAsync();
+
+        // 새 예약 접수 알림(웹 푸시) — 알림 발송 실패가 예약 접수 자체를 막으면 안 되므로
+        // try/catch로 격리한다(web-push-notification-guide.md 3-5절 원칙과 동일).
+        try
+        {
+            await pushSender.SendNewReservationAlertAsync(reservation.Id, reservation.Name, code);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "새 예약 웹 푸시 발송 실패: reservationId={Id}", reservation.Id);
+        }
 
         return Ok(new ReservationCreateResponse(code, reservation.WechatId));
     }

@@ -18,9 +18,11 @@ public class AuditLogFilter(AppDbContext db, ILogger<AuditLogFilter> logger, ICo
     // GET만 존재해 애초에 OnActionExecutionAsync 상단(39행)에서 이미 걸러진다. prefix로 남겨두면
     // 나중에 이 경로에 쓰기 액션(로그 삭제 등)이 추가될 때 그 민감한 행위까지 조용히 감사에서
     // 빠지는 회귀 위험이 있어(admin-panel-pattern-reference.md 4-7절), 불필요한 이 항목을 제거했다.
+    // /api/admin/push — 본인 기기의 알림 구독 켜기/끄기는 계정 설정 성격이라 /api/auth/me와
+    // 동일하게 감사 대상에서 제외한다(2026-08-27, 새 예약 웹 푸시 도입).
     private static readonly string[] ExcludedPrefixes =
     [
-        "/api/auth/login", "/api/auth/logout", "/api/auth/refresh", "/api/auth/me",
+        "/api/auth/login", "/api/auth/logout", "/api/auth/refresh", "/api/auth/me", "/api/admin/push",
     ];
 
     // 14-1절 RouteMap. 세그먼트 개수 내림차순으로 매칭해야 /notes·/status가 상위 규칙에 먹히지 않는다.
