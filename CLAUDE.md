@@ -4,7 +4,7 @@
 ## 개요
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원 · 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO·보안감사 1라운드+재감사(신규 9건 전부 수정). **날짜·시간 피커는 D11을 뒤집고 커스텀 라이브러리로 교체 완료**(D23). **[실장 관리]·[시술·수술 관리]에 엑셀 일괄등록 기능 추가 완료**(2026-08-27). **페이지네이션 UI 통일·로딩 오버레이 스피너/고착버그 근본수정·개인정보 처리방침 예문·랜딩 동의 모달화·어드민 헤더 개편 완료**(2026-08-27, `session-2026-08-27` 워크트리에서 진행 후 main 병합, 세션요약 (35)~(36)). **관리자 알림 2종(신규예약→VAPID 웹푸시 / 예약확정→SSE 캘린더 조용한 새로고침) 추가 완료**(2026-08-27, `worktree-admin-notifications`에서 진행 후 main 병합, 세션요약 (37)). **어드민 shadcn 컴포넌트 완성(체크박스·NativeSelect·Textarea·파일Input)+카드 패딩 대칭 수정(검색필터 4곳+차트/달력 6곳 전부) 완료·전건 격리검증 완료**(2026-08-27, `worktree-admin-header-shadcn-fix`, **main 미병합 — 병합은 지시 대기**, 세션요약 (38)). **남은 건 CSP 도입 결정·날짜피커/웹푸시 실브라우저 재확인 2건(아래 TODO)·실배포 라이브 curl 검증·위 워크트리 병합뿐**
+- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27, main 병합+인프라 실배포 — 프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료(신규 9건 전부 수정). 이후 여러 워크트리 세션에 걸쳐 UI/UX·알림·shadcn 컴포넌트 개선 다수 완료(세션요약 (35)~(38), 상세는 `docs/session-log.md`). **남은 건 CSP 도입 결정·날짜피커/웹푸시 실브라우저 재확인 2건(아래 TODO)·실배포 라이브 curl 검증뿐**
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -45,7 +45,6 @@
 - **병원 정식 정보 확정**(M8, 2026-08-26) — 상호 `원진성형외과의원`·사업자번호 `824-67-00414`·주소는 화면 푸터에 원문 그대로 표기(고유명사 번역 안 함). 🔴 **대표전화는 화면에 노출하지 않고 JSON-LD에만 포함**(예약 폼 유도 우선, 사용자 결정) — 상세는 design.md 12-1-1절
 - **실장 KPI·예약 통계 = 표+차트 병행**(D21, 2026-08-26) — 차트는 `vue-chartjs`+`chart.js`, 색상은 새로 만들지 않고 D20 팔레트 재사용. Canvas는 SSR 불가라 `<ClientOnly>`로 감싸고(화면 깜빡임 금지 원칙은 데이터 프리로드 대상이라 위반 아님), 레이아웃 시프트 방지로 고정 높이 컨테이너 사용
 - 🔴 **푸터 주소는 로케일별로 다른 문구**(D22, 2026-08-26) — "고유명사 번역 안 함" 원칙의 예외. 상호·사업자번호는 여전히 원문 고정, 주소만 ko=등록원문/zh-CN=제공된 간체/zh-TW·en=영문. JSON-LD도 영문 주소로 동기화(상세: design.md 12-1-1·D22)
-
 ## 역할 · 메뉴 권한
 | 메뉴 | Admin | HospitalManager | Consultant |
 |---|:---:|:---:|:---:|
@@ -131,7 +130,6 @@
 | 7 | ✅ 계정 관리·감사 로그(2026-08-26 `phase7-users-audit` 워크트리에서 구현+실측+미작업분 점검 **전건 완료**, main 병합 완료) | **3역할(Admin·HospitalManager·Consultant) 전부** 실제 쓰기 행위가 `audit_logs`에 정확히 기록됨을 curl+동시성 20건(200/400/500 전 상태코드 정확 기록)+브라우저 실측(JS 레벨 confirm() 오버라이드로 실제 클릭 이벤트 경로 확인 — 확인 시 PATCH 실행·화면 반영, 취소 시 PATCH 자체가 안 나가고 화면 불변까지 둘 다 확인)으로 전부 통과. RouteMap 등록 액션(notes/status/consultants create) 정확 분류 확인. 16장 체크리스트 재대조로 정지 확인 UI 누락·500 시 감사로그 유실 2건 발견·수정. **부가 발견(임의 수정 안 함, TODO 등록)**: `PATCH /{id}/consultant`(실장 배정)가 design.md 14-1절 RouteMap 표 자체에 없어 일반 `update`로 뭉뚱그려 기록됨 |
 | 8 | ✅ 유입 경로 분석(2026-08-26 구현+실측+main 병합 완료) | 비어드민 접근 차단 실측 — **완료**: curl 4종(Admin 200 / HospitalManager 403 / Consultant 403 / 익명 401) + 빈 결과 `200 []`·`to<from` 400 + 브라우저 3역할 전건(Admin만 진입, 나머지 `/admin` 리다이렉트) 확인 |
 | 9 | SEO·보안감사·배포 | 라이브 curl 검증 — **인프라 배포는 2026-08-26 완료**(Cloudflare Workers+Render). **보안감사 1라운드**(High2·Medium5) + **재감사**(원본 Low 12건 목록 유실 발견 → 1~21절 재감사로 신규 9건 발견·전부 수정, `AssignConsultant` RowVersion 포함) + **SEO 파트** **로컬 검증까지 완료**(세션요약 (27)(28)(32)). CSP는 설계 결정 보류, **실배포 도메인 대상 라이브 curl 검증만 미착수** |
-
 ## 미결정 (상세: `docs/design.md` 20장)
 - [ ] **M6 랜딩 히어로·소개 콘텐츠**(4개 언어) — Phase 2는 기능 설명 최소 문구로 대체(마케팅 카피 아님), 실제 콘텐츠는 이후 결정
 - [ ] **M2 도메인·Cloudflare 계정** — Phase 9
@@ -148,4 +146,4 @@
 `docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종) · 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md` · `excel-bulk-upload-pattern-reference.md`
 
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (38)까지 이동 완료)
-- **2026-08-27 (38) — 어드민 헤더/shadcn/카드패딩 3건 + 후속 4건 전부 완료, `worktree-admin-header-shadcn-fix`, main 미병합**: ①헤더 'Admin' 제거+계정배지는 커밋 `e81db13`(다른 세션)에서 이미 완료 확인, 코드 변경 없음. ②체크박스8·select11·textarea2·file-input2 전부 신규 `Checkbox`/`Textarea`(+기존 미사용이던 `NativeSelect`)로 교체, 배열형 체크박스는 수동 토글 함수로 대체(reka-ui가 배열 v-model 미지원). ③카드 패딩 중복 `pt-6` 10곳(검색필터4+차트/달력6) 전부 제거. `npm run build` 0에러 + 격리 docker로 전건 실측: NativeSelect 로케일전환, 체크박스 배열토글·단일토글 API 영속, 패딩 10곳 전부 `getBoundingClientRect` 25/25px 대칭, 상담기록 Textarea 실제 입력→저장→API 영속, 엑셀 업로드 Input(type=file)에 앱이 직접 생성한 진짜 xlsx blob(byte-perfect, DataTransfer 주입) 투입해 파싱 0에러 확인. `computer` 클릭·스크린샷은 Browser pane 비컴포지팅으로 무반응이라 `form_input`+JS `.click()`/`fetch()`로 우회(도구 제약, 코드결함 아님). 상세: `docs/session-log.md` (38).
+- **2026-08-27 (38) — 어드민 헤더/shadcn/카드패딩 3건 + 후속 4건 전부 완료, `worktree-admin-header-shadcn-fix` → main 병합 완료**: ①헤더 'Admin' 제거+계정배지는 커밋 `e81db13`(다른 세션)에서 이미 완료 확인, 코드 변경 없음. ②체크박스8·select11·textarea2·file-input2 전부 신규 `Checkbox`/`Textarea`(+기존 미사용이던 `NativeSelect`)로 교체, 배열형 체크박스는 수동 토글 함수로 대체(reka-ui가 배열 v-model 미지원). ③카드 패딩 중복 `pt-6` 10곳(검색필터4+차트/달력6) 전부 제거. `npm run build` 0에러 + 격리 docker로 전건 실측: NativeSelect 로케일전환, 체크박스 배열토글·단일토글 API 영속, 패딩 10곳 전부 `getBoundingClientRect` 25/25px 대칭, 상담기록 Textarea 실제 입력→저장→API 영속, 엑셀 업로드 Input(type=file)에 앱이 직접 생성한 진짜 xlsx blob(byte-perfect, DataTransfer 주입) 투입해 파싱 0에러 확인. `computer` 클릭·스크린샷은 Browser pane 비컴포지팅으로 무반응이라 `form_input`+JS `.click()`/`fetch()`로 우회(도구 제약, 코드결함 아님). 상세: `docs/session-log.md` (38).
