@@ -43,10 +43,8 @@
           >
             <Menu class="size-5" />
           </button>
-          <span class="font-semibold text-foreground">Admin</span>
         </div>
         <div v-if="user" class="flex items-center gap-3 text-sm text-muted-foreground">
-          <span class="hidden sm:inline">{{ user.name }} · {{ user.role }}</span>
           <!-- 디자인 원칙(절대 원칙) — select에는 보이는 label 필수, aria-label만으로 대체 금지 -->
           <div class="flex items-center gap-1">
             <label for="admin-locale-select" class="text-xs">{{ t('admin.common.language') }}</label>
@@ -60,6 +58,10 @@
               <option v-for="loc in locales" :key="loc.code" :value="loc.code">{{ loc.name }}</option>
             </select>
           </div>
+          <!-- 2026-08-27 — 계정 정보를 배지로 구분 + 로그아웃 버튼 바로 왼쪽으로 배치 -->
+          <span class="hidden items-center rounded-full border border-border bg-accent px-3 py-1 text-xs font-medium text-accent-foreground sm:inline-flex">
+            {{ user.name }} · {{ user.role }}
+          </span>
           <Button variant="outline" size="sm" @click="logout">{{ t('admin.common.logout') }}</Button>
         </div>
       </header>
