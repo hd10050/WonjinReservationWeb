@@ -152,6 +152,9 @@ const navLinks = computed(() => {
 })
 
 function isActive(link: { to: string, exact?: boolean }) {
+  // 예약 상세(/admin/reservations/[id])는 대시보드의 하위 페이지지만 exact 매칭 밖에 있어
+  // 별도로 챙겨야 사이드바가 상세 화면에서도 [예약 대시보드]로 표시된다.
+  if (link.to === '/admin') return route.path === '/admin' || route.path.startsWith('/admin/reservations/')
   return link.exact ? route.path === link.to : route.path === link.to || route.path.startsWith(`${link.to}/`)
 }
 

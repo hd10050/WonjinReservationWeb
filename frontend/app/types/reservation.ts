@@ -44,6 +44,13 @@ export interface ReservationLog {
   createdAt: string
 }
 
+export interface ReservationNoteRevision {
+  id: number
+  body: string
+  editedByName: string
+  editedAt: string
+}
+
 export interface ReservationDetail {
   id: number
   code: string

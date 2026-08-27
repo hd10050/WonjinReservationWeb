@@ -12,4 +12,6 @@ public class ReservationNote
     public string AuthorName { get; set; } = string.Empty; // 작성 시점 이름 스냅샷
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+
+    public ICollection<ReservationNoteRevision> Revisions { get; set; } = [];
 }

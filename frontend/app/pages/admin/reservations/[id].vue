@@ -30,7 +30,6 @@
           </div>
           <div><span class="text-muted-foreground">{{ t('admin.reservationDetail.locale') }}: </span>{{ detail.locale }}</div>
           <div><span class="text-muted-foreground">{{ t('admin.reservationDetail.receivedAt') }}: </span>{{ formatKst(detail.createdAt) }}</div>
-          <div class="md:col-span-3"><span class="text-muted-foreground">{{ t('admin.reservationDetail.referralSource') }}: </span>{{ [detail.utmSource, detail.utmMedium, detail.utmCampaign, detail.referralCode].filter(Boolean).join(' / ') || '-' }}</div>
         </CardContent>
       </Card>
 
@@ -40,14 +39,14 @@
         <CardContent class="flex flex-wrap items-end gap-3">
           <div class="flex flex-col gap-1.5">
             <Label for="f-assign">{{ t('admin.reservationDetail.consultant') }}</Label>
-            <select id="f-assign" v-model="assignConsultantId" :disabled="!canWrite" class="h-9 w-56 rounded-md border border-input bg-transparent px-3 text-sm">
+            <select id="f-assign" v-model="assignConsultantId" :disabled="!canWrite || isAssignLocked" class="h-9 w-56 rounded-md border border-input bg-transparent px-3 text-sm">
               <option value="">{{ t('admin.reservationDetail.consultantPlaceholder') }}</option>
               <option v-for="c in assignableConsultants" :key="c.id" :value="String(c.id)">
                 {{ c.name }}{{ c.isActive ? '' : ` (${t('admin.reservationDetail.inactive')})` }}
               </option>
             </select>
           </div>
-          <Button :disabled="!canWrite || !assignConsultantId" @click="submitAssign">{{ t('admin.reservationDetail.assign') }}</Button>
+          <Button :disabled="!canWrite || isAssignLocked || !assignConsultantId" @click="submitAssign">{{ t('admin.reservationDetail.assign') }}</Button>
           <span v-if="assignError" class="text-sm text-destructive">{{ assignError }}</span>
         </CardContent>
       </Card>
@@ -61,7 +60,17 @@
             <li v-for="n in detail.notes" :key="n.id" class="rounded-md border border-border p-3">
               <div class="mb-1 flex items-center justify-between text-xs text-muted-foreground">
                 <span>{{ n.authorName }} · {{ formatKst(n.createdAt) }}<template v-if="n.isEdited"> ({{ t('admin.reservationDetail.edited') }})</template></span>
-                <button v-if="canEditNote(n) && editingNoteId !== n.id" type="button" class="underline" @click="startEditNote(n)">{{ t('admin.reservationDetail.editNote') }}</button>
+                <span class="flex items-center gap-2">
+                  <button v-if="n.isEdited" type="button" class="underline" @click="toggleRevisions(n.id)">{{ t('admin.reservationDetail.noteHistory') }}</button>
+                  <button v-if="canEditNote(n) && editingNoteId !== n.id && !isCancelled" type="button" class="underline" @click="startEditNote(n)">{{ t('admin.reservationDetail.editNote') }}</button>
+                </span>
+              </div>
+              <div v-if="openRevisionsForNoteId === n.id" class="mb-2 space-y-2 rounded-md bg-muted/50 p-2">
+                <p v-if="revisionsLoading" class="text-xs text-muted-foreground">{{ t('common.loading') }}</p>
+                <div v-for="rev in noteRevisions" :key="rev.id" class="text-xs">
+                  <div class="mb-0.5 text-muted-foreground">{{ rev.editedByName }} · {{ formatKst(rev.editedAt) }}</div>
+                  <p class="whitespace-pre-wrap">{{ rev.body }}</p>
+                </div>
               </div>
               <template v-if="editingNoteId === n.id">
                 <textarea v-model="editingNoteBody" maxlength="2000" rows="3" class="w-full rounded-md border border-input bg-transparent p-2 text-sm" />
@@ -77,12 +86,12 @@
           <div class="flex flex-col gap-1.5 pt-2">
             <Label for="f-note">{{ t('admin.reservationDetail.noteBodyLabel') }}</Label>
             <textarea
-              id="f-note" v-model="noteBody" maxlength="2000" rows="3" :disabled="!canWrite || !isAssigned"
+              id="f-note" v-model="noteBody" maxlength="2000" rows="3" :disabled="!canWrite || isNotesLocked"
               :placeholder="t('admin.reservationDetail.noteBodyPlaceholder')"
               class="w-full rounded-md border border-input bg-transparent p-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
             />
             <div class="flex items-center gap-3">
-              <Button :disabled="!canWrite || !isAssigned || !noteBody.trim()" @click="submitNote">{{ t('admin.reservationDetail.addNote') }}</Button>
+              <Button :disabled="!canWrite || isNotesLocked || !noteBody.trim()" @click="submitNote">{{ t('admin.reservationDetail.addNote') }}</Button>
               <span v-if="noteError" class="text-sm text-destructive">{{ noteError }}</span>
             </div>
           </div>
@@ -96,11 +105,11 @@
           <div class="flex flex-wrap gap-4">
             <div class="flex flex-col gap-1.5">
               <Label for="f-visit-date">{{ t('admin.reservationDetail.visitDate') }}</Label>
-              <DatePicker id="f-visit-date" v-model="visitDate" :locale="inputLang" :disabled="!canWrite || !isAssigned" class="w-40" />
+              <DatePicker id="f-visit-date" v-model="visitDate" :locale="inputLang" :disabled="!canWrite || isVisitInfoLocked" class="w-40" />
             </div>
             <div class="flex flex-col gap-1.5">
               <Label for="f-visit-time">{{ t('admin.reservationDetail.visitTime') }} ({{ t('admin.reservationDetail.preferredContactTimeHint') }})</Label>
-              <TimePicker id="f-visit-time" v-model="visitTime" :locale="inputLang" :disabled="!canWrite || !isAssigned" />
+              <TimePicker id="f-visit-time" v-model="visitTime" :locale="inputLang" :disabled="!canWrite || isVisitInfoLocked" />
             </div>
           </div>
 
@@ -108,7 +117,7 @@
             <p class="mb-1.5 text-sm font-medium">{{ t('admin.reservationDetail.procedures') }}</p>
             <div class="flex flex-wrap gap-x-4 gap-y-2">
               <label v-for="p in visibleProcedures" :key="p.id" class="flex items-center gap-1.5 text-sm">
-                <input type="checkbox" :value="p.id" v-model="selectedProcedureIds" :disabled="!canWrite || !isAssigned">
+                <input type="checkbox" :value="p.id" v-model="selectedProcedureIds" :disabled="!canWrite || isVisitInfoLocked">
                 {{ procedureName(p) }}{{ p.isActive ? '' : ` (${t('admin.reservationDetail.inactive')})` }}
               </label>
             </div>
@@ -117,23 +126,29 @@
           <div class="flex flex-wrap items-end gap-4">
             <div class="flex flex-col gap-1.5">
               <Label for="f-deposit-currency">{{ t('admin.reservationDetail.depositCurrency') }}</Label>
-              <select id="f-deposit-currency" v-model="depositCurrency" :disabled="!canWrite || !isAssigned" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm">
+              <select id="f-deposit-currency" v-model="depositCurrency" :disabled="!canWrite || isVisitInfoLocked || depositMode === 'waived'" class="h-9 rounded-md border border-input bg-transparent px-3 text-sm">
                 <option value="CNY">CNY</option>
                 <option value="KRW">KRW</option>
               </select>
             </div>
             <div class="flex flex-col gap-1.5">
               <Label for="f-deposit-amount">{{ t('admin.reservationDetail.depositAmount') }}</Label>
-              <Input id="f-deposit-amount" v-model.number="depositAmount" type="number" min="0" max="9999999999.99" :disabled="!canWrite || !isAssigned" class="w-32" />
+              <Input id="f-deposit-amount" v-model.number="depositAmount" type="number" min="0" max="9999999999.99" :disabled="!canWrite || isVisitInfoLocked || depositMode === 'waived'" class="w-32" />
             </div>
-            <label class="flex items-center gap-1.5 pb-2 text-sm">
-              <input type="checkbox" v-model="depositPaid" :disabled="!canWrite || !isAssigned">
-              {{ t('admin.reservationDetail.depositPaid') }}
-            </label>
+            <div class="flex items-center gap-6 pb-2">
+              <label class="flex items-center gap-1.5 text-sm">
+                <input type="radio" name="deposit-mode" :checked="depositMode === 'paid'" :disabled="!canWrite || isVisitInfoLocked" @click="toggleDepositMode('paid')">
+                {{ t('admin.reservationDetail.depositPaid') }}
+              </label>
+              <label class="flex items-center gap-1.5 text-sm">
+                <input type="radio" name="deposit-mode" :checked="depositMode === 'waived'" :disabled="!canWrite || isVisitInfoLocked" @click="toggleDepositMode('waived')">
+                {{ t('admin.reservationDetail.depositWaived') }}
+              </label>
+            </div>
           </div>
 
           <div class="flex items-center gap-3">
-            <Button :disabled="!canWrite || !isAssigned || saving" @click="submitSave">{{ t('common.save') }}</Button>
+            <Button :disabled="!canWrite || isVisitInfoLocked || saving" @click="submitSave">{{ t('common.save') }}</Button>
             <span v-if="saveError" class="text-sm text-destructive">{{ saveError }}</span>
           </div>
         </CardContent>
@@ -154,8 +169,8 @@
         </CardContent>
       </Card>
 
-      <!-- 액션: 상태 전이 · 삭제 -->
-      <Card>
+      <!-- 액션: 상태 전이 — 방문완료 후에는 상담 기록 외 전 구역이 잠기므로 이 카드 자체를 숨긴다(#14) -->
+      <Card v-if="!isVisited">
         <CardHeader><CardTitle>{{ t('admin.reservationDetail.actions') }}</CardTitle></CardHeader>
         <CardContent class="space-y-3">
           <div v-if="canWrite" class="flex flex-wrap items-center gap-3">
@@ -163,10 +178,13 @@
               {{ t('admin.reservationDetail.markVisited') }}
             </Button>
             <Button
-              v-if="isAssigned && ['New', 'Consulting', 'Confirmed'].includes(detail.status)"
+              v-if="['New', 'Consulting', 'Confirmed'].includes(detail.status)"
               variant="outline" @click="showCancelForm = !showCancelForm"
             >
               {{ t('admin.reservationDetail.cancelReservation') }}
+            </Button>
+            <Button v-if="isCancelled && user?.role === 'Admin'" @click="submitRestore">
+              {{ t('admin.reservationDetail.restoreReservation') }}
             </Button>
             <span v-if="statusError" class="text-sm text-destructive">{{ statusError }}</span>
           </div>
@@ -179,11 +197,6 @@
               <Button variant="outline" @click="showCancelForm = false">{{ t('common.cancel') }}</Button>
             </div>
           </div>
-
-          <div v-if="canWrite && detail.notes.length === 0" class="border-t border-border pt-3">
-            <Button variant="destructive" @click="submitDelete">{{ t('admin.reservationDetail.deleteReservation') }}</Button>
-            <span v-if="deleteError" class="ml-3 text-sm text-destructive">{{ deleteError }}</span>
-          </div>
         </CardContent>
       </Card>
     </template>
@@ -191,7 +204,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ConsultantLookup, ProcedureLookup, ReservationDetail, ReservationNote } from '~/types/reservation'
+import type { ConsultantLookup, ProcedureLookup, ReservationDetail, ReservationNote, ReservationNoteRevision } from '~/types/reservation'
 
 definePageMeta({ middleware: 'admin', layout: 'admin', i18n: false })
 
@@ -218,6 +231,14 @@ useHead(() => ({ title: `${detail.value?.name ?? ''} | Admin`, meta: [{ name: 'r
 // 개발자 도구로 우회되므로 백엔드가 실제 방어선이지만, 프론트도 역할별로 같이 가려야 한다.
 const canWrite = computed(() => user.value?.role === 'Admin' || user.value?.role === 'Consultant')
 const isAssigned = computed(() => detail.value?.consultantId != null)
+const isCancelled = computed(() => detail.value?.status === 'Cancelled')
+const isVisited = computed(() => detail.value?.status === 'Visited')
+// 담당 실장 배정 섹션 — 미배정 상태에서 바로 이 컨트롤로 최초 배정을 하므로 !isAssigned로는 잠그지 않는다.
+const isAssignLocked = computed(() => isCancelled.value || isVisited.value)
+// 방문일시·시술·예약금 섹션 — 미배정이거나 취소·방문완료면 잠근다(11-2절, 담당 실장 배정 전과 동일 취급).
+const isVisitInfoLocked = computed(() => !isAssigned.value || isCancelled.value || isVisited.value)
+// 상담 기록 섹션 — 취소면 잠그지만 방문완료는 예외로 계속 허용한다(#14, 사후 상담 기록 목적).
+const isNotesLocked = computed(() => !isAssigned.value || isCancelled.value)
 const assignableConsultants = computed(() =>
   (consultantsRaw.value ?? []).filter(c => c.isActive || c.id === detail.value?.consultantId))
 // 8-3절 — 이미 선택된 비활성 시술은 목록에 남겨야 한다(빼면 편집 화면에서 확인·해제가 불가능해진다)
@@ -239,8 +260,21 @@ const visitDate = ref(detail.value?.visitDate ?? '')
 const visitTime = ref(detail.value?.visitTime?.slice(0, 5) ?? '')
 const depositCurrency = ref(detail.value?.depositCurrency ?? 'CNY')
 const depositAmount = ref<number | null>(detail.value?.depositAmount ?? null)
-const depositPaid = ref(detail.value?.depositPaid ?? false)
 const selectedProcedureIds = ref<number[]>([...(detail.value?.procedureIds ?? [])])
+
+// 입금 확인 라디오 3상태(#13) — 미확인/입금확인/예약금없음(면제). 예약금없음도 내부적으로는
+// depositPaid=true로 전송하되 금액이 null인 것으로 구분한다(백엔드도 동일 규칙으로 판별).
+type DepositMode = 'unpaid' | 'paid' | 'waived'
+function deriveDepositMode(paid: boolean, amount: number | null): DepositMode {
+  if (!paid) return 'unpaid'
+  return amount === null ? 'waived' : 'paid'
+}
+const depositMode = ref<DepositMode>(deriveDepositMode(detail.value?.depositPaid ?? false, detail.value?.depositAmount ?? null))
+function toggleDepositMode(mode: 'paid' | 'waived') {
+  // 이미 선택된 라디오를 다시 클릭하면 미확인 상태로 되돌린다(네이티브 radio는 스스로 해제가 안 되므로).
+  depositMode.value = depositMode.value === mode ? 'unpaid' : mode
+  if (depositMode.value === 'waived') depositAmount.value = null
+}
 
 const saving = ref(false)
 const saveError = ref('')
@@ -254,9 +288,9 @@ async function submitSave() {
         visitDate: visitDate.value || null,
         visitTime: visitTime.value || null,
         procedureIds: selectedProcedureIds.value,
-        depositAmount: depositAmount.value,
+        depositAmount: depositMode.value === 'waived' ? null : depositAmount.value,
         depositCurrency: depositCurrency.value,
-        depositPaid: depositPaid.value,
+        depositPaid: depositMode.value !== 'unpaid',
       },
     })
     await refresh()
@@ -295,14 +329,33 @@ function canEditNote(n: ReservationNote): boolean {
   return user.value?.role === 'Admin' || n.authorUserId === user.value?.id
 }
 
-const assignConsultantId = ref('')
+// 상담 기록 수정 이력(#5) — 클릭 시에만 불러온다(목록에 있는 모든 노트의 이력을 미리 로드할 필요 없음).
+const openRevisionsForNoteId = ref<number | null>(null)
+const noteRevisions = ref<ReservationNoteRevision[]>([])
+const revisionsLoading = ref(false)
+async function toggleRevisions(noteId: number) {
+  if (openRevisionsForNoteId.value === noteId) {
+    openRevisionsForNoteId.value = null
+    return
+  }
+  openRevisionsForNoteId.value = noteId
+  revisionsLoading.value = true
+  try {
+    noteRevisions.value = await authFetch<ReservationNoteRevision[]>(`/api/admin/reservations/${id.value}/notes/${noteId}/revisions`)
+  } finally {
+    revisionsLoading.value = false
+  }
+}
+
+// 배정 드롭다운 — 이미 배정된 실장이 있으면 플레이스홀더 대신 그 실장이 바로 선택된 상태로 보여준다(#3).
+const assignConsultantId = ref(detail.value?.consultantId != null ? String(detail.value.consultantId) : '')
 const assignError = ref('')
 async function submitAssign() {
   assignError.value = ''
   try {
     await authFetch(`/api/admin/reservations/${id.value}/consultant`, { method: 'PATCH', body: { consultantId: Number(assignConsultantId.value) } })
-    assignConsultantId.value = ''
     await refresh()
+    assignConsultantId.value = detail.value?.consultantId != null ? String(detail.value.consultantId) : ''
   } catch (e: any) {
     assignError.value = t(`errors.${errCode(e)}`)
   }
@@ -335,14 +388,15 @@ async function submitCancel() {
   }
 }
 
-const deleteError = ref('')
-async function submitDelete() {
-  if (!confirm(t('admin.reservationDetail.deleteConfirm'))) return
+// 취소된 예약 복구(#10) — 어드민 전용. 되돌릴 수 없는 상태 전이들과 동일하게 확인을 거친다(12-5절).
+async function submitRestore() {
+  if (!confirm(t('admin.reservationDetail.restoreConfirm'))) return
+  statusError.value = ''
   try {
-    await authFetch(`/api/admin/reservations/${id.value}`, { method: 'DELETE' })
-    await navigateTo('/admin')
+    await authFetch(`/api/admin/reservations/${id.value}/restore`, { method: 'POST' })
+    await refresh()
   } catch (e: any) {
-    deleteError.value = t(`errors.${errCode(e)}`)
+    statusError.value = t(`errors.${errCode(e)}`)
   }
 }
 </script>

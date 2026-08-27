@@ -76,7 +76,7 @@
     },
     "reservationDetail": {
       "backToList": "Back to list",
-      "notAssignedBanner": "Assign a consultant first. Notes, status changes, and saving are disabled until then.",
+      "notAssignedBanner": "Assign a consultant first. Notes and saving are disabled until then — only cancellation is available.",
       "customerInfo": "Customer Info",
       "birthDate": "Birth Date",
       "age": "y/o",
@@ -89,7 +89,6 @@
       "preferredContactTimeHint": "Korea time",
       "locale": "Applied Language",
       "receivedAt": "Received At",
-      "referralSource": "Referral Source",
       "consultant": "Consultant",
       "consultantPlaceholder": "Select a consultant",
       "inactive": "Inactive",
@@ -98,6 +97,7 @@
       "notesEmpty": "No notes yet.",
       "editNote": "Edit",
       "edited": "edited",
+      "noteHistory": "Edit history",
       "noteBodyLabel": "New note",
       "noteBodyPlaceholder": "Enter consultation details",
       "addNote": "Add Note",
@@ -108,6 +108,7 @@
       "depositCurrency": "Deposit Currency",
       "depositAmount": "Deposit Amount",
       "depositPaid": "Deposit Confirmed",
+      "depositWaived": "No Deposit Required",
       "logs": "Activity Log",
       "actions": "Actions",
       "markVisited": "Mark as Visited",
@@ -115,8 +116,8 @@
       "cancelReservation": "Cancel Reservation",
       "cancelReasonLabel": "Cancellation Reason",
       "cancelReasonPlaceholder": "Enter the reason for cancellation",
-      "deleteReservation": "Delete Reservation",
-      "deleteConfirm": "Delete this reservation? It will be excluded from the list afterward."
+      "restoreReservation": "Restore Reservation",
+      "restoreConfirm": "Restore this cancelled reservation?"
     },
     "consultants": {
       "title": "Consultants",
@@ -361,9 +362,13 @@
     "assigned": "Consultant changed",
     "status_changed": "Status changed",
     "note_added": "Note added",
+    "note_updated": "Note edited",
     "deposit_confirmed": "Deposit confirmed",
+    "deposit_updated": "Deposit info changed",
+    "visit_schedule_changed": "Visit schedule changed",
+    "procedure_changed": "Procedures changed",
     "cancelled": "Cancelled",
-    "deleted": "Deleted"
+    "restored": "Restored"
   },
   "errors": {
     "INVALID_CREDENTIALS": "Invalid email or password.",
@@ -374,7 +379,8 @@
     "INVALID_BIRTH_DATE": "Please enter a valid date of birth.",
     "SUBMIT_FAILED": "Submission failed. Please try again later.",
     "RESERVATION_NOT_ASSIGNED": "This reservation has no consultant assigned. Assign one first.",
-    "RESERVATION_HAS_NOTES": "Reservations with notes cannot be deleted.",
+    "RESERVATION_LOCKED": "Cancelled or visited reservations cannot be edited.",
+    "RESERVATION_NOT_CANCELLED": "Only cancelled reservations can be restored.",
     "RESERVATION_STATE_CHANGED": "The status was already changed elsewhere. Refresh and try again.",
     "CONSULTANT_NOT_FOUND": "Consultant not found.",
     "CONSULTANT_INACTIVE": "Cannot assign to an inactive consultant.",
@@ -389,6 +395,7 @@
     "INVALID_STATUS_TRANSITION": "This status change is not allowed.",
     "CANCEL_REASON_REQUIRED": "Please enter a cancellation reason.",
     "INVALID_DEPOSIT_CURRENCY": "Invalid deposit currency.",
+    "INVALID_DEPOSIT_AMOUNT": "Please enter a deposit amount between 0 and 9999999999.99.",
     "INVALID_PROCEDURE_IDS": "One or more selected procedures do not exist.",
     "PROCEDURE_CODE_DUPLICATE": "This procedure code is already in use.",
     "INTERNAL_ERROR": "A temporary server error occurred. Please try again in a moment.",

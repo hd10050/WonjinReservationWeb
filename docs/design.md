@@ -640,13 +640,28 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 > - **수정은 작성자 본인 + 어드민만**. 수정하면 `updated_at`이 갱신되고 화면에 "(수정됨)"을 표시한다.
 > - 목록 API에서는 이 테이블을 조회하지 않는다(본문이 커서 목록이 무거워진다). 상세 화면에서만 로드한다.
 
+### 8-7-1. `reservation_note_revisions` — 상담 기록 수정 이력 (2026-08-27 신설)
+
+| 컬럼 | 타입 | 비고 |
+|---|---|---|
+| `id` | int | PK |
+| `reservation_note_id` | int | FK → `reservation_notes.id` ON DELETE CASCADE |
+| `body` | varchar(2000) | NOT NULL — **수정 전(직전) 본문 스냅샷** |
+| `edited_by_user_id` | int | NULL, FK → `users.id` ON DELETE SET NULL |
+| `edited_by_name` | varchar(30) | NOT NULL — 수정 시점 이름 스냅샷 |
+| `edited_at` | timestamptz | NOT NULL |
+
+**인덱스**: `ix_reservation_note_revisions_note_id_edited_at` (`reservation_note_id`, `edited_at`), FK 컬럼 `edited_by_user_id`는 EF Core가 자동 생성.
+
+> `UpdateNote`가 본문을 덮어쓰기 **직전**에 현재 본문을 여기 스냅샷으로 남긴다. 상세 화면의 "수정 이력" 버튼에서 특정 상담 기록의 과거 내용을 최신순으로 조회할 때 쓴다. `reservation_notes` 자체는 여전히 최신 본문 1개만 들고 있다(D14 그대로) — 이 테이블이 그 이전 버전들을 보존한다.
+
 ### 8-8. `reservation_logs` — 예약 처리 이력 (업무 타임라인)
 
 | 컬럼 | 타입 | 비고 |
 |---|---|---|
 | `id` | int | PK |
 | `reservation_id` | int | FK → `reservations.id` ON DELETE CASCADE |
-| `action` | varchar(40) | `received`/`assigned`/`status_changed`/`note_added`/`deposit_confirmed`/`cancelled`/**`deleted`** |
+| `action` | varchar(40) | `received`/`assigned`/`status_changed`/`note_added`/`note_updated`/`deposit_confirmed`/`deposit_updated`/`visit_schedule_changed`/`procedure_changed`/`cancelled`/`restored`(2026-08-27 확장 — `deleted`는 삭제 기능 폐지로 더 이상 생성되지 않음) |
 | `note` | varchar(300) | NULL — 짧은 요약만(상담 본문은 `reservation_notes`에 있다) |
 | `actor_user_id` | int | NULL — 시스템 접수는 NULL |
 | `actor_name` | varchar(30) | NOT NULL — `'SYSTEM'` 또는 조작한 계정 이름(계정이 사라져도 이력 보존) |
@@ -820,11 +835,14 @@ var monthStartUtc = monthStartKst.UtcDateTime;   // 쿼리에는 이 값을 쓴�
 |---|---|---|
 | → `New` | 폼 제출 | 고객(익명) |
 | `New` → `Consulting` | **상담 기록 최초 추가**(배정만으로는 전이하지 않는다) | Consultant |
-| `New`/`Consulting` → `Confirmed` | **`visit_date`가 있고 `deposit_paid = true`** 둘 다 충족 | Consultant |
-| `Confirmed` → `Visited` | 실제 내원 확인 | Consultant |
-| `New`/`Consulting`/`Confirmed` → `Cancelled` | 취소 사유 입력 필수 | Consultant |
+| `New`/`Consulting` → `Confirmed` | **`visit_date`가 있음**(2026-08-27 완화 — 이전엔 `deposit_paid = true`도 함께 요구했으나, 예약금이 미확인이어도 내원 확인이 가능해야 한다는 요구로 조건에서 뺐다. 예약금 확인 자체는 계속 별도로 추적·기록된다) | Consultant |
+| `Confirmed` → `Visited` | 실제 내원 확인(예약금 확인 여부 무관) | Consultant |
+| `New`/`Consulting`/`Confirmed` → `Cancelled` | 취소 사유 입력 필수. **미배정 상태에서도 허용**(2026-08-27, 10-1절 참고) | Consultant, 미배정이면 누구든(쓰기 권한자) |
+| `Cancelled` → `New`/`Consulting`/`Confirmed` | **복구**(10-1절) — 취소 시점 데이터로 되돌아갈 상태를 계산 | **Admin만** |
 
 > **배정은 상태를 바꾸지 않는다.** "배정됨"과 "실제로 연락해서 상담이 시작됨"은 다른 사건이고, 대시보드의 "신규 접수" 카드는 **아직 고객에게 연락하지 않은 건**을 뜻해야 실장이 무엇부터 처리할지 알 수 있다. 배정만으로 `Consulting`이 되면 그 카드가 "연락 안 한 건"을 더 이상 나타내지 못한다.
+>
+> 🔴 **`Cancelled`·`Visited`는 배정 전과 동일하게 잠긴다**(2026-08-27) — 담당 실장 재배정·상담 기록(단, `Visited`는 예외)·방문일시/시술/예약금 저장이 전부 막힌다. 상세는 10-1절.
 
 ### 10-1. 🔴 미배정 예약 작업 차단 (D17)
 
@@ -834,12 +852,14 @@ var monthStartUtc = monthStartKst.UtcDateTime;   // 쿼리에는 이 값을 쓴�
 |---|---|
 | 조회(목록·상세) | ✅ |
 | **담당 실장 배정** | ✅ (이것부터 해야 나머지가 열린다) |
-| 소프트 삭제(상담 기록 0건, D15) | ✅ — 중복·장난 신청 정리가 목적이라 배정을 요구하면 정리 자체가 불가능해진다 |
+| **예약 취소**(상태 전이 → `Cancelled`) | ✅ (2026-08-27 — 하드 삭제를 없애고, 미배정 예약을 정리하는 수단을 삭제 대신 취소로 통일했다. 소프트 삭제 기능 자체를 제거) |
 | 상담 기록 추가 | ❌ |
-| 상태 전이 | ❌ |
+| 상태 전이 — `Cancelled` 이외 | ❌ |
 | 방문일시·시술·예약금 저장 | ❌ |
 
 차단된 요청은 **400 `RESERVATION_NOT_ASSIGNED`**를 반환한다. 서버가 실제 방어선이며, 화면은 미배정 상태에서 해당 입력들을 `disabled` 처리하고 "담당 실장을 먼저 배정하세요" 안내를 띄운다(12-5절).
+
+> 🔴 **삭제 기능은 없다(2026-08-27, 정책 변경).** 배정 여부와 무관하게 "예약 삭제" 액션 자체를 없애고 **예약 취소로 통일**했다 — 담당자가 있든 없든 정리 수단은 취소뿐이다. 이전 소프트 삭제(D15, `deleted_at`)는 화면·API에서 완전히 제거됐다. 관련 모델 컬럼(`deleted_at`·`deleted_by_user_id`)과 전역 쿼리 필터는 DB에 남아 있지만(과거 데이터 호환용, 재도입 시 근거) 이 컬럼을 채우는 쓰기 경로는 더 이상 없다.
 
 **구현 규칙**
 - 상태 전이는 **조건부 원자적 UPDATE**로만 수행한다. "조회 → 판단 → 저장" 3단계로 나누면 실장 두 명이 동시에 저장할 때 경쟁 조건이 생긴다.
@@ -874,8 +894,9 @@ if (affected == 0)
 
 **담당자 변경은 예외 없이 처리 이력에 남긴다**(D17). 배정·재배정·해제 모두 `reservation_logs`에 `action='assigned'`로 기록하고, `note`에 **이전 담당자 → 새 담당자**를 적는다. 실장 간 예약 접근을 전면 허용했기 때문에(F8) 담당자가 조용히 바뀌는 것을 막을 유일한 수단이 이 기록이다.
 
-- `Visited`·`Cancelled`는 **종결 상태**다. 되돌리기가 필요하면 어드민만 가능하게 별도 액션으로 만들되, 요구되기 전까지는 만들지 않는다.
+- `Visited`·`Cancelled`는 **종결 상태**로 배정 전과 동일하게 잠긴다(재배정·상담 기록·방문정보 저장 전부 400 `RESERVATION_LOCKED`). 단 `Visited`는 상담 기록만 예외로 계속 허용한다(사후 상담 기록 목적) — `Cancelled`는 예외 없음.
 - 취소·완료 등 되돌릴 수 없는 액션은 프론트에서 확인 UI를 거치게 하고, 목록 행이 아니라 **상세 화면 안에서만** 노출한다(실수 클릭 방지).
+- **`Cancelled`는 되돌릴 수 있다(복구, 2026-08-27 구현)** — 위에서 예고했던 "어드민만 가능한 별도 액션"이 `POST /{id}/restore`로 구현됨. 되돌아갈 상태는 무조건 `New`가 아니라, 취소 시점에 남아있던 데이터로 순방향 전이 규칙과 동일하게 계산한다: `visit_date`가 있으면 `Confirmed`, 없고 상담 기록이 있으면 `Consulting`, 둘 다 없으면 `New`. `cancelled_at`·`cancel_reason`은 복구 시 비운다. 처리 이력에 `action='restored'`로 반드시 기록한다.
 
 ---
 
@@ -905,18 +926,17 @@ public record PagedResult<T>(IEnumerable<T> Items, int Total, int Page, int Page
 
 | 메서드 | 경로 | 권한 | 비고 |
 |---|---|---|---|
-| 메서드 | 경로 | 권한 | 비고 |
-|---|---|---|---|
 | GET | `/api/admin/reservations` | 전 역할 | 필터: `status`, `consultantId`, `from`, `to`, `search` / 정렬: `created_at DESC` |
 | GET | `/api/admin/reservations/summary` | 전 역할 | 상단 4개 카드 — 조건부 집계 1회(아래) |
 | GET | `/api/admin/reservations/calendar` | 전 역할 | `year`·`month` 필수, **최대 1개월 범위 검증**(무제한 범위 조회 차단). `status IN ('Confirmed','Visited')` |
 | GET | `/api/admin/reservations/{id:int}` | 전 역할 | 상세 + 시술 + 상담 기록 + 처리 이력 |
-| PATCH | `/api/admin/reservations/{id:int}` | Consultant, Admin | 방문일시·시술·예약금 저장. **미배정이면 400**(D17) |
-| PATCH | `/api/admin/reservations/{id:int}/consultant` | Consultant, Admin | **담당 실장 배정·변경 전용**. 처리 이력 필수 기록(D17) |
-| POST | `/api/admin/reservations/{id:int}/status` | Consultant, Admin | 상태 전이(10장). **미배정이면 400**(D17) |
-| POST | `/api/admin/reservations/{id:int}/notes` | Consultant, Admin | 상담 기록 **추가**(누적, D14). **미배정이면 400**(D17) |
-| PATCH | `/api/admin/reservations/{id:int}/notes/{noteId:int}` | 작성자 본인, Admin | 상담 기록 수정. 삭제 엔드포인트는 만들지 않는다 |
-| DELETE | `/api/admin/reservations/{id:int}` | Consultant, Admin | **소프트 삭제**(D15) — 상담 기록 0건일 때만. 미배정이어도 허용(D17) |
+| PATCH | `/api/admin/reservations/{id:int}` | Consultant, Admin | 방문일시·시술·예약금 저장. **미배정이면 400**(D17), **취소·방문완료면 400**`RESERVATION_LOCKED`(2026-08-27) |
+| PATCH | `/api/admin/reservations/{id:int}/consultant` | Consultant, Admin | **담당 실장 배정·변경 전용**. 처리 이력 필수 기록(D17). 취소·방문완료면 400`RESERVATION_LOCKED` |
+| POST | `/api/admin/reservations/{id:int}/status` | Consultant, Admin | 상태 전이(10장). **미배정이면 400**(D17) — 단 `Cancelled`로의 전이는 미배정이어도 허용(2026-08-27) |
+| POST | `/api/admin/reservations/{id:int}/notes` | Consultant, Admin | 상담 기록 **추가**(누적, D14). **미배정이면 400**(D17), 취소면 400`RESERVATION_LOCKED`(방문완료는 예외) |
+| PATCH | `/api/admin/reservations/{id:int}/notes/{noteId:int}` | 작성자 본인, Admin | 상담 기록 수정. 삭제 엔드포인트는 만들지 않는다. 취소면 400`RESERVATION_LOCKED` |
+| GET | `/api/admin/reservations/{id:int}/notes/{noteId:int}/revisions` | 전 역할 | 상담 기록 **수정 이력**(2026-08-27 신설) — 수정 전 스냅샷 목록, 최신순 |
+| POST | `/api/admin/reservations/{id:int}/restore` | **Admin만** | `Cancelled` → 취소 시점 데이터 기준 이전 상태로 **복구**(2026-08-27 신설). 상세는 10-1절 |
 
 > **`includeInactive`는 이 엔드포인트에 없다(Phase 4 재확인, 이전 버전 문서의 표기 오류를 정정).** 8-4절·12-4절의 "비활성 실장 포함" 대시보드 필터는 `/api/admin/consultants?includeInactive=`(11-3절)만으로 이미 완전히 구현된다 — 담당 실장 필터 드롭다운에 비활성 실장을 노출할지 여부만 결정하면 되고, `consultantId`로 특정 실장을 선택해 조회하는 동작 자체는 그 실장의 활성 상태와 무관하게 항상 동작하기 때문이다. 이 엔드포인트에 별도 파라미터를 추가할 필요가 없다(Phase 3 재감사 미해결 이슈② — 실제 구현을 근거로 종결).
 >
@@ -924,26 +944,31 @@ public record PagedResult<T>(IEnumerable<T> Items, int Total, int Page, int Page
 >
 > **담당 실장 배정을 `PATCH /{id}`에 섞지 않고 전용 경로로 분리한 이유**(D17): 배정은 ①미배정 상태에서도 허용되는 **유일한 쓰기**이고 ②처리 이력 기록이 **필수**다. 일반 저장과 한 엔드포인트에 두면 "미배정이면 차단" 규칙과 "배정은 허용" 규칙이 같은 핸들러 안에서 충돌해, 조건문이 꼬이면서 차단이 뚫리기 쉽다.
 
-**소프트 삭제 — 조건 검사를 원자적으로** (D15)
+**삭제 기능 폐지 → 취소로 통일**(2026-08-27, D15 대체)
 
-"상담 기록이 있는지 조회 → 없으면 삭제" 2단계로 나누면, 그 사이에 다른 실장이 기록을 추가한 경우 **방금 쓴 상담 내용째로 예약이 사라진다.** 조건을 UPDATE 문 안에 넣어 한 번에 처리한다.
+이전엔 "상담 기록이 있는지 조회 → 없으면 소프트 삭제"(`DELETE /{id}`, `deleted_at` 전역 쿼리 필터로 제외)였다. 하드 삭제는 아니었지만 **복구 화면·API가 없어 사용자 입장에서는 사실상 되돌릴 수 없는 액션**이었고, 담당자 유무와 무관하게 늘 노출돼 있어 실수로 되돌릴 수 없이 지워버릴 위험이 있었다. **삭제 액션 자체를 없애고 예약 취소로 통일**했다 — 담당자가 있든 없든 예약을 정리하는 방법은 취소뿐이고, 취소는 **처리 이력에 남고 나중에 복구할 수 있다**(아래).
+
+- `DELETE /api/admin/reservations/{id:int}` 엔드포인트는 **더 이상 존재하지 않는다.**
+- `Reservation.DeletedAt`/`DeletedByUserId` 컬럼과 전역 쿼리 필터(8-5절)는 과거 데이터 호환을 위해 DB에 남아 있지만, 이 컬럼을 채우는 쓰기 경로는 없다.
+
+**복구(Restore) — 취소 시점 데이터 기준으로 상태를 계산**(10-1절)
 
 ```csharp
-// 상담 기록이 하나도 없을 때만 소프트 삭제된다 — 조건과 갱신이 같은 문장에서 평가되므로 경쟁 조건이 없다
-var affected = await db.Reservations
-    .Where(r => r.Id == id
-             && !db.ReservationNotes.Any(n => n.ReservationId == id))
-    .ExecuteUpdateAsync(s => s
-        .SetProperty(r => r.DeletedAt, now)
-        .SetProperty(r => r.DeletedByUserId, currentUserId));
+// 취소 시점에 남아있던 데이터(방문일·상담기록 유무)로 되돌아갈 상태를 판정 — 무조건 New로
+// 되돌리면 이미 진행된 상담·확정 이력이 화면에서 사라져 보인다.
+var targetStatus = visitDate is not null ? "Confirmed" : hasNotes ? "Consulting" : "New";
 
-if (affected == 0)
-    return Conflict(new { code = "RESERVATION_HAS_NOTES" });   // 상담 기록이 있거나 이미 삭제됨
+var affected = await db.Reservations
+    .Where(r => r.Id == id && r.Status == "Cancelled")
+    .ExecuteUpdateAsync(s => s
+        .SetProperty(r => r.Status, targetStatus)
+        .SetProperty(r => r.CancelledAt, (DateTimeOffset?)null)
+        .SetProperty(r => r.CancelReason, (string?)null)
+        .SetProperty(r => r.UpdatedAt, now));
 ```
 
-- 삭제된 예약은 전역 쿼리 필터(8-5절)로 목록·상세·달력·통계·KPI·유입경로 전환율에서 **모두 자동 제외**된다.
-- 복구 화면은 만들지 않는다(요구되지 않음). DB에는 남아 있으므로 필요하면 직접 조회한다.
-- **양쪽에 모두 기록한다**: `audit_logs`에 `action='soft_delete'`/`entity_type='reservation'`, **`reservation_logs`에 `action='deleted'`**(8-8절). 화면에서 조회되지 않더라도 "누가 언제 지웠는지"는 두 경로 모두에 남아야 한다 — 삭제는 되돌릴 수 없는 액션이므로 추적 근거를 한쪽에만 두지 않는다.
+- **Admin만** 가능(10-1절 원래 방향대로 — 종결 상태를 되돌리는 액션은 별도 승인 주체를 둔다).
+- `reservation_logs`에 `action='restored'`로 반드시 기록한다.
 
 > **실장 간 예약 접근은 전면 허용한다**(F8, 2026-08-25 사용자 결정). 실장 A가 실장 B의 예약을 조회·수정하고 담당자를 변경할 수 있다. 단일 병원에서 휴가·교대 대체가 일상적이고, **누가 무엇을 바꿨는지는 처리 이력(`reservation_logs`)과 감사 로그에 전부 남으므로** 접근 제한 대신 추적으로 관리한다. 담당자 변경도 반드시 이력에 남긴다(`action='assigned'`, 이전 담당자 → 새 담당자를 `note`에 기록).
 
@@ -1341,8 +1366,8 @@ var statusCode = executed.Exception is not null ? 500 : context.HttpContext.Resp
 | `/api/admin/reservations` + `/notes` | PATCH | `note_update` | `reservation_note` |
 | `/api/admin/reservations` + `/status` | POST | `status_change` | `reservation` |
 | `/api/admin/reservations` | PATCH | `update` | `reservation` |
-| `/api/admin/reservations` | DELETE | `soft_delete` | `reservation` |
 | `/api/admin/reservations` + `/consultant` | PATCH | `assign` | `reservation` |
+| `/api/admin/reservations` + `/restore` | POST | `restore` | `reservation` |
 | `/api/admin/consultants` | POST | `create` | `consultant` |
 | `/api/admin/consultants` | PUT | `update` | `consultant` |
 | `/api/admin/procedures` | POST | `create` | `procedure` |
@@ -1546,6 +1571,8 @@ F5 완료 기준을 아래 4개 경로로 전건 실측했다.
 **⚠️ 자동화 도구 특이사항(코드 버그 아님, 참고용)**: 이 세션에서 쓴 브라우저 자동화 도구의 좌표 기반 클릭(`computer left_click`)은 로그아웃 버튼에서 `logout()`을 호출은 시켰으나(네트워크 요청 발생) `user.value = null` 반영이 화면에 관측되지 않는 현상이 있었다. 같은 버튼을 JS `element.click()`으로 호출하면 정상 작동했다 — curl 직접 호출까지 포함해 3가지 다른 경로로 서버·프론트 로직 자체는 정상임을 확인했으므로, 실제 사용자의 마우스 클릭에는 영향이 없을 것으로 판단(둘 다 표준 DOM `click` 이벤트를 발생시키므로). 원인은 `[미확인]`으로 남기되, 이 프로젝트 코드의 결함이 아니라 검증 도구 쪽 특이사항으로 분류한다.
 >
 > **추가 사례(Phase 6, 2026-08-26) — 같은 범주의 두 번째 특이사항**: 이 도구의 Browser pane이 "비표시(pane not displayed)" 상태일 때 `document.hidden=true`가 되어 **`requestAnimationFrame`이 전혀 실행되지 않는다**(2초 대기 후에도 콜백 미실행 직접 확인). Chart.js는 초기 페인트도 rAF로 스케줄링하므로, 이 상태에서 캔버스가 완전히 빈 화면으로 보였다(`getImageData` 전 픽셀 흰색/투명). 원인이 코드가 아님을 확정하기 위해 `$refs.<ref>.chart`(vue-chartjs 공식 API)로 Chart.js 인스턴스에 직접 접근해 데이터가 정확히 주입돼 있음을 확인하고, `chart.draw()`(rAF를 거치지 않는 동기 메서드)를 강제 호출해 실제로 픽셀이 그려짐(15,131개)을 실증했다. **로그인 클릭과 동일하게, rAF·click 이벤트처럼 브라우저가 "비표시 문서"를 스로틀링하는 API 전반에서 이 자동화 도구가 실제 사용자 환경과 다르게 동작할 수 있다** — 다음에도 캔버스가 비어 보이면 코드부터 의심하지 말고 인스턴스에 데이터가 들어갔는지·동기 draw로 그려지는지부터 확인할 것.
+>
+> **추가 사례(예약 상세 페이지 대규모 수정, 2026-08-27) — 세 번째 특이사항**: 이번 세션은 `computer` 툴의 **좌표 기반 클릭 자체가 항상 무반응**이었다(`screenshot`/`zoom`도 "Browser pane is not displayed, so the page is not compositing frames"로 매번 실패 — 이전 두 사례보다 더 근본적으로, 이 세션은 애초에 컴포지팅 서페이스가 없었던 것으로 추정). `read_page`·`get_page_text`·`javascript_tool`·네트워크/콘솔 로그처럼 컴포지팅에 의존하지 않는 CDP 기반 도구는 전부 정상 동작했다. 우회: 버튼은 `element.click()`(표준 DOM 이벤트라 Vue 리스너가 정상 수신)으로 대체. 여기서 **한 가지 더 발견한 함정** — `input`/`select`의 값을 DOM에서 직접 설정한 뒤 **같은 스크립트 안에서 바로** `.click()`을 호출하면, Vue의 반응형 갱신(그 값에 의존하는 `:disabled` 등)이 아직 flush되지 않은 시점이라 버튼이 여전히 이전 렌더의 `disabled=true`인 채로 클릭을 무시했다(간헐적이 아니라 매번 재현) — **값 설정과 클릭을 서로 다른 tool 호출로 분리**(두 호출 사이의 왕복 지연이 자연스러운 `nextTick`처럼 작동)하면 항상 해결됐다. 앞의 두 사례와 마찬가지로 이 프로젝트 코드의 결함이 아니라 검증 도구 세션 특이사항이다.
 
 **코딩 규칙 (절대 원칙)**
 - 코드 중간 잘림 금지 — `// 나머지 동일`, `...` 생략 표현을 쓰지 않는다.

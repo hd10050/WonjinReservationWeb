@@ -76,7 +76,7 @@
     },
     "reservationDetail": {
       "backToList": "返回列表",
-      "notAssignedBanner": "請先分配負責顧問。分配前無法新增諮詢記錄、變更狀態或儲存資訊。",
+      "notAssignedBanner": "請先分配負責顧問。分配前無法新增諮詢記錄或儲存資訊，僅可取消預約。",
       "customerInfo": "客戶資訊",
       "birthDate": "出生日期",
       "age": "歲",
@@ -89,7 +89,6 @@
       "preferredContactTimeHint": "韓國時間",
       "locale": "申請語言",
       "receivedAt": "接收時間",
-      "referralSource": "來源",
       "consultant": "負責顧問",
       "consultantPlaceholder": "請選擇負責顧問",
       "inactive": "已停用",
@@ -98,6 +97,7 @@
       "notesEmpty": "尚無諮詢記錄。",
       "editNote": "編輯",
       "edited": "已編輯",
+      "noteHistory": "修改紀錄",
       "noteBodyLabel": "新增諮詢記錄",
       "noteBodyPlaceholder": "請輸入諮詢內容",
       "addNote": "新增記錄",
@@ -108,6 +108,7 @@
       "depositCurrency": "訂金幣別",
       "depositAmount": "訂金金額",
       "depositPaid": "已確認入帳",
+      "depositWaived": "無需訂金",
       "logs": "處理紀錄",
       "actions": "操作",
       "markVisited": "確認到店",
@@ -115,8 +116,8 @@
       "cancelReservation": "取消預約",
       "cancelReasonLabel": "取消原因",
       "cancelReasonPlaceholder": "請輸入取消原因",
-      "deleteReservation": "刪除預約",
-      "deleteConfirm": "確定要刪除此預約嗎？刪除後將從列表中排除。"
+      "restoreReservation": "復原預約",
+      "restoreConfirm": "確定要復原此已取消的預約嗎？"
     },
     "consultants": {
       "title": "顧問管理",
@@ -361,9 +362,13 @@
     "assigned": "更改負責人",
     "status_changed": "狀態變更",
     "note_added": "新增諮詢記錄",
+    "note_updated": "修改諮詢記錄",
     "deposit_confirmed": "確認訂金到帳",
+    "deposit_updated": "訂金資訊變更",
+    "visit_schedule_changed": "到店時間變更",
+    "procedure_changed": "療程變更",
     "cancelled": "預約取消",
-    "deleted": "已刪除"
+    "restored": "預約復原"
   },
   "errors": {
     "INVALID_CREDENTIALS": "電子郵件或密碼不正確。",
@@ -374,7 +379,8 @@
     "INVALID_BIRTH_DATE": "請填寫正確的出生日期。",
     "SUBMIT_FAILED": "提交失敗，請稍後再試。",
     "RESERVATION_NOT_ASSIGNED": "此預約尚未分配負責顧問，請先分配。",
-    "RESERVATION_HAS_NOTES": "含有諮詢記錄的預約無法刪除。",
+    "RESERVATION_LOCKED": "已取消或已到店的預約無法編輯。",
+    "RESERVATION_NOT_CANCELLED": "只有已取消的預約才能復原。",
     "RESERVATION_STATE_CHANGED": "狀態已在其他地方被變更，請重新整理後再試。",
     "CONSULTANT_NOT_FOUND": "找不到該顧問。",
     "CONSULTANT_INACTIVE": "無法分配給已停用的顧問。",
@@ -389,6 +395,7 @@
     "INVALID_STATUS_TRANSITION": "不允許此狀態變更。",
     "CANCEL_REASON_REQUIRED": "請輸入取消原因。",
     "INVALID_DEPOSIT_CURRENCY": "訂金幣別不正確。",
+    "INVALID_DEPOSIT_AMOUNT": "請輸入0至9999999999.99之間的訂金金額。",
     "INVALID_PROCEDURE_IDS": "所選項目中包含不存在的項目。",
     "PROCEDURE_CODE_DUPLICATE": "該療程編號已被使用。",
     "INTERNAL_ERROR": "伺服器發生暫時性錯誤，請稍後再試。",

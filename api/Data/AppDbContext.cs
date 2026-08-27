@@ -12,6 +12,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<ReservationProcedure> ReservationProcedures => Set<ReservationProcedure>();
     public DbSet<ReservationNote> ReservationNotes => Set<ReservationNote>();
+    public DbSet<ReservationNoteRevision> ReservationNoteRevisions => Set<ReservationNoteRevision>();
     public DbSet<ReservationLog> ReservationLogs => Set<ReservationLog>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<LandingDailyStat> LandingDailyStats => Set<LandingDailyStat>();
@@ -156,6 +157,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .HasForeignKey(n => n.AuthorUserId).OnDelete(DeleteBehavior.SetNull);
 
             e.HasIndex(n => new { n.ReservationId, n.CreatedAt }).HasDatabaseName("ix_reservation_notes_reservation_id_created_at");
+        });
+
+        // ── reservation_note_revisions (8-7-1) — 상담 기록 수정 이력 ──
+        modelBuilder.Entity<ReservationNoteRevision>(e =>
+        {
+            e.Property(r => r.Body).HasMaxLength(2000).IsRequired();
+            e.Property(r => r.EditedByName).HasMaxLength(30).IsRequired();
+
+            e.HasOne(r => r.ReservationNote).WithMany(n => n.Revisions)
+                .HasForeignKey(r => r.ReservationNoteId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<User>().WithMany()
+                .HasForeignKey(r => r.EditedByUserId).OnDelete(DeleteBehavior.SetNull);
+
+            e.HasIndex(r => new { r.ReservationNoteId, r.EditedAt }).HasDatabaseName("ix_reservation_note_revisions_note_id_edited_at");
         });
 
         // ── reservation_logs (8-8) ───────────────────────────────

@@ -76,7 +76,7 @@
     },
     "reservationDetail": {
       "backToList": "목록으로",
-      "notAssignedBanner": "담당 실장을 먼저 배정하세요. 배정 전에는 상담 기록·상태 변경·저장이 모두 제한됩니다.",
+      "notAssignedBanner": "담당 실장을 먼저 배정하세요. 배정 전에는 상담 기록 작성·저장이 제한되며, 예약 취소만 가능합니다.",
       "customerInfo": "고객 정보",
       "birthDate": "생년월일",
       "age": "세",
@@ -89,7 +89,6 @@
       "preferredContactTimeHint": "한국 시간",
       "locale": "신청 언어",
       "receivedAt": "접수 시각",
-      "referralSource": "유입 경로",
       "consultant": "담당 실장",
       "consultantPlaceholder": "담당 실장 선택",
       "inactive": "비활성",
@@ -98,6 +97,7 @@
       "notesEmpty": "아직 상담 기록이 없습니다.",
       "editNote": "수정",
       "edited": "수정됨",
+      "noteHistory": "수정 이력",
       "noteBodyLabel": "새 상담 기록",
       "noteBodyPlaceholder": "상담 내용을 입력하세요",
       "addNote": "기록 추가",
@@ -108,6 +108,7 @@
       "depositCurrency": "예약금 통화",
       "depositAmount": "예약금 금액",
       "depositPaid": "입금 확인됨",
+      "depositWaived": "예약금 없음",
       "logs": "처리 이력",
       "actions": "액션",
       "markVisited": "내원 확인",
@@ -115,8 +116,8 @@
       "cancelReservation": "예약 취소",
       "cancelReasonLabel": "취소 사유",
       "cancelReasonPlaceholder": "취소 사유를 입력하세요",
-      "deleteReservation": "예약 삭제",
-      "deleteConfirm": "이 예약을 삭제하시겠습니까? 삭제 후에는 목록에서 제외됩니다."
+      "restoreReservation": "예약 복구",
+      "restoreConfirm": "취소된 예약을 다시 되돌리시겠습니까?"
     },
     "consultants": {
       "title": "실장 관리",
@@ -361,9 +362,13 @@
     "assigned": "담당자 변경",
     "status_changed": "상태 변경",
     "note_added": "상담 기록 추가",
+    "note_updated": "상담 기록 수정",
     "deposit_confirmed": "예약금 입금 확인",
+    "deposit_updated": "예약금 정보 변경",
+    "visit_schedule_changed": "방문일시 변경",
+    "procedure_changed": "시술 변경",
     "cancelled": "예약 취소",
-    "deleted": "삭제됨"
+    "restored": "예약 복구"
   },
   "errors": {
     "INVALID_CREDENTIALS": "이메일 또는 비밀번호가 올바르지 않습니다.",
@@ -374,7 +379,8 @@
     "INVALID_BIRTH_DATE": "생년월일을 정확히 입력해주세요.",
     "SUBMIT_FAILED": "제출에 실패했습니다. 잠시 후 다시 시도해주세요.",
     "RESERVATION_NOT_ASSIGNED": "담당 실장이 배정되지 않은 예약입니다. 먼저 배정하세요.",
-    "RESERVATION_HAS_NOTES": "상담 기록이 있는 예약은 삭제할 수 없습니다.",
+    "RESERVATION_LOCKED": "취소되었거나 방문 완료된 예약은 수정할 수 없습니다.",
+    "RESERVATION_NOT_CANCELLED": "취소된 예약만 복구할 수 있습니다.",
     "RESERVATION_STATE_CHANGED": "다른 곳에서 이미 상태가 변경되었습니다. 새로고침 후 다시 시도하세요.",
     "CONSULTANT_NOT_FOUND": "존재하지 않는 실장입니다.",
     "CONSULTANT_INACTIVE": "비활성 상태의 실장에게는 배정할 수 없습니다.",
@@ -389,6 +395,7 @@
     "INVALID_STATUS_TRANSITION": "허용되지 않는 상태 변경입니다.",
     "CANCEL_REASON_REQUIRED": "취소 사유를 입력하세요.",
     "INVALID_DEPOSIT_CURRENCY": "예약금 통화가 올바르지 않습니다.",
+    "INVALID_DEPOSIT_AMOUNT": "예약금 금액을 0 ~ 9999999999.99 사이로 입력해주세요.",
     "INVALID_PROCEDURE_IDS": "존재하지 않는 시술이 포함되어 있습니다.",
     "PROCEDURE_CODE_DUPLICATE": "이미 사용 중인 시술 코드입니다.",
     "INTERNAL_ERROR": "서버에 일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
