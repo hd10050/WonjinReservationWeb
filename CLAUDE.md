@@ -4,7 +4,7 @@
 ## 개요
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원 · 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO(`useSeo`·hreflang·OG이미지), 보안감사 1라운드(High2·Medium5) + **재감사**(원본 Low 12건 목록 유실 발견 → 재감사로 신규 9건 발견·전부 수정). 운영 DB 최초 부트스트랩 계정 3개 생성, 어드민 UI·보안 재감사 반영(상세는 세션 요약). **날짜·시간 피커는 D11을 뒤집고 커스텀 라이브러리로 교체 완료**(D23, 2026-08-27). **남은 건 CSP 도입 결정·실배포 라이브 curl 검증뿐** — **git 상태 clean, origin/main 동기화 확인 후 세션 종료**(2026-08-27, 다음 세션은 워크트리 아닌 main에서 바로 이어가면 됨)
+- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO·보안감사 1라운드+재감사(신규 9건 전부 수정). **날짜·시간 피커는 D11을 뒤집고 커스텀 라이브러리로 교체 완료**(D23). **[실장 관리]·[시술·수술 관리]에 엑셀 일괄등록 기능 추가 완료**(2026-08-27, 격리 워크트리에서 진행 후 main 병합). **남은 건 CSP 도입 결정·실배포 라이브 curl 검증뿐** — **git 상태 clean, origin/main 동기화 확인 후 세션 종료**
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -19,6 +19,7 @@
 | 언어 버전 고정 | **TypeScript 5.9.3 고정**(devDependency) — 7.x(네이티브 재작성판)는 `@vue/compiler-sfc`의 `ts.sys` 타입 해석과 비호환이라 reka-ui 기반 shadcn 컴포넌트 컴파일이 깨짐(11-7절) |
 | 배포 | 프론트 Cloudflare Workers(nitro `cloudflare_module`+`frontend/wrangler.toml`) / 백엔드·DB Render — **2026-08-26 실배포 완료** |
 | 로컬 | `docker compose up` — frontend:3700 / api:5200 / postgres:5435 |
+| 엑셀 | **xlsx(SheetJS)** — 관리자 엑셀 일괄등록(2026-08-27). 🔴 **npm 레지스트리판(`0.18.x`)은 미패치 취약점 있음 — 반드시 `https://cdn.sheetjs.com/xlsx-<버전>/xlsx-<버전>.tgz`로 설치**(package.json 의존성 값이 URL인 것은 의도된 것) |
 
 ## 확정 설계 결정 (2026-08-25 · 상세는 `docs/design.md` 2장)
 - **단일 병원 전용** — 전 테이블에 `hospital_id` 없음
@@ -142,8 +143,7 @@
 - **개인정보 처리방침 문안·보유기간 / DB 백업 정책** — 범위 외
 
 ## 참고 문서
-`docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종)
-공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md`
+`docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종) · 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md` · `excel-bulk-upload-pattern-reference.md`
 
-## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (33)까지 이동 완료)
-- **2026-08-27 (33) — 날짜·시간 피커 커스텀 라이브러리 도입(D23) + 폼 검증 메시지 로케일 버그 동시 수정**: 사용자 지시로 D11("네이티브 위젯이라 제어 불가")을 뒤집기로 결정. Context7로 shadcn Date Picker(Popover+Calendar, reka-ui 기반)·reka-ui TimeField 조사 후 채택(이미 설치된 reka-ui 재활용, 신규 의존성은 `@internationalized/date` 1개뿐). `components/ui/date-picker`·`time-picker` 신규(v-model은 기존과 동일한 `YYYY-MM-DD`/`HH:mm` 문자열 계약이라 API 불변) + `useInputLang()` 공용 컴포저블로 7개 파일(랜딩 폼, 어드민 대시보드·감사로그·KPI·유입경로·통계 필터, 예약상세) 10곳 전 교체. **같은 근본원인(네이티브 브라우저 UI가 앱 로케일 대신 브라우저/OS 언어를 따름)의 두 번째 증상 — 폼 필수 필드 미입력 시 브라우저 기본 검증 팝업이 로케일과 무관하게 뜨던 문제도 함께 해소**: `<form novalidate>` + 커스텀 `validate()`(필드별 인라인 에러+`aria-invalid`)로 대체(랜딩 폼·어드민 로그인, `required` 사용처 전수 grep 확인). **실측 중 버그 발견·수정**: `hour-cycle`에 문서 타입표(`12|24`)대로 숫자 `24`를 넘기면 "14 AM"처럼 깨져 문자열 `"h23"`으로 정정(`aria-valuemax=23`으로 재검증). 4언어 팝업 캘린더+검증 메시지 브라우저 실측, DatePicker/TimePicker→DB 값(`birth_date`/`preferred_contact_time`) 정확 저장까지 전 구간 실측(테스트 데이터 삭제 완료). `npm run build` 성공. **미확인**: 자동화 도구 환경(`document.hidden=true`)에서 Popover 닫힘 애니메이션 미완료 관측 — 19-2절 Chart.js rAF와 동일 범주 추정, 실브라우저 재확인 권장(위 TODO 참고). design.md D23 신설 + 9-2절①·12-1절 표 갱신.
+## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (34)까지 이동 완료)
+- **2026-08-27 (34) — [실장 관리]·[시술·수술 관리] 엑셀 일괄등록 기능 추가**: `excel-bulk-upload-pattern-reference.md` 패턴(all-or-nothing 3계층 검증) 적용, `POST /api/admin/{consultants,procedures}/bulk` 신설 + `RouteMap` 분류 추가. xlsx는 npm 레지스트리판의 미패치 취약점(GHSA-4r6h-8v6p-xvw6 등)을 발견해 `cdn.sheetjs.com` 패치판(0.20.3)으로 설치, 클릭시 동적 import. 격리 docker 스택(포트 15210/13710/15445)에서 curl 전 케이스(성공·all-or-nothing·중복 2종·역할403·상한초과·감사로그 분류) 실측 완료. 다른 세션의 D23 병합 커밋과 충돌 없이 병합 확인 후 main 병합·워크트리 정리. 상세: `docs/session-log.md` (34).
