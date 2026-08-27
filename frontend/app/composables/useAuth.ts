@@ -112,6 +112,15 @@ export function useAuth() {
       credentials: 'include',
       timeout: 3000,
     }).catch(() => {})
+
+    // 🔴 다른 탭 즉시 로그아웃(2026-08-27) — useState('auth:user')는 탭 간 공유되지 않아
+    // 이 탭의 로그아웃이 다른 탭에는 반영되지 않았다. BroadcastChannel로 방송하고,
+    // 수신 측은 plugins/02.auth-sync.client.ts가 처리(auth-pattern-reference.md 6-7절 패턴).
+    if (import.meta.client) {
+      const channel = new BroadcastChannel('wj_auth')
+      channel.postMessage('logout')
+      channel.close()
+    }
   }
 
   return { user, isLoggedIn, fetchMe, login, logout }
