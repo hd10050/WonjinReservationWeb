@@ -5,6 +5,13 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
+  // auth-pattern-reference.md 8장 — 재배포 후 열린 탭이 구 JS 청크 404를 맞으면 자동 새로고침.
+  // 없으면 auth 플러그인이 실행 안 돼 "로그인이 풀린 것처럼" 보임(버그#4). Cloudflare Workers는
+  // 재배포마다 청크 해시가 바뀌는 구조라 실제 발동 가능(design.md TODO, 2026-08-27 반영).
+  experimental: {
+    emitRouteChunkError: 'reload',
+  },
+
   css: ['~/assets/css/main.css'],
   vite: {
     plugins: [tailwindcss()],
