@@ -52,6 +52,7 @@
       "filterSearchPlaceholder": "Name, WeChat ID, or code",
       "filterApply": "Apply",
       "filterReset": "Reset",
+      "refresh": "Refresh",
       "colCode": "Code",
       "colName": "Name",
       "colWechatId": "WeChat ID",

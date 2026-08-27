@@ -52,6 +52,7 @@
       "filterSearchPlaceholder": "이름·위챗ID·예약코드",
       "filterApply": "적용",
       "filterReset": "초기화",
+      "refresh": "새로고침",
       "colCode": "예약코드",
       "colName": "이름",
       "colWechatId": "위챗ID",
