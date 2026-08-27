@@ -357,8 +357,10 @@ const MAIN_TABS = [
   { key: 'procedures', labelKey: 'admin.procedures.tabProcedures' },
 ] as const
 type MainTab = typeof MAIN_TABS[number]['key']
+// 기본 탭 = 카테고리 관리 — 사용자가 요청에서 먼저 나열한 탭이자, 시술을 등록하려면 카테고리가
+// 먼저 있어야 하는 선행 조건이기 때문(첫 진입 시 "카테고리부터 만들라"는 안내를 볼 필요가 없다).
 const mainTab = computed<MainTab>({
-  get: () => (route.query.tab === 'categories' ? 'categories' : 'procedures'),
+  get: () => (route.query.tab === 'procedures' ? 'procedures' : 'categories'),
   set: (v: MainTab) => navigateTo({ query: { ...route.query, tab: v } }),
 })
 
@@ -449,17 +451,19 @@ const catBulkSubmitError = ref('')
 const catBulkSuccessMessage = ref('')
 const catBulkErrorCount = computed(() => catBulkRows.value.filter(r => r.error).length)
 
-function fieldLabel(field?: string): string {
+// 🔴 code 필드 라벨은 탭마다 다르다(시술 코드 / 카테고리 코드) — codeLabel로 주입, 미지정 시 시술 코드가 기본.
+// (프론트 레이어1 검증과 백엔드 레이어3 응답 둘 다 이 라벨을 쓴다.)
+function fieldLabel(field: string | undefined, codeLabel?: string): string {
   const map: Record<string, string> = {
-    code: t('admin.procedures.formCodeLabel'),
+    code: codeLabel ?? t('admin.procedures.formCodeLabel'),
     categoryCode: t('admin.procedures.bulk.colCategoryCode'),
     nameZhCn: '简体中文', nameZhTw: '繁體中文', nameEn: 'English', nameKo: '한국어',
   }
   return map[field ?? ''] ?? (field ?? '')
 }
-function describeBulkError(code: string, field?: string, length?: number, max?: number): string {
-  if (code === 'BULK_FIELD_REQUIRED') return t('errors.BULK_FIELD_REQUIRED', { field: fieldLabel(field) })
-  if (code === 'BULK_FIELD_TOO_LONG') return t('errors.BULK_FIELD_TOO_LONG', { field: fieldLabel(field), length, max })
+function describeBulkError(code: string, field?: string, length?: number, max?: number, codeLabel?: string): string {
+  if (code === 'BULK_FIELD_REQUIRED') return t('errors.BULK_FIELD_REQUIRED', { field: fieldLabel(field, codeLabel) })
+  if (code === 'BULK_FIELD_TOO_LONG') return t('errors.BULK_FIELD_TOO_LONG', { field: fieldLabel(field, codeLabel), length, max })
   if (code === 'BULK_CODE_DUPLICATE_IN_FILE') return t('errors.BULK_CODE_DUPLICATE_IN_FILE')
   if (code === 'BULK_CODE_DUPLICATE_EXISTING') return t('errors.BULK_CODE_DUPLICATE_EXISTING')
   if (code === 'BULK_CATEGORY_NOT_FOUND') return t('errors.BULK_CATEGORY_NOT_FOUND')
@@ -474,10 +478,10 @@ function validateNameFields(r: { nameZhCn: string, nameZhTw: string, nameEn: str
   }
   return check(r.nameZhCn, 'nameZhCn') || check(r.nameZhTw, 'nameZhTw') || check(r.nameEn, 'nameEn') || check(r.nameKo, 'nameKo')
 }
-function validateCode(code: string): string {
+function validateCode(code: string, codeLabel?: string): string {
   const trimmed = code.trim()
-  if (!trimmed) return describeBulkError('BULK_FIELD_REQUIRED', 'code')
-  if (trimmed.length > 30) return describeBulkError('BULK_FIELD_TOO_LONG', 'code', trimmed.length, 30)
+  if (!trimmed) return describeBulkError('BULK_FIELD_REQUIRED', 'code', undefined, undefined, codeLabel)
+  if (trimmed.length > 30) return describeBulkError('BULK_FIELD_TOO_LONG', 'code', trimmed.length, 30, codeLabel)
   return ''
 }
 
@@ -510,18 +514,19 @@ async function onCategoryExcelSelected(e: Event) {
     }))
   const codeCounts = new Map<string, number>()
   for (const p of parsed) if (p.code) codeCounts.set(p.code, (codeCounts.get(p.code) ?? 0) + 1)
+  const catCodeLabel = t('admin.categories.formCodeLabel')
   catBulkRows.value = parsed.map((p) => {
-    const baseError = validateCode(p.code) || validateNameFields(p)
+    const baseError = validateCode(p.code, catCodeLabel) || validateNameFields(p)
     const dupError = !baseError && p.code && (codeCounts.get(p.code) ?? 0) > 1 ? describeBulkError('BULK_CODE_DUPLICATE_IN_FILE') : ''
     return { ...p, error: baseError || dupError }
   })
   catBulkSubmitError.value = ''
   catBulkSuccessMessage.value = ''
 }
-function applyRowErrors<T extends { row: number, error: string }>(rows: T[], e: any): T[] {
+function applyRowErrors<T extends { row: number, error: string }>(rows: T[], e: any, codeLabel?: string): T[] {
   const errorsByRow = new Map<number, string>()
   for (const err of e.data.rowErrors as { row: number, code: string, field?: string, length?: number, max?: number }[]) {
-    const msg = describeBulkError(err.code, err.field, err.length, err.max)
+    const msg = describeBulkError(err.code, err.field, err.length, err.max, codeLabel)
     errorsByRow.set(err.row, errorsByRow.has(err.row) ? `${errorsByRow.get(err.row)} / ${msg}` : msg)
   }
   return rows.map(r => ({ ...r, error: errorsByRow.get(r.row) ?? r.error }))
@@ -543,7 +548,7 @@ async function submitCategoryBulk() {
   } catch (e: any) {
     const code = e?.data?.code ?? 'UNKNOWN'
     if (code === 'BULK_VALIDATION_FAILED' && Array.isArray(e?.data?.rowErrors)) {
-      catBulkRows.value = applyRowErrors(catBulkRows.value, e)
+      catBulkRows.value = applyRowErrors(catBulkRows.value, e, t('admin.categories.formCodeLabel'))
     } else {
       catBulkSubmitError.value = t(`errors.${code}`)
     }
