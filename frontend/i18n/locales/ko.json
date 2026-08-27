@@ -13,7 +13,10 @@
     "common": {
       "logout": "로그아웃",
       "language": "언어",
-      "menu": "메뉴"
+      "menu": "메뉴",
+      "pushOn": "새 예약 알림 켜짐",
+      "pushOff": "새 예약 알림 꺼짐",
+      "pushDenied": "알림이 차단됨 — 브라우저 설정에서 허용해주세요"
     },
     "nav": {
       "dashboard": "예약 대시보드",

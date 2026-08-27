@@ -28,6 +28,9 @@ services:
       Jwt__AccessTokenMinutes: "15"
       Cors__AllowedOrigins__0: ${FRONTEND_ORIGIN}
       InternalSecret: ${INTERNAL_SECRET}
+      Push__VapidPublicKey: ${VAPID_PUBLIC_KEY}
+      Push__VapidPrivateKey: ${VAPID_PRIVATE_KEY}
+      Push__VapidSubject: ${VAPID_SUBJECT}
     depends_on:
       postgres:
         condition: service_healthy

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using WonjinApi.Data;
 using WonjinApi.DTOs;
 using WonjinApi.Models;
+using WonjinApi.Services;
 using WonjinApi.Utils;
 
 namespace WonjinApi.Controllers;
@@ -15,7 +16,7 @@ namespace WonjinApi.Controllers;
 [ApiController]
 [Route("api/admin/reservations")]
 [Authorize(Roles = "Admin,HospitalManager,Consultant")]
-public class AdminReservationsController(AppDbContext db) : ControllerBase
+public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster broadcaster) : ControllerBase
 {
     private static readonly TimeZoneInfo Kst = TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul");
 
@@ -226,6 +227,10 @@ public class AdminReservationsController(AppDbContext db) : ControllerBase
 
         await db.SaveChangesAsync();
         await tx.CommitAsync();
+
+        // 커밋 성공 후에만 발행 — 롤백될 수도 있는 변경을 미리 알리면 안 된다(2026-08-27, SSE 조용한 새로고침).
+        if (confirmedAffected > 0)
+            broadcaster.PublishReservationConfirmed(id);
 
         return await GetDetail(id);
     }

@@ -4,7 +4,7 @@
 ## 개요
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원 · 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO·보안감사 1라운드+재감사(신규 9건 전부 수정). **날짜·시간 피커는 D11을 뒤집고 커스텀 라이브러리로 교체 완료**(D23). **[실장 관리]·[시술·수술 관리]에 엑셀 일괄등록 기능 추가 완료**(2026-08-27). **페이지네이션 UI 통일·로딩 오버레이 스피너/고착버그 근본수정·개인정보 처리방침 예문·랜딩 동의 모달화·어드민 헤더 개편 완료**(2026-08-27, `session-2026-08-27` 워크트리에서 진행 후 main 병합, 세션요약 (35)~(36)). **남은 건 CSP 도입 결정·실배포 라이브 curl 검증뿐** — **git 상태 clean, origin/main 동기화 확인 후 세션 종료**
+- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO·보안감사 1라운드+재감사(신규 9건 전부 수정). **날짜·시간 피커는 D11을 뒤집고 커스텀 라이브러리로 교체 완료**(D23). **[실장 관리]·[시술·수술 관리]에 엑셀 일괄등록 기능 추가 완료**(2026-08-27). **페이지네이션 UI 통일·로딩 오버레이 스피너/고착버그 근본수정·개인정보 처리방침 예문·랜딩 동의 모달화·어드민 헤더 개편 완료**(2026-08-27, `session-2026-08-27` 워크트리에서 진행 후 main 병합, 세션요약 (35)~(36)). **관리자 알림 2종(신규예약→VAPID 웹푸시 / 예약확정→SSE 캘린더 조용한 새로고침) 추가 완료**(2026-08-27, `worktree-admin-notifications`에서 진행 후 main 병합, 세션요약 (37)). **남은 건 CSP 도입 결정·날짜피커/웹푸시 실브라우저 재확인 2건(아래 TODO)·실배포 라이브 curl 검증뿐** — **git 상태 clean, origin/main 동기화 확인 후 세션 종료**
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -12,6 +12,7 @@
 | 프론트 | Nuxt 4 + Vue 3 **Composition API** + Tailwind v4(`@tailwindcss/vite`) + `@nuxtjs/i18n`(`prefix_except_default`, 기본 zh-CN) |
 | SEO | `@nuxtjs/sitemap` + `@nuxtjs/robots` |
 | 백엔드/DB | ASP.NET Core 10 + EF Core(`EFCore.NamingConventions` 스네이크케이스) / PostgreSQL 16 (스키마 `wonjin`) |
+| 알림(2026-08-27) | **WebPush(1.0.13) VAPID 웹푸시**(신규예약→관리자, 브라우저 종료상태도 수신) + **ASP.NET Core 10 SSE**(`TypedResults.ServerSentEvents`, 예약확정→[예약 달력] 조용한 새로고침, `System.Threading.Channels` 인메모리 pub-sub) |
 | 인증 | 자체 JWT(AT 15분, 쿠키 `wj_at`) + RT(7일, SHA-256, 쿠키 `wj_rt`) — **소셜 로그인·회원가입 없음** |
 | UI | **shadcn-vue**(`shadcn-nuxt`, style `new-york`) + `reka-ui` 프리미티브 + `class-variance-authority`(D19, 구 D11 대체) + 커스텀 `DatePicker`/`TimePicker` + `@internationalized/date`(D23) |
 | 팔레트 | **Olive Garden Feast**(D20) — `#606C38`올리브(primary)·`#283618`짙은산림녹(foreground)·`#FEFDF7`크림(background, 2026-08-27 채도 낮춤)·`#DDA15E`탄(secondary)·`#BC6C25`번트오렌지(destructive), OKLCH 변환 후 shadcn CSS 변수에 적용 |
@@ -115,6 +116,7 @@
 ## TODO
 ### 다음 세션 최우선
 - [ ] **프론트 Content-Security-Policy 미적용 — 의도적 보류**(보안감사 재감사 2026-08-27) — X-Content-Type-Options 등 4개 헤더는 적용 완료했으나 CSP만 보류. `landing.vue`의 JSON-LD 인라인 스크립트가 예약마다 내용이 달라 정적 해시 지정이 안 통하고, nonce 방식은 Nuxt 통합이 더 큰 작업이라 섣불리 걸면 스크립트가 깨질 위험 — nonce 도입 여부 결정 필요
+- [ ] **🔴 관리자 알림(웹 푸시) 실제 브라우저 최종 확인 필요**(2026-08-27) — 자동화 도구 환경은 Service Worker 등록·`Notification.permission`이 원천 차단돼 있어 파이프라인은 간접 증거로 전부 확인했으나(공개키·SSRF화이트리스트·구독저장·실제 발송 시도·활성계정 필터) 실제 OS 알림 표시는 미검증. 테스트 계정 `verify-push@wonjin.local`로 실브라우저에서 `/admin` 로그인→종 아이콘→알림 허용→새 예약 접수로 확인 권장(19-2절 자동화 도구 특이사항과 동일 범주)
 - [ ] **🔴 Popover(DatePicker) 닫힘 애니메이션이 자동화 도구 환경(`document.hidden=true`)에서 미완료로 관측 — 실브라우저 재확인 필요**(2026-08-27) — `data-state`는 `closed`로 바뀌지만 `opacity`/`pointer-events`가 안 풀림. 19-2절 Chart.js rAF와 동일 범주 추정(코드는 순정 shadcn 생성 그대로), 실사용자 브라우저 재현 여부만 확인하면 됨
 ### Phase 계획 — 완료기준 포함 (design.md 19장과 동일, 상세 코드는 그쪽 참고)
 | # | 내용 | 완료기준 |
@@ -145,5 +147,5 @@
 ## 참고 문서
 `docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종) · 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md` · `excel-bulk-upload-pattern-reference.md`
 
-## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (36)까지 이동 완료)
-- **2026-08-27 (35)~(36) 이 세션 통합 요약**(`session-2026-08-27` 워크트리에서 진행 후 main 병합·워크트리/브랜치 정리 완료) — ①페이지네이션 UI 통일: 3개 목록 페이지(대시보드·계정관리·감사로그)를 공용 `Pagination.vue`(VixWeb 구조 참고, 팔레트는 기존 `Button` 컴포넌트 재사용)로 교체 ②`RouteOverlay`에 `Loader2` 스피너 추가 ③전환 중 재전환 시 오버레이가 안 걷히는 버그를 `useLoadingIndicator`(Nuxt 내장)로 교체해 근본 수정(`page:start`/`page:finish` 카운터 불균형이 원인) ④20-1절 "범위 외" 결정을 사용자 지시로 번복해 개인정보 처리방침 예문 7개 섹션을 4개 로케일 작성(`PrivacyContent.vue` 신규, `privacy.vue`·랜딩 모달이 공유) ⑤랜딩 폼 동의 링크를 네이티브 `<dialog>` 모달로 교체(신규 의존성 없음 — 재오픈 실패 버그를 발견해 이벤트 왕복 대신 상태 직접 갱신으로 수정) ⑥어드민 헤더 좌측 "Admin" 텍스트 제거 + 계정정보 배지화·로그아웃 버튼 왼쪽 재배치. 매 단계 `npm run build` + 격리 docker 브라우저 실측(기존 공유 컨테이너 무중단 확인) 후 정리 완료. 병합 시 다른 세션(D23·엑셀 일괄등록)과 6개 파일 충돌 발생 — 전부 직접 읽고 두 세션 의도를 모두 보존하는 방향으로 수동 해결(합집합 병합, 세션요약 번호 재배치 등). 상세 시행착오: `docs/session-log.md` (35)(36).
+## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (37)까지 이동 완료)
+- **2026-08-27 (37) — 관리자 알림 2종(신규예약→VAPID 웹푸시, 예약확정→SSE 캘린더 조용한 새로고침), `worktree-admin-notifications`에서 진행 후 main 병합**: SSE는 curl로 confirm 전이를 발생시켜 브라우저 무조작 상태에서 캘린더가 자동 갱신되는 것까지 end-to-end 실측, 웹 푸시는 파이프라인 전량(공개키·SSRF화이트리스트·구독저장·실제 발송 시도·활성계정 필터) 간접 증거로 확인했으나 실제 SW등록·OS알림 표시는 이 자동화 도구 환경 제약으로 미검증(위 TODO 참고). 커밋 `6aaf165`·`7e31f00`, 사용자 지시로 main 병합 + 워크트리·브랜치 정리 완료. 상세: `docs/session-log.md` (37).

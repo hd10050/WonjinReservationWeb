@@ -13,7 +13,10 @@
     "common": {
       "logout": "退出登录",
       "language": "语言",
-      "menu": "菜单"
+      "menu": "菜单",
+      "pushOn": "新预约提醒已开启",
+      "pushOff": "新预约提醒已关闭",
+      "pushDenied": "通知已被屏蔽 — 请在浏览器设置中允许"
     },
     "nav": {
       "dashboard": "预约看板",

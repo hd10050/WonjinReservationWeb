@@ -58,6 +58,23 @@
               <option v-for="loc in locales" :key="loc.code" :value="loc.code">{{ loc.name }}</option>
             </select>
           </div>
+          <!-- 새 예약 웹 푸시 토글 — 노출 조건은 isSupported뿐(5-5절, granted로만 게이팅하면
+               default·denied 유저는 여기서 켤 방법이 사라진다). ClientOnly로 감싸는 이유는 이
+               v-if가 브라우저 전용 값으로 엘리먼트 존재 자체를 게이팅해 hydration mismatch를
+               일으키기 때문(5-3절 — 텍스트 보간과 다른 종류의 문제). -->
+          <ClientOnly>
+            <button
+              v-if="isSupported"
+              type="button"
+              class="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              :aria-label="pushButtonLabel"
+              :title="pushButtonLabel"
+              @click="onTogglePush"
+            >
+              <BellOff v-if="permission === 'denied'" class="size-4" />
+              <Bell v-else class="size-4" :class="{ 'fill-current text-primary': isSubscribed }" />
+            </button>
+          </ClientOnly>
           <!-- 2026-08-27 — 계정 정보를 배지로 구분 + 로그아웃 버튼 바로 왼쪽으로 배치 -->
           <span class="hidden items-center rounded-full border border-border bg-accent px-3 py-1 text-xs font-medium text-accent-foreground sm:inline-flex">
             {{ user.name }} · {{ user.role }}
@@ -77,7 +94,7 @@
 // 메뉴 구성은 루트 CLAUDE.md 역할×메뉴 권한표 그대로: Consultant는 대시보드·달력만,
 // HospitalManager는 계정관리·로그·유입경로만 빠짐, Admin은 전부.
 import {
-  BarChart3, CalendarDays, FileClock, LayoutDashboard, LineChart, Menu, Stethoscope, Tag, UserCog, Users,
+  BarChart3, Bell, BellOff, CalendarDays, FileClock, LayoutDashboard, LineChart, Menu, Stethoscope, Tag, UserCog, Users,
 } from '@lucide/vue'
 
 useHead({ meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
@@ -90,6 +107,31 @@ const route = useRoute()
 await useOpsLocale()
 
 const mobileNavOpen = ref(false)
+
+// 새 예약 접수 웹 푸시(어드민 전용, 2026-08-27) — 항상 켜져있는 종 아이콘 하나로 상태별 분기.
+const { isSupported, permission, isSubscribed, refreshStatus, subscribe, unsubscribe } = usePush()
+if (import.meta.client) refreshStatus()
+
+const pushButtonLabel = computed(() => {
+  if (permission.value === 'denied') return t('admin.common.pushDenied')
+  return isSubscribed.value ? t('admin.common.pushOn') : t('admin.common.pushOff')
+})
+
+async function onTogglePush() {
+  if (permission.value === 'denied') return // 재요청해도 네이티브 팝업이 다시 안 뜬다(5-4절) — 안내는 title로 대체
+  if (isSubscribed.value) await unsubscribe()
+  else await subscribe()
+}
+
+// 예약 확정 시 [예약 달력] 조용히 새로고침용 SSE(2026-08-27, 스파이크 테스트 완료) — 레이아웃이
+// 전 어드민 페이지 공통이라 여기서 한 번만 연결하고 페이지 이동엔 영향받지 않는다. 새 예약 접수는
+// 이 채널을 안 타고 별도 웹 푸시로 처리한다(브라우저를 닫아도 받아야 하므로).
+const reservationConfirmedTick = useState('sse:reservationConfirmedTick', () => 0)
+if (import.meta.client) {
+  const es = new EventSource(`${config.public.apiBase}/api/admin/events`)
+  es.addEventListener('reservation_confirmed', () => { reservationConfirmedTick.value++ })
+  onScopeDispose(() => es.close())
+}
 
 const NAV_ITEMS = [
   { to: '/admin', labelKey: 'admin.nav.dashboard', exact: true, icon: LayoutDashboard, roles: ['Admin', 'HospitalManager', 'Consultant'] },

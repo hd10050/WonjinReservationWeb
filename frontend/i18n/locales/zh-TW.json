@@ -13,7 +13,10 @@
     "common": {
       "logout": "登出",
       "language": "語言",
-      "menu": "選單"
+      "menu": "選單",
+      "pushOn": "新預約提醒已開啟",
+      "pushOff": "新預約提醒已關閉",
+      "pushDenied": "通知已被封鎖 — 請在瀏覽器設定中允許"
     },
     "nav": {
       "dashboard": "預約看板",
