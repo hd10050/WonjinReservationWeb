@@ -4,7 +4,7 @@
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
       <Card>
-        <CardContent class="pt-6">
+        <CardContent>
           <div class="mb-4 flex items-center justify-between">
             <Button variant="outline" size="sm" @click="goMonth(-1)">{{ t('admin.calendar.prevMonth') }}</Button>
             <span class="font-semibold text-foreground">{{ monthLabel }}</span>

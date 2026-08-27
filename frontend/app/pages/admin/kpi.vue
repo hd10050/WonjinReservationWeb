@@ -17,7 +17,7 @@
     </Card>
 
     <Card>
-      <CardContent class="pt-6">
+      <CardContent>
         <ClientOnly>
           <div style="height: 320px">
             <Bar :data="chartData" :options="chartOptions" />
