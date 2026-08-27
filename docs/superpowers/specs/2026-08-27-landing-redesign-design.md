@@ -746,3 +746,151 @@ wonjincn.com(원진 중국어 자매 사이트, 같은 병원)에서 병렬 에�
 | 남자 안면 윤곽 [번역] | 脸部不对称。/ 耳下方形下颌角严重。/ 下颌骨和肌肉发达导致脸大且宽。/ 想要拥有小巧的脸型线条。 | 展现男性专属魅力的脸型 | 以WJ原辰的独家技术，在保留线条和棱角的同时，打造自然又立体的脸型。 |
 
 **[번역]** 표시는 참고사이트 원문이 아니라 이번에 직접 번역한 것 — 의료 마케팅 카피이므로 병원 검수 권장.
+
+## 부록 F. 영어(en) 번역 결과 (2026-08-27, 한국어 부록 D 원문 기반)
+
+wonjinbeauty.com/en 스크래핑을 포기(10절 참고, 카테고리 체계 불일치)하고 부록 D(한국어) 원문을 그대로 번역했다. 11개 카테고리 소개문 + 67개 시술(고민 불릿/상세 라벨/상세 설명) 전부 완료 — 부록 D의 67개와 정확히 일치. **[번역]** 표시 항목(짝눈 비대칭 교정/소아 선천성 안검하수/복 코 성형/코끝 성형/유두 성형/힙업 성형)도 포함, 의료 카피이므로 병원 검수 권장.
+
+### eye
+
+Intro: The eyes are considered one of the most important features in shaping a first impression. Because every face has its own unique balance and skin type, WJ WonJin recommends the surgical approach that best suits your individual features through in-depth consultation, aiming for a natural, harmonious result. Based on precise diagnosis and consultation, WJ WonJin's eye surgery selects the most suitable surgical method to guarantee a highly refined outcome.
+
+| Procedure (KO) | Concerns (EN) | Detail Label (EN) | Detail Description (EN) |
+|---|---|---|---|
+| 비절개 눈매 교정 - 글램아이 | I want my eyes to look bright and clear, larger, without it being obvious. / I have a habit of using my forehead muscles to open my eyes. / My double eyelids are multiple or uneven. | Double Eyelid and Eye Shape Correction at Once | This is a total eye surgery that corrects not only the double eyelid and eye shape but also the position of the lower lashes, creating a beautiful, appealing eye shape. |
+| 부분절개 눈매교정 - 더블유착 | I have ptosis that makes my eyes look severely sleepy. / Wrinkles form on my forehead when I open my eyes. / My eyelids are thick or have a lot of fat. | Strong, Long-Lasting Fixation | Rather than simply creating a double eyelid, this total eye surgery adjusts the strength of the eye-opening muscle to create a clearer, more defined eye shape. |
+| 눈썹 올림술 - 엔젤아이 | Even after double eyelid surgery, I feel something is still lacking. / I want pretty, gentle-looking eyes without double eyelid surgery. / My eyebrows make my expression look harsh. | A Softer Look with Just Eyebrow and Eye Shape Correction | Wrinkles around the eyes and the shape of the forehead are improved at the same time, and sagging skin disappears, transforming your look into a softer, gentler image. |
+| 트임 성형 - 오픈아이 | I have epicanthic folds that make my eyes look cramped. / My eyes are set far apart. / The horizontal width of my eyes is short, making them look cramped. | Bright and Open, Without the Cramped Look | While maintaining a natural look, this procedure completes clear, bright-looking eyes. |
+| 눈 재수술 | The front is large and the eyelid line gets lower toward the back. / The front line isn't visible and only the back line shows. / Only the front and back of the double eyelid line are visible, with the middle looking pressed down when the eyes are open. | Revision Eye Surgery + Eyelid Line Re-Correction | Based on a precise diagnosis of your current eye condition, we select the most suitable surgical method to guarantee a highly refined result. |
+| 고도 안검하수 눈매 교정 | Even when I strain my eyebrows or forehead, my eyes don't open well. / I have congenital ptosis. / Even after eye shape correction surgery, my eyelid movement is slow. | Correcting Severe Ptosis | This is an advanced eye shape correction with excellent aesthetic and functional results and a low recurrence rate. |
+| 눈밑지방재배치 | The fat under my eyes bulges out. / The skin under my eyes sags, making me look older. / My dark circles are severe, making me look tired. | Bright, Youthful-Looking Under-Eyes | By repositioning the under-eye fat, a leading cause of an aged look, this procedure brightens and smooths dark, dull under-eye areas. |
+| 중년 눈성형 | My drooping eyelids poke my eyelashes. / My eyelids sag so much they block my vision. / The skin under my eyes is loose and puffy. / I have severe under-eye wrinkles and dark circles. | Correcting Eyes That Have Drooped with Age | This is an anti-aging surgery for middle-aged and older patients that restores firmness and a bright impression to eyes that have sagged with age. |
+| 짝눈(비대칭) 교정 [번역] | I have a double eyelid on only one side. / The inner corner height differs between my two eyes. / My two eyes differ in size or shape. / The eye-opening strength differs between my two eyes. / My double eyelid lines came out different after surgery. / The double eyelid on one side is faint or has come undone. | (N/A) | We'll bring balance to both your eyes! Everyone has some degree of eye asymmetry, but if the difference is significant enough to be a concern, correction may be needed. The causes vary — eyelid shape, facial bone differences, eye-opening muscle strength, and more. We pinpoint the exact cause and use a customized surgical approach to bring balance to both eyes. |
+| 소아 선천성 안검하수 [번역] | Amblyopia (impaired visual development) / Emotional distress (severe asymmetry can cause stress for the child) / Ptosis symptoms (forehead wrinkles, headaches, reduced concentration, restless behavior, etc.) | (N/A) | Protect your precious child's eyes. This condition occurs when the eye-opening muscle has not fully developed, appearing in one or both eyes — most often just one, making full correction of the asymmetry difficult. Treating it is still important because it can affect visual development and expose the child to teasing. |
+
+### nose
+
+Intro: At WJ WonJin Plastic Surgery, we don't simply raise the bridge of your nose to change your image — we consider the balance of your entire face to find the ideal proportion and angle for you. We take pride in delivering satisfying results that consider both aesthetics and function.
+
+| Procedure (KO) | Concerns (EN) | Detail Label (EN) | Detail Description (EN) |
+|---|---|---|---|
+| 들창코·짧은 코 성형 | My nose is short and the tip turns up. / The tip is upturned so my nostrils are visible from the front. / My nose is short, making my face look flat. | Nasal Tip Lengthening (Septal Extension) | No more stress over a "pig nose"! We complete a smooth, refined nose line for you. |
+| 콧볼 축소 | My nasal tip is low and flared or drooping. / My nostrils are wide and the tip is flat. / My nasal tip is blunt and wide, making it look heavy. | ElastiGum Non-Incisional Alar Reduction | We bring together a spread-out nose to transform it into a refined look. |
+| 매부리코 성형 | The area between my brows looks low and my nasal tip droops. / My nose looks like an arrow-shaped nose. / My expression looks tough and stubborn. | Nasal Bone Osteotomy | Depending on the degree and cause of the protrusion, we transform a tough, stubborn look into a refined impression. |
+| 휜 코 성형 | My nose is crooked and asymmetrical. / My nasal bridge and nostrils are tilted. / My crooked nose causes conditions like nasal congestion and rhinitis. | Internal and External Lateral Osteotomy | By improving both the shape and function of the nose at the same time, we create a well-balanced, beautiful nose. |
+| 코 재수술 | After multiple surgeries, my skin is thin and the implant and cartilage show through. / The height of my nasal tip doesn't hold even after surgery. / My nasal tip is upturned, showing my nostrils too much. | Personalized Revision Rhinoplasty | Rather than simply correcting the visible issues, we analyze the cause of the previous surgery's failure and carry out a safe, precise revision. |
+| 무보형물코성형 | I'm uncomfortable with artificial implants. / I'm worried about inflammation or a foreign-body sensation after surgery. / I want a natural-looking rhinoplasty. | Smooth and Well-Defined, Without an Artificial Implant | Non-implant rhinoplasty minimizes the foreign-body sensation and inflammation caused by artificial implants, completing a natural-looking, undetectable nose line. |
+| 복 코 성형 [번역] | (N/A) | (N/A) | We improve a wide, blunt nasal tip to create a slimmer, more vibrant impression! A "bulbous nose" refers to a nose with a wide, round tip and nostrils — East Asians tend to have thick, flat nasal tip skin, making this common. We correct the tip's shape using cartilage, combined with fat removal when needed, to create a slim, well-defined nose. |
+| 코끝 성형 [번역] | (N/A) | (N/A) | Tip plasty uses only your own tissue, giving you a natural, freely moving nasal tip with no worries about side effects! The tip is just as important as the bridge in determining the overall impression of the nose — we improve the line of the bridge and tip using your own tissue, considering your individual features and proportions. |
+| 남자 코성형 | I'm concerned about a hooked or crooked nose. / I want a more masculine image. / I have severe nasal congestion and rhinitis symptoms. | Facial Dimension Brought to Life with Volume and Straight Lines | This creates a change not just in the shape of the nose, but in the overall image of the face. |
+
+### ent
+
+Intro: At WJ WonJin Plastic Surgery, to improve each patient's individual functional issues, experienced medical staff who thoroughly understand the anatomical structure of the nose perform every procedure personally, ensuring safe and satisfying results.
+
+| Procedure (KO) | Concerns (EN) | Detail Label (EN) | Detail Description (EN) |
+|---|---|---|---|
+| 비중격만곡증 | My crooked nose has caused a deviated septum. / I get frequent nosebleeds and my nose feels weak. / I've developed migraines, memory decline, and reduced concentration. | A Nasal Condition Covered by Insurance | An ENT specialist with over 20 years of experience personally handles everything from consultation to surgery, in a one-on-one, one-stop process. |
+| 비밸브협착증 | I have symptoms of rhinitis and sinusitis. / I snore heavily during sleep and also have sleep apnea. / Nasal congestion causes me migraines and sore throats. | Turning Labored Breathing into Comfortable Breathing | Surgical treatment of the narrowed nasal valve comfortably improves your breathing. |
+| 편도선수술 | I get tonsillitis 3-4 times a year. / I feel severe pain or a foreign-body sensation in my throat. / I have frequent recurrences of otitis media and sinusitis. | Safe and Certain | The tonsils are closely tied to immune function, so it's important to receive treatment tailored precisely to the cause. |
+| 비염 | Severe sneezing, runny nose, and congestion make daily life difficult. / My nose and eyes itch every pollen season. / When I catch a cold, my runny nose and sneezing linger for a long time. | Resolving Rhinitis That Made Even Breathing Difficult | Rhinitis comes with a range of symptoms. We identify the exact cause and provide a treatment tailored to you. |
+| 축농증(부비동염) | I frequently have yellow nasal discharge. / I feel postnasal drip running down the back of my throat. / I have severe chronic nasal congestion. | Turning Labored Breathing into Comfortable Breathing | Sinusitis comes with a range of symptoms. It's important to receive definitive treatment from an experienced ENT specialist. |
+
+### lifting
+
+Intro: Diagnosing and understanding skin elasticity, which varies by generation and individual, is the foundation of any lifting procedure. For a natural yet harmonious youthful look, WJ WonJin recommends the optimal lifting method for each individual.
+
+| Procedure (KO) | Concerns (EN) | Detail Label (EN) | Detail Description (EN) |
+|---|---|---|---|
+| 엘라스티꿈 리프팅 | After facial contouring/double jaw surgery, my cheeks started sagging. / My neck has lost elasticity and developed wrinkles. / My cheeks and jawline are thick and my skin has become loose. | Facelift-Level Results Through Minimal Incision | By reforming loosened ligaments, you can experience natural movement along with a strong lifting effect. |
+| 안면 거상 | My wrinkles have become too deeply set. / I wasn't satisfied with the results of thread lifting. / I want a long-lasting effect from a single procedure. | Simultaneous Correction of the SMAS (Fascia) Layer and Retaining Ligaments | Turn back the clock to how you looked 10 years ago, carrying that look forward for the next 10 years — a 20-year turnaround in effect. |
+| 이마 거상술 | Deep wrinkles have formed on my forehead. / My eyes and eyebrows droop, giving a gloomy look. / I've developed wrinkles around my eyes. | Using HD Endoscopy | This corrects not only forehead sagging but also drooping eyebrows and eyelids, transforming your look into a brighter impression. |
+| 이마 축소술 | My wide forehead makes my face look long. / My hairline has an "M" shape. / My hairline has an angular, box-like shape. | Forehead Reduction with Hairline Correction, All at Once | We reduce a wide forehead to match your overall facial balance, creating a well-proportioned, refined look. |
+| 민트 리프팅 | I want to improve my overall skin elasticity. / I'm concerned about nasolabial folds and sagging cheeks. / I want to correct facial asymmetry. | Stronger Lifting, Longer-Lasting Results | Mint Lifting improves wrinkles and skin elasticity all at once! It completes a natural V-line look, as if turning back the clock. |
+| 지방이식 | My sunken forehead gives a dull impression. / My hollow cheeks make me look older. / My deep nasolabial folds are a concern. / I want natural-looking volume in my face. | Fat Grafting with a High Survival Rate | It satisfies everything at once — a high fat-survival rate, naturally filling volume, and safety. |
+
+### dermatology
+
+Intro: Skin concerns aren't just a matter of cosmetics — they require systematic care tailored to each individual's condition. Using the latest medical equipment and experienced medical staff, WJ WonJin effectively treats pigmentation, enlarged pores, acne, and redness, and improves skin elasticity through lifting procedures. From laser treatments and skin boosters to customized skin regeneration programs, we provide safe, precise treatment for fundamental skin improvement.
+
+| Procedure (KO) | Concerns (EN) | Detail Label (EN) | Detail Description (EN) |
+|---|---|---|---|
+| 울쎄라피 프라임 | I'm concerned about a double chin or sagging jawline. / I want an overall V-line facial shape. / I want to improve sagging and wrinkles. | The Upgraded NEW Ulthera | Deeper ultrasound, more precise targeting. |
+| 써마지 FLX | I want to improve skin elasticity and texture. / I want to improve deepening nasolabial folds and sagging cheeks. / I want a natural lifting effect. | The More Advanced 4th-Generation Thermage | Collagen builds up with delicate, safe radiofrequency energy. |
+| 볼뉴머 | My face has lost overall elasticity. / I want to improve fine lines and skin texture. / I want to fill in natural-looking volume. | Collagen Building Up Deep Within the Skin | Safe, powerful radiofrequency energy that reaches deep into the skin's tissue. |
+| 레이저 안티에이징 | My skin elasticity has declined and I'm concerned about sagging. / I want a natural lifting effect. / I want to define my facial lines. | Restoring Elasticity and a V-Line, Without Surgery | A non-invasive procedure that delivers laser energy deep into the skin to promote collagen production, improving wrinkles and elasticity. |
+| 스킨부스터 | I want to hydrate my skin from deep within. / I want to improve my skin tone and elasticity. / I want to improve fine lines caused by aging. / I need fast recovery and skin regeneration. | Hydration and Elasticity Building Up from Deep Within the Skin | Skin Booster delivers active ingredients deep into the skin, supporting regeneration, brightening, hydration, collagen formation, and elasticity. |
+| 색소·모공 | I want to improve melasma, blemishes, and freckles. / I want to refine enlarged pores. / I want to brighten a dull skin tone. | Clear, Smooth Skin Through Personalized Treatment | A solution tailored to each skin concern — melasma, freckles, blemishes, pores — brightens the skin tone and smooths the texture. |
+| 여드름·홍조 | I frequently get adult acne. / I want to calm red, flushed skin. / I'm concerned about acne marks and scars. | Treating Acne, Acne Scars, and Redness by Analyzing the Root Cause | Through thorough diagnosis and customized treatment, we improve acne, acne scars, and facial redness, clearing up uneven, blotchy skin. |
+
+### stemcell
+
+Intro: Stem cells are a fundamental source of energy that resupplies lost cells, restoring damaged and weakened cells to address the root cause of aging and regenerate new cells — a state-of-the-art anti-aging treatment.
+
+| Procedure (KO) | Concerns (EN) | Detail Label (EN) | Detail Description (EN) |
+|---|---|---|---|
+| 줄기세포 주사 | I want to improve not only aged skin but also my overall condition, tissue function, and immunity. | Solving the Root Cause of Aging Through Cell Regeneration | It boosts cellular immunity and restores your body's balance, helping to bring you back to a younger, healthier state. |
+| 줄기세포 지방이식 | I want fat grafting with good volume and a high survival rate, without worrying about calcification or lumping. | Advanced Technology That Infuses Cells with Volume and Youth | You can enjoy all the benefits at once — a high fat-survival rate, firm skin, and vibrant dimension. |
+| 줄기세포 리프팅 | I want to restore damaged skin without scars or pain, to achieve firm, youthful-looking skin. | The Power of Double Synergy That Rewinds Your Skin's Clock | Through skin cell regeneration, your skin naturally looks younger, allowing you refined beauty and health together. |
+| 줄기세포 탈모개선 | I want a simple yet effective hair loss treatment instead of a cumbersome hair transplant. | A Method for Newly Proliferating Hair Follicle Cells | It regenerates damaged hair follicle cells into healthy ones, fundamentally improving hair loss. |
+| 줄기세포 남성활력 | I want to restore the vitality I've lost due to stress and aging. | Boosting Male Hormones to Activate Vital Energy | It regenerates the blood vessels and nerves responsible for declining sexual function and increases male hormone levels. |
+
+### breast
+
+Intro: You have every right to be beautiful, and you can be. WJ WonJin will listen to your honest concerns about your breasts to truly understand a woman's heart. Meet a premium breast surgery center at WJ WonJin, one that has stood at the top of Korean breast surgery for over 20 years.
+
+| Procedure (KO) | Concerns (EN) | Detail Label (EN) | Detail Description (EN) |
+|---|---|---|---|
+| 가슴 확대 성형 | I want to return to my daily life quickly after surgery. / I'm suffering from capsular contracture. / I need breast reconstruction due to complications. / I want the shape and movement, not just the feel, to be reliably natural. | Implant Insertion | High-quality, highly satisfying implants meet the premium breast surgery center, WJ WonJin. |
+| 하이브리드 가슴성형 | I want a natural breast feel. / I have a very thin body type. / My breast implants show visibly through the skin after surgery. | Combining Only the Advantages of Breast Implants and Fat Grafting | You can achieve full volume, a natural cleavage, and a soft feel. |
+| 가슴 축소 성형 | My breasts are severely large, causing significant psychological stress. / My large breasts cause neck and back pain. / Severe breast sagging has led to skin conditions like eczema. | Vertical, Periareolar, and "Anchor"-Shaped Incision Methods | Safe removal of glandular tissue considers not only your physical health but also your body proportions. |
+| 처진 가슴 교정 | My breasts have low volume and are sagging. / My breasts are large in volume and sagging. / My breasts have sagged due to pregnancy and childbirth. / My breast elasticity has declined due to rapid weight loss. | Breast Lift Surgery | A simple correction of the glandular tissue restores lost elasticity and volume. |
+| 가슴 재수술 | My breasts feel hard after surgery. / I'm unhappy with the size and shape after surgery. / I want to replace my implants. | Revision Breast Surgery, Done More Carefully and Precisely! | Through precise diagnosis, WJ WonJin thoroughly analyzes the cause requiring revision and carries out the procedure safely and accurately. |
+| 유두 성형 [번역] | (N/A) | (N/A) | We create the perfect breast! A beautiful breast isn't just about ample volume — a nipple and areola that suit the breast's size are essential. The ideal nipple diameter is about 1 cm, and the ideal areola width is about 3.5-4.5 cm. We correct inverted or enlarged nipples while resolving functional and aesthetic concerns. (Subtypes: Inverted Nipple Correction, Nipple Reduction, Areola Reduction) |
+| 여성형 유방(여유증) | I can feel a lump in my chest. / My chest is unusually developed. / I avoid wearing thin clothing because of my chest. | A Concern Men Don't Like to Talk About | The feminized chest you've had to hide and cover up — WJ WonJin will transform it into a confident, masculine chest. |
+
+### contour
+
+Intro: Double jaw surgery corrects a misaligned facial skeleton, and facial contouring surgery designs a natural, beautiful facial line — both require more specialized, advanced surgical skill than almost any other procedure. WJ WonJin provides a coordinated specialist care system to ensure highly refined results. Double jaw and contouring surgery are highly demanding procedures — but with WJ WonJin, you can feel at ease.
+
+| Procedure (KO) | Concerns (EN) | Detail Label (EN) | Detail Description (EN) |
+|---|---|---|---|
+| 긴 얼굴 수술 | My teeth and gums show when I smile. / My face is long and I have a protruding mouth. / Only my chin tip is long. | Chin Surgery or Double Jaw Surgery | By shortening the length of the jaw while resolving every issue related to the facial bones, we uncover your hidden golden ratio. |
+| 안면 비대칭 교정 | My midline is normal, but the size of my left and right jaw differs. / My midline is normal, but only the contour of my left and right jawline differs. / My midline is off-center and I have a long face with an underbite. | Jaw Angle Surgery, Chin Surgery, or Double Jaw Surgery | By aligning the center of the face, even a large, asymmetrical face can be transformed into a smaller, well-balanced one. |
+| 돌출 입 교정 | Only my teeth protrude. / Only my mouth protrudes, without a long face. / I have a protruding mouth along with a receding chin. | Anterior Segmental Osteotomy or Double Jaw Surgery | Correcting both the teeth and the skeletal structure completes a smaller, slimmer face. |
+| 복합 안면 윤곽 | Both my jaw and cheekbones protrude. / My face looks large and angular from the front. / My bones are thick, making my jaw look wide. / My face lacks overall harmony. | Combined U-Line/V-Line Facial Contouring | Considering various factors such as your individual features and image, we find the egg-shaped facial line that suits you best. |
+| 사각 턱 수술 | My face looks like a wide square from the front. / My jaw tip is blunt, making it hard to distinguish my jaw from my cheeks. / My jawline below the ears looks severely angular from the side. / I'm often told I look intimidating. | Cortical Bone Ostectomy, T-Osteotomy | The key isn't simply eliminating the angle of the jaw, but bringing out a V-line that's in harmony with your face. |
+| 광대뼈 축소술 | My cheekbones protrude, giving an intimidating look. / My side cheekbones are prominent, making my face look uneven from the front. / Both my front and side cheekbones are prominent, widening my face. / My cheekbones are asymmetrical. | 3D Zygoma Reduction, iQuick Zygoma Reduction, Front Cheekbone Implant | By reducing the side cheekbones while preserving front volume, you can expect a smaller, slimmer face. |
+| 턱 끝 수술 | My bite is normal, but my chin tip is long and protrudes forward. / My bite is normal, but underdeveloped jaw bone makes my chin tip small. / My chin tip is too long or too short. / My chin tip is wide and blunt. | Implant/Fat Grafting, Chin Bone Osteotomy | Even a small addition makes a dramatic difference — a clear transformation without needing double jaw surgery. |
+| 윤곽재건복원술 | I developed facial asymmetry after facial contouring surgery. / Over-resection during facial contouring gave me a "witch chin." / A secondary angle developed after surgery. / I'm unsatisfied with the results of my facial contouring/double jaw surgery. | Precise, Safe, Customized Reconstruction and Restoration | Dissatisfaction caused by contouring surgery can be corrected through revision and restoration to achieve your desired look. |
+
+### bodyline
+
+Intro: WJ WonJin's body contouring surgery isn't just about removing fat — it considers each client's needs and their individual body balance to complete the most ideal body line.
+
+| Procedure (KO) | Concerns (EN) | Detail Label (EN) | Detail Description (EN) |
+|---|---|---|---|
+| 지방 흡입 | I have a high overall body fat level. / I have excess fat in specific areas. / I want to reshape my body in a short period of time. | Performed by a Plastic Surgery Specialist — Fat and Body Contouring | Rather than simply reducing size, this completes a balanced body line that considers your individual body type. |
+| 복부 성형술 | My abdomen sags after childbirth. / I have severe stretch marks and loose skin. / My abdominal shape is uneven after liposuction. | More Than Just Liposuction — Firming a Sagging, Loose Abdomen | Loose, sagging skin from weight changes, childbirth, or aging is difficult to improve with liposuction alone — cutting away excess skin and bringing together the abdominal muscles creates a firm, smooth line. |
+| 힙업 성형 [번역] | My hips sag and lack volume. / I want to look more voluminous in my clothes. / My hips are asymmetrical. / My hips sag and are flat, making my legs look short. / My pelvis is small. / Diet, exercise, and yoga haven't given me a hip lift. / Some hip tissue was removed due to an accident or illness. | (N/A) | Along with the chest, firm, voluminous hips are essential for a feminine S-line figure. We lift the hips upward to create an attractive hip line. (Specific techniques: Harvest Jet Autologous Fat Grafting / Implant Insertion / Combined Approach) |
+
+### men
+
+Intro: WJ WonJin's surgery for men systematically analyzes each individual's bone structure and skin characteristics — which differ from women's — and plans designs and surgical methods made specifically for men.
+
+| Procedure (KO) | Concerns (EN) | Detail Label (EN) | Detail Description (EN) |
+|---|---|---|---|
+| 남자 눈성형 | I want clear, defined eyes without a double eyelid. / I want to improve a sleepy-looking gaze. / I want bigger eyes, whether monolid or hidden double lid. | Subtle, Undetectable Definition | Using clean, natural lines different from women's surgery, this completes an attractive, defined gaze. |
+| 남자 코성형 | I'm concerned about a hooked or crooked nose. / I want a more masculine image. / I have severe nasal congestion and rhinitis symptoms. | Facial Dimension Brought to Life with Volume and Straight Lines | This creates a change not just in the shape of the nose, but in the overall image of the face. |
+| 남자 안면 윤곽 | My face is asymmetrical. / I have a severe square jaw below my ears. / My jaw bone and muscles are developed, making my face look large and wide. / I want a slimmer facial line. | A Facial Shape That Brings Out Distinctly Masculine Appeal | With WJ WonJin's expertise, we bring out lines and angles to create a natural yet sharp look. |
+| 여유증 | I can feel a lump in my chest. / My chest is unusually developed. / I avoid wearing thin clothing because of my chest. | A Concern Men Don't Like to Talk About | The feminized chest you've had to hide and cover up — WJ WonJin will transform it into a confident, masculine chest. |
+
+### reconstruction
+
+Intro: Through years of experience and continuous research, WJ WonJin has built extensive expertise not only in cosmetic surgery but also in reconstructive surgery. With our own unique know-how, we strive to heal even the wounded heart.
+
+| Procedure (KO) | Concerns (EN) | Detail Label (EN) | Detail Description (EN) |
+|---|---|---|---|
+| 구순구개열 | I was born with a cleft in my upper lip. / I missed the timing for a second surgery after the initial procedure. / I need treatment for deformity that developed after surgery. | Natural, Precise Restoration Is Key | This surgery requires comprehensive treatment covering the nose and philtrum as well as the lips. |
+| 구순열코성형 | My nose became deformed after the initial cleft lip surgery. / My nose is bent to one side and my nostrils have become deformed. | Correcting a Deformed Nose | By restoring not only appearance but also nasal function, we give you back natural beauty and a comfortable daily life. |
+| 귀성형 | My earlobe looks sharply pulled. / My ears look too protruding. / I've developed a complex because of the shape of my ears. | Balanced Harmony for the Face | The key to ear surgery is harmonious features and a natural look. |
