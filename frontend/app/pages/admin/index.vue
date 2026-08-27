@@ -55,7 +55,7 @@
         </div>
         <div class="flex flex-col gap-1.5">
           <Label for="f-to">{{ t('admin.reservations.filterTo') }}</Label>
-          <DatePicker id="f-to" v-model="formTo" :locale="inputLang" />
+          <DatePicker id="f-to" v-model="formTo" :locale="inputLang" :min-value="toMinValue" />
         </div>
         <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
           <Label for="f-search">{{ t('admin.reservations.filterSearch') }}</Label>
@@ -181,6 +181,7 @@ const formConsultantId = ref(query.value.consultantId ? String(query.value.consu
 const formFrom = ref(query.value.from)
 const formTo = ref(query.value.to)
 const formSearch = ref(query.value.search ?? '')
+const { toMinValue } = useDateRangeFilter(formFrom, formTo)
 
 // 🔴 버그(2026-08-27) — "비활성 포함" 체크 후 비활성 실장을 선택하고 체크를 다시 해제하면 목록이
 // 활성 실장만으로 교체돼 선택돼 있던 값이 <select>에 더 이상 없는 옵션이 된다. 네이티브 select는

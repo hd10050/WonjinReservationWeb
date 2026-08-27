@@ -123,7 +123,7 @@
         </div>
         <div class="flex flex-col gap-1.5">
           <Label for="f-to">{{ t('admin.referrals.filterTo') }}</Label>
-          <DatePicker id="f-to" v-model="formTo" :locale="inputLang" />
+          <DatePicker id="f-to" v-model="formTo" :locale="inputLang" :min-value="toMinValue" />
         </div>
         <Button @click="applyFilters">{{ t('admin.referrals.filterApply') }}</Button>
       </CardContent>
@@ -195,6 +195,7 @@ const { data } = await useApi<ReferralStat[]>('/api/admin/stats/referrals', { qu
 
 const formFrom = ref(query.value.from)
 const formTo = ref(query.value.to)
+const { toMinValue } = useDateRangeFilter(formFrom, formTo)
 
 function applyFilters() {
   navigateTo({ query: { from: formFrom.value, to: formTo.value } })

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
 import type { DateValue } from '@internationalized/date'
-import { parseDate } from '@internationalized/date'
+import { getLocalTimeZone, parseDate, today } from '@internationalized/date'
 import { CalendarIcon, X } from '@lucide/vue'
+import { createYearRange } from 'reka-ui/date'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -18,12 +19,25 @@ const props = withDefaults(defineProps<{
   disabled?: boolean
   invalid?: boolean
   placeholder?: string
+  minValue?: DateValue
+  maxValue?: DateValue
   class?: HTMLAttributes['class']
 }>(), {
   disabled: false,
   invalid: false,
 })
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
+
+// 🔴 UX(2026-08-28) — 화살표로만 월 이동이 가능해 생년월일처럼 먼 과거를 고를 때 수십~수백 번
+// 클릭해야 했음. app/components/ui/calendar/Calendar.vue에 이미 구현된 shadcn "month-and-year"
+// 레이아웃(년/월 네이티브 select, D11 대체 당시 함께 들여온 것)을 활성화하는 것으로 해결 — 타이핑
+// 입력으로 바꾸지 않음. year-range를 명시적으로 고정해두지 않으면 Calendar.vue가 매번 현재
+// placeholder(=화면에 보이는 달) 기준 -100/+10년으로 재계산해, 연도를 선택할 때마다 선택지 목록
+// 자체가 다시 움직여버린다 — "오늘" 한 번만 앵커로 고정.
+const yearRange = createYearRange({
+  start: today(getLocalTimeZone()).cycle('year', -100),
+  end: today(getLocalTimeZone()).cycle('year', 10),
+})
 
 const { t } = useI18n()
 const open = ref(false)
@@ -70,7 +84,14 @@ function clear() {
         </Button>
       </PopoverTrigger>
       <PopoverContent class="w-auto p-0" align="start">
-        <Calendar v-model="calendarValue" :locale="locale" />
+        <Calendar
+          v-model="calendarValue"
+          :locale="locale"
+          :min-value="minValue"
+          :max-value="maxValue"
+          layout="month-and-year"
+          :year-range="yearRange"
+        />
       </PopoverContent>
     </Popover>
     <button

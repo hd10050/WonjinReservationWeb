@@ -52,7 +52,7 @@ const timeValue = computed<Time | undefined>({
     :aria-invalid="invalid"
     granularity="minute"
     :class="cn(
-      'border-input flex h-9 w-32 items-center gap-0.5 rounded-md border bg-transparent px-3 text-sm shadow-xs',
+      'border-input flex h-9 w-fit items-center gap-0.5 rounded-md border bg-transparent px-3 text-sm shadow-xs',
       'focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-3',
       disabled ? 'cursor-not-allowed opacity-50' : '',
       invalid ? 'border-destructive ring-destructive/20 dark:ring-destructive/40' : '',
@@ -64,12 +64,17 @@ const timeValue = computed<Time | undefined>({
            dayPeriod("AM"/"PM") 파트를 함께 내보낸다(ko-KR 확인). 24시간제 고정 취지(위 주석)를
            지키려면 hour/minute/literal 세 파트만 그리고 dayPeriod는 명시적으로 걸러야 한다. -->
       <span v-if="segment.part === 'literal'" class="text-muted-foreground">{{ segment.value }}</span>
+      <!-- 🔴 실측(2026-08-28) — node_modules/reka-ui/dist/shared/useDateFormatter.js의 part()가 쓰는
+           defaultPartOptions는 hour/minute을 'numeric'으로 포맷한다('2-digit' 아님) — 한자릿수 값이
+           패딩 없이 그대로 나온다(라이브러리 기본 동작, TimeFieldRoot에 이를 바꿀 prop 없음). 이미
+           formatHm()에서 쓰는 것과 동일한 padStart로 표시만 보정 — 내부 segmentValues·타이핑 상태는
+           그대로라 안전. -->
       <TimeFieldInput
         v-else-if="segment.part === 'hour' || segment.part === 'minute'"
         :part="segment.part"
         class="rounded px-0.5 text-center tabular-nums outline-none focus:bg-accent"
       >
-        {{ segment.value }}
+        {{ segment.value.padStart(2, '0') }}
       </TimeFieldInput>
     </template>
   </TimeFieldRoot>

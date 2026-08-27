@@ -30,7 +30,7 @@
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="f-to">{{ t('admin.auditLogs.filterToLabel') }}</Label>
-        <DatePicker id="f-to" v-model="formTo" :locale="inputLang" />
+        <DatePicker id="f-to" v-model="formTo" :locale="inputLang" :min-value="toMinValue" />
       </div>
       <div class="flex flex-col gap-1.5">
         <Label for="f-search">{{ t('admin.auditLogs.filterSearchLabel') }}</Label>
@@ -125,6 +125,7 @@ const formAction = ref(query.value.action ?? '')
 const formFrom = ref(query.value.from)
 const formTo = ref(query.value.to)
 const formSearch = ref(query.value.search ?? '')
+const { toMinValue } = useDateRangeFilter(formFrom, formTo)
 
 function applyFilters() {
   navigateTo({
