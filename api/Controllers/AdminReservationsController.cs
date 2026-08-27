@@ -449,11 +449,10 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
         await using var tx = await db.Database.BeginTransactionAsync();
 
         // 🔴 보안감사(2026-08-26) 발견 — 이전엔 배정 여부를 트랜잭션 밖 별도 SELECT로만 확인했다.
-        // 그 확인과 아래 INSERT 사이에 SoftDelete가 먼저 커밋되면(둘 다 "상담기록 0건"을 보고 통과),
-        // 노트는 삭제된 예약에 조용히 저장되고 전역 쿼리 필터로 영구히 안 보이게 된다(D15 시나리오와
-        // 동일). ExecuteUpdateAsync 조건부 UPDATE가 이 행에 row-level lock을 걸어, 동시에 들어온
-        // SoftDelete의 UPDATE와 서로 직렬화되게 한다 — SoftDelete가 먼저 커밋되면 아래 WHERE의
-        // ConsultantId 조건이 전역 필터에 의해 대상 자체를 못 찾아 touched=0이 되어 안전하게 막힌다.
+        // ExecuteUpdateAsync 조건부 UPDATE가 이 행에 row-level lock을 걸어, 동시에 들어온 다른 쓰기의
+        // UPDATE와 서로 직렬화되게 한다 — 상대가 먼저 커밋되면 아래 WHERE 조건에 안 걸려 touched=0이
+        // 되어 안전하게 막힌다(경쟁하는 대상은 원래 SoftDelete/D15였으나, 2026-08-27 소프트 삭제
+        // 기능 자체가 폐지되어 지금은 예약 취소(Cancelled 전이)가 그 자리를 대신한다 — 아래 참고).
         // 🔴 취소된 예약은 상담 기록 추가도 잠근다(11-2절) — 방문완료는 예외(#14, 사후 상담 기록 목적).
         var touched = await db.Reservations
             .Where(r => r.Id == id && r.ConsultantId != null && r.Status != "Cancelled")
