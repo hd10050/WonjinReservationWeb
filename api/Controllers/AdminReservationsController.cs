@@ -97,8 +97,13 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
             summary?.New ?? 0, summary?.Consulting ?? 0, summary?.Confirmed ?? 0, summary?.VisitedThisMonth ?? 0));
     }
 
-    // [예약 달력] year·month는 정확히 한 달만 조회 가능 — from/to 파라미터 자체가 없어 무제한 범위
+    // [예약 달력] year·month는 정확히 한 달만 지정 가능 — from/to 파라미터 자체가 없어 무제한 범위
     // 조회를 클라이언트가 요청할 방법이 없다(12-6절 "최대 1개월 범위 검증"을 파라미터 설계로 만족).
+    // 🔴 실제 조회 범위는 그 달의 리터럴 1일~말일이 아니라 프론트 6주(42칸) 그리드 전체다 —
+    // 그래야 그리드에 걸쳐 나오는 이전달 말주·다음달 초주 셀의 예약도 표시된다(2026-08-27).
+    // gridStart 계산은 calendar.vue의 gridCells와 완전히 동일해야 한다(달라지면 그리드에는
+    // 보이는데 조회가 안 되는 셀이 생김). year·month가 계산의 유일한 입력이라 범위는 여전히
+    // 고정 42일로 결정론적이며 클라이언트가 임의로 넓힐 수 없다.
     // 필터가 부분 인덱스 ix_reservations_visit_date의 조건(status IN ('Confirmed','Visited'))과
     // 정확히 일치해야 인덱스를 탄다(8-5절).
     [HttpGet("calendar")]
@@ -107,10 +112,11 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
         DateOnly monthStart;
         try { monthStart = new DateOnly(year, month, 1); }
         catch (ArgumentOutOfRangeException) { return BadRequest(new { code = "INVALID_CALENDAR_DATE" }); }
-        var monthEndExclusive = monthStart.AddMonths(1);
+        var gridStart = monthStart.AddDays(-(int)monthStart.DayOfWeek); // DayOfWeek: 일요일=0
+        var gridEndExclusive = gridStart.AddDays(42);
 
         var items = await db.Reservations
-            .Where(r => r.VisitDate != null && r.VisitDate >= monthStart && r.VisitDate < monthEndExclusive
+            .Where(r => r.VisitDate != null && r.VisitDate >= gridStart && r.VisitDate < gridEndExclusive
                      && (r.Status == "Confirmed" || r.Status == "Visited"))
             .OrderBy(r => r.VisitDate).ThenBy(r => r.VisitTime)
             .Select(r => new ReservationCalendarItemDto(

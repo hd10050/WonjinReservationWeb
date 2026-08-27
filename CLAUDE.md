@@ -4,7 +4,7 @@
 ## 개요
 원진성형외과의 **외국인(중화권) 고객 예약·상담 관리 시스템**. 광고로 유입된 고객이 랜딩 폼으로 상담을 신청하면, 병원 실장이 위챗으로 연락해 상담·방문예약을 확정하고 그 과정을 관리자 패널에서 추적·감사·집계한다.
 - 흐름: 광고(UTM·추천코드) → 랜딩 폼 제출 → 실장 위챗 연락 → 상담·시술 결정 → 방문예약 확정 → 내원 · 지원 언어 4개: **zh-CN(기본)** · zh-TW · en · ko
-- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO·보안감사 1라운드+재감사(신규 9건 전부 수정). **날짜·시간 피커는 D11을 뒤집고 커스텀 라이브러리로 교체 완료**(D23). **[실장 관리]·[시술·수술 관리]에 엑셀 일괄등록 기능 추가 완료**(2026-08-27). **페이지네이션 UI 통일·로딩 오버레이 스피너/고착버그 근본수정·개인정보 처리방침 예문·랜딩 동의 모달화·어드민 헤더 개편 완료**(2026-08-27, `session-2026-08-27` 워크트리에서 진행 후 main 병합, 세션요약 (35)~(36)). **관리자 알림 2종(신규예약→VAPID 웹푸시 / 예약확정→SSE 캘린더 조용한 새로고침) 추가 완료**(2026-08-27, `worktree-admin-notifications`에서 진행 후 main 병합, 세션요약 (37)). **남은 건 CSP 도입 결정·날짜피커/웹푸시 실브라우저 재확인 2건(아래 TODO)·실배포 라이브 curl 검증뿐** — **git 상태 clean, origin/main 동기화 확인 후 세션 종료**
+- 현재 상태: **Phase 1~9 전부 완료**(2026-08-27). Phase 1~8 main 병합+인프라 실배포(프론트 Cloudflare Workers `wonjinreservationweb.hd1005019.workers.dev` / 백엔드+DB Render `wonjinreservationweb.onrender.com`, 2026-08-26). **Phase 9**(SEO·보안감사) 로컬 검증까지 완료 — SEO·보안감사 1라운드+재감사(신규 9건 전부 수정). **날짜·시간 피커는 D11을 뒤집고 커스텀 라이브러리로 교체 완료**(D23). **[실장 관리]·[시술·수술 관리]에 엑셀 일괄등록 기능 추가 완료**(2026-08-27). **페이지네이션 UI 통일·로딩 오버레이 스피너/고착버그 근본수정·개인정보 처리방침 예문·랜딩 동의 모달화·어드민 헤더 개편 완료**(2026-08-27, `session-2026-08-27` 워크트리에서 진행 후 main 병합, 세션요약 (35)~(36)). **관리자 알림 2종(신규예약→VAPID 웹푸시 / 예약확정→SSE 캘린더 조용한 새로고침) 추가 완료**(2026-08-27, `worktree-admin-notifications`에서 진행 후 main 병합, 세션요약 (37)). **[예약 달력] 연/월 드롭다운·새로고침 버튼 추가 + 그리드 인접월(이전달 말주·다음달 초주) 예약 미표시 결함 수정**(2026-08-27, `session-2026-08-27c` 워크트리에서 구현+격리 docker 검증까지 완료, **main 병합은 사용자 지시 대기 — 현재 브랜치에 커밋만 완료**, 세션요약 (38)). 그 외 남은 건 CSP 도입 결정·날짜피커/웹푸시 실브라우저 재확인 2건(아래 TODO)·실배포 라이브 curl 검증.
 
 ## 기술 스택
 | 레이어 | 기술 |
@@ -116,8 +116,7 @@
 ## TODO
 ### 다음 세션 최우선
 - [ ] **프론트 Content-Security-Policy 미적용 — 의도적 보류**(보안감사 재감사 2026-08-27) — X-Content-Type-Options 등 4개 헤더는 적용 완료했으나 CSP만 보류. `landing.vue`의 JSON-LD 인라인 스크립트가 예약마다 내용이 달라 정적 해시 지정이 안 통하고, nonce 방식은 Nuxt 통합이 더 큰 작업이라 섣불리 걸면 스크립트가 깨질 위험 — nonce 도입 여부 결정 필요
-- [ ] **🔴 관리자 알림(웹 푸시) 실제 브라우저 최종 확인 필요**(2026-08-27) — 자동화 도구 환경은 Service Worker 등록·`Notification.permission`이 원천 차단돼 있어 파이프라인은 간접 증거로 전부 확인했으나(공개키·SSRF화이트리스트·구독저장·실제 발송 시도·활성계정 필터) 실제 OS 알림 표시는 미검증. 테스트 계정 `verify-push@wonjin.local`로 실브라우저에서 `/admin` 로그인→종 아이콘→알림 허용→새 예약 접수로 확인 권장(19-2절 자동화 도구 특이사항과 동일 범주)
-- [ ] **🔴 Popover(DatePicker) 닫힘 애니메이션이 자동화 도구 환경(`document.hidden=true`)에서 미완료로 관측 — 실브라우저 재확인 필요**(2026-08-27) — `data-state`는 `closed`로 바뀌지만 `opacity`/`pointer-events`가 안 풀림. 19-2절 Chart.js rAF와 동일 범주 추정(코드는 순정 shadcn 생성 그대로), 실사용자 브라우저 재현 여부만 확인하면 됨
+- [ ] 🔴 **실브라우저 최종 확인 필요 2건**(2026-08-27, 자동화 도구 환경 제약으로 자동검증 불가 — 19-2절 자동화 도구 특이사항과 동일 범주): ①**관리자 웹 푸시** — Service Worker 등록·`Notification.permission`이 원천 차단돼 파이프라인만 간접 확인(공개키·SSRF화이트리스트·구독저장·발송시도·활성계정필터), 테스트 계정 `verify-push@wonjin.local`로 `/admin`→종 아이콘→알림허용→새 예약 접수 재확인 권장 ②**Popover(DatePicker) 닫힘 애니메이션** — `document.hidden=true`에서 `opacity`/`pointer-events` 미해제 관측(`data-state`는 정상 전환), 코드는 순정 shadcn 생성 그대로라 실사용자 환경 재현 여부만 확인하면 됨
 ### Phase 계획 — 완료기준 포함 (design.md 19장과 동일, 상세 코드는 그쪽 참고)
 | # | 내용 | 완료기준 |
 |---|---|---|
@@ -134,8 +133,7 @@
 
 ## 미결정 (상세: `docs/design.md` 20장)
 - [ ] **M6 랜딩 히어로·소개 콘텐츠**(4개 언어) — Phase 2는 기능 설명 최소 문구로 대체(마케팅 카피 아님), 실제 콘텐츠는 이후 결정
-- [ ] **M2 도메인·Cloudflare 계정** — Phase 9
-> 최초 어드민 계정은 **사용자가 DB에 직접 삽입**(시딩 코드 없음). 실장·시술 마스터도 사용자가 관리 화면에서 직접 등록
+- [ ] **M2 도메인·Cloudflare 계정** — Phase 9(참고: 최초 어드민 계정은 **사용자가 DB에 직접 삽입**·시딩 코드 없음, 실장·시술 마스터도 관리 화면에서 직접 등록)
 
 ## 🔴 범위 외 — 재론 금지 (상세: `docs/design.md` 20-1절)
 - **법적 검토**(의료광고 심의·유치 등록 등) — 2026-08-25 사용자 확인 완료. 중계·광고 플랫폼이 아니라 예약 기능만 제공하는 도구
@@ -147,5 +145,5 @@
 ## 참고 문서
 `docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종) · 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md` · `excel-bulk-upload-pattern-reference.md`
 
-## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (37)까지 이동 완료)
-- **2026-08-27 (37) — 관리자 알림 2종(신규예약→VAPID 웹푸시, 예약확정→SSE 캘린더 조용한 새로고침), `worktree-admin-notifications`에서 진행 후 main 병합**: SSE는 curl로 confirm 전이를 발생시켜 브라우저 무조작 상태에서 캘린더가 자동 갱신되는 것까지 end-to-end 실측, 웹 푸시는 파이프라인 전량(공개키·SSRF화이트리스트·구독저장·실제 발송 시도·활성계정 필터) 간접 증거로 확인했으나 실제 SW등록·OS알림 표시는 이 자동화 도구 환경 제약으로 미검증(위 TODO 참고). 커밋 `6aaf165`·`7e31f00`, 사용자 지시로 main 병합 + 워크트리·브랜치 정리 완료. 상세: `docs/session-log.md` (37).
+## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (38)까지 이동 완료)
+- **2026-08-27 (38) — [예약 달력] 연/월 드롭다운·새로고침 버튼 추가 + 그리드 인접월 예약 미표시 결함 수정, `session-2026-08-27c` 워크트리 작업**: 격리 docker 스택(`wonjin-cal-verify`, 별도 포트·볼륨)에서 테스트 예약 4건(이전달 말주·다음달 초주·이달·그리드밖 각 1건)으로 실측 — 그리드밖 데이터는 여전히 제외되고 이전달·다음달 오버플로우 셀은 배지·클릭 상세 둘 다 정상 표시 확인. 연/월 드롭다운 변경 시 URL·헤더 갱신, 새로고침 버튼 클릭 시 신규 삽입 데이터가 재조회되는 것도 network 로그로 확인. `EXPLAIN`으로 `ix_reservations_visit_date` 인덱스 스캔 유지 확인(범위만 넓어짐, 술어 형태 불변). `dotnet build`·`npm run build` 둘 다 클린 통과, 4로케일 i18n 키(`yearLabel`/`monthLabel`/`refresh`) 추가 후 319개 동일 확인. main 병합은 사용자 지시 대기 — 현재 브랜치에 커밋만 완료. 상세: `docs/session-log.md` (38).

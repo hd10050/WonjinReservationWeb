@@ -70,6 +70,9 @@
       "title": "예약 달력",
       "prevMonth": "이전 달",
       "nextMonth": "다음 달",
+      "yearLabel": "연도",
+      "monthLabel": "월",
+      "refresh": "새로고침",
       "dayListTitle": "{date} 예약 목록",
       "empty": "이 날짜에는 예약이 없습니다.",
       "colTime": "방문 시각"

@@ -70,6 +70,9 @@
       "title": "預約日曆",
       "prevMonth": "上個月",
       "nextMonth": "下個月",
+      "yearLabel": "年",
+      "monthLabel": "月",
+      "refresh": "重新整理",
       "dayListTitle": "{date} 的預約清單",
       "empty": "該日期沒有預約。",
       "colTime": "到店時間"
