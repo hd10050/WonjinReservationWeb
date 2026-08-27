@@ -125,7 +125,19 @@
       "formTitleEdit": "실장 수정",
       "formNameLabel": "실장 이름",
       "formSortOrderLabel": "정렬순서",
-      "formActiveLabel": "활성 상태"
+      "formActiveLabel": "활성 상태",
+      "bulk": {
+        "button": "엑셀로 일괄등록",
+        "templateButton": "양식 다운로드",
+        "title": "실장 엑셀 일괄등록",
+        "fileLabel": "엑셀 파일 선택",
+        "colRow": "행",
+        "colError": "오류",
+        "errorBanner": "{count}개 행에 오류가 있어 등록할 수 없습니다. 엑셀을 수정한 뒤 다시 업로드해주세요.",
+        "submit": "일괄 등록",
+        "submitDisabled": "오류 {count}건 — 수정 후 다시 업로드",
+        "successMessage": "{count}건 등록되었습니다."
+      }
     },
     "procedures": {
       "title": "시술·수술 관리",
@@ -144,7 +156,19 @@
       "formCodeLabel": "시술 코드",
       "formNameLabel": "시술명",
       "formSortOrderLabel": "정렬순서",
-      "formActiveLabel": "활성 상태"
+      "formActiveLabel": "활성 상태",
+      "bulk": {
+        "button": "엑셀로 일괄등록",
+        "templateButton": "양식 다운로드",
+        "title": "시술 엑셀 일괄등록",
+        "fileLabel": "엑셀 파일 선택",
+        "colRow": "행",
+        "colError": "오류",
+        "errorBanner": "{count}개 행에 오류가 있어 등록할 수 없습니다. 엑셀을 수정한 뒤 다시 업로드해주세요.",
+        "submit": "일괄 등록",
+        "submitDisabled": "오류 {count}건 — 수정 후 다시 업로드",
+        "successMessage": "{count}건 등록되었습니다."
+      }
     },
     "users": {
       "title": "계정 관리",
@@ -315,6 +339,13 @@
     "CONSULTANT_NOT_FOUND": "존재하지 않는 실장입니다.",
     "CONSULTANT_INACTIVE": "비활성 상태의 실장에게는 배정할 수 없습니다.",
     "VALIDATION_FAILED": "입력값이 올바르지 않습니다. 확인 후 다시 시도해주세요.",
+    "BULK_EMPTY": "등록할 행이 없습니다.",
+    "BULK_TOO_MANY": "한 번에 최대 500건까지 등록할 수 있습니다.",
+    "BULK_VALIDATION_FAILED": "입력한 엑셀에 오류가 있어 등록이 취소되었습니다. 행별 오류를 확인해주세요.",
+    "BULK_FIELD_REQUIRED": "{field} — 필수 입력값입니다.",
+    "BULK_FIELD_TOO_LONG": "{field} — 최대 {max}자를 초과했습니다 ({length}자).",
+    "BULK_CODE_DUPLICATE_IN_FILE": "엑셀 파일 내에서 코드가 중복되었습니다.",
+    "BULK_CODE_DUPLICATE_EXISTING": "이미 등록된 코드입니다.",
     "INVALID_STATUS_TRANSITION": "허용되지 않는 상태 변경입니다.",
     "CANCEL_REASON_REQUIRED": "취소 사유를 입력하세요.",
     "INVALID_DEPOSIT_CURRENCY": "예약금 통화가 올바르지 않습니다.",

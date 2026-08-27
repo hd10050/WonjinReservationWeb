@@ -32,6 +32,8 @@ public class AuditLogFilter(AppDbContext db, ILogger<AuditLogFilter> logger, ICo
         (["/api/admin/reservations"], "PATCH", "update", "reservation"),
         (["/api/admin/reservations"], "DELETE", "soft_delete", "reservation"),
         (["/api/admin/reservations", "/consultant"], "PATCH", "assign", "reservation"),
+        (["/api/admin/consultants", "/bulk"], "POST", "bulk_create", "consultant"),
+        (["/api/admin/procedures", "/bulk"], "POST", "bulk_create", "procedure"),
         (["/api/admin/consultants"], "POST", "create", "consultant"),
         (["/api/admin/consultants"], "PUT", "update", "consultant"),
         (["/api/admin/procedures"], "POST", "create", "procedure"),

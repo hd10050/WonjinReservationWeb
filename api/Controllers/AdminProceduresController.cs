@@ -87,4 +87,70 @@ public class AdminProceduresController(AppDbContext db) : ControllerBase
 
         return Ok(new ProcedureLookupDto(procedure.Id, procedure.Code, procedure.NameZhCn, procedure.NameZhTw, procedure.NameEn, procedure.NameKo, procedure.IsActive, procedure.SortOrder));
     }
+
+    // 엑셀 일괄등록 — excel-bulk-upload-pattern-reference.md 레이어3(all-or-nothing).
+    // 코드 중복은 "엑셀 내부"와 "기존 DB"를 별도 오류로 구분한다(관리자가 취해야 할 조치가 다름).
+    [HttpPost("bulk")]
+    [Authorize(Roles = "Admin,HospitalManager")]
+    [EnableRateLimiting("admin-write")]
+    public async Task<ActionResult> BulkCreate([FromBody] List<BulkProcedureRequest> requests)
+    {
+        if (requests.Count == 0) return BadRequest(new { code = "BULK_EMPTY" });
+        if (requests.Count > 500) return BadRequest(new { code = "BULK_TOO_MANY" });
+
+        var rowErrors = new List<BulkRowError>();
+        void CheckField(int row, string? value, string field, int max)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                rowErrors.Add(new BulkRowError(row, "BULK_FIELD_REQUIRED", field));
+            else if (value.Trim().Length > max)
+                rowErrors.Add(new BulkRowError(row, "BULK_FIELD_TOO_LONG", field, value.Trim().Length, max));
+        }
+        foreach (var r in requests)
+        {
+            CheckField(r.Row, r.Code, "code", 30);
+            CheckField(r.Row, r.NameZhCn, "nameZhCn", 50);
+            CheckField(r.Row, r.NameZhTw, "nameZhTw", 50);
+            CheckField(r.Row, r.NameEn, "nameEn", 50);
+            CheckField(r.Row, r.NameKo, "nameKo", 50);
+        }
+
+        // 엑셀 내부 중복 — 서버 조회 없이 배치 자체에서 계산(코드가 있는 행만 대상).
+        var dupInFileRows = requests
+            .Where(r => !string.IsNullOrWhiteSpace(r.Code))
+            .GroupBy(r => r.Code!.Trim())
+            .Where(g => g.Count() > 1)
+            .SelectMany(g => g.Select(r => r.Row));
+        foreach (var row in dupInFileRows)
+            rowErrors.Add(new BulkRowError(row, "BULK_CODE_DUPLICATE_IN_FILE"));
+
+        // 기존 DB와의 중복 — 행 개수만큼 조회하지 않고 배치 조회 1회(DB성능 절대원칙).
+        var codes = requests.Where(r => !string.IsNullOrWhiteSpace(r.Code)).Select(r => r.Code!.Trim()).Distinct().ToList();
+        var existingCodes = (await db.Procedures.Where(p => codes.Contains(p.Code)).Select(p => p.Code).ToListAsync()).ToHashSet();
+        foreach (var r in requests)
+            if (!string.IsNullOrWhiteSpace(r.Code) && existingCodes.Contains(r.Code!.Trim()))
+                rowErrors.Add(new BulkRowError(r.Row, "BULK_CODE_DUPLICATE_EXISTING"));
+
+        if (rowErrors.Count > 0)
+            return BadRequest(new { code = "BULK_VALIDATION_FAILED", rowErrors });
+
+        var now = DateTimeOffset.UtcNow;
+        var procedures = requests.Select(r => new Procedure
+        {
+            Code = r.Code!.Trim(),
+            NameZhCn = r.NameZhCn!.Trim(),
+            NameZhTw = r.NameZhTw!.Trim(),
+            NameEn = r.NameEn!.Trim(),
+            NameKo = r.NameKo!.Trim(),
+            SortOrder = r.SortOrder,
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now,
+        }).ToList();
+        db.Procedures.AddRange(procedures);
+        HttpContext.Items["AuditSummary"] = $"시술 {procedures.Count}건 일괄등록";
+        await db.SaveChangesAsync();
+
+        return Ok(new { successCount = procedures.Count });
+    }
 }

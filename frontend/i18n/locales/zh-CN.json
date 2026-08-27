@@ -125,7 +125,19 @@
       "formTitleEdit": "编辑顾问",
       "formNameLabel": "顾问姓名",
       "formSortOrderLabel": "排序",
-      "formActiveLabel": "启用状态"
+      "formActiveLabel": "启用状态",
+      "bulk": {
+        "button": "Excel批量导入",
+        "templateButton": "下载模板",
+        "title": "顾问Excel批量导入",
+        "fileLabel": "选择Excel文件",
+        "colRow": "行",
+        "colError": "错误",
+        "errorBanner": "有{count}行存在错误，无法注册。请修改Excel后重新上传。",
+        "submit": "批量注册",
+        "submitDisabled": "有{count}项错误 — 修改后重新上传",
+        "successMessage": "已注册{count}条。"
+      }
     },
     "procedures": {
       "title": "项目管理",
@@ -144,7 +156,19 @@
       "formCodeLabel": "项目编号",
       "formNameLabel": "项目名称",
       "formSortOrderLabel": "排序",
-      "formActiveLabel": "启用状态"
+      "formActiveLabel": "启用状态",
+      "bulk": {
+        "button": "Excel批量导入",
+        "templateButton": "下载模板",
+        "title": "项目Excel批量导入",
+        "fileLabel": "选择Excel文件",
+        "colRow": "行",
+        "colError": "错误",
+        "errorBanner": "有{count}行存在错误，无法注册。请修改Excel后重新上传。",
+        "submit": "批量注册",
+        "submitDisabled": "有{count}项错误 — 修改后重新上传",
+        "successMessage": "已注册{count}条。"
+      }
     },
     "users": {
       "title": "账户管理",
@@ -315,6 +339,13 @@
     "CONSULTANT_NOT_FOUND": "找不到该顾问。",
     "CONSULTANT_INACTIVE": "无法分配给已停用的顾问。",
     "VALIDATION_FAILED": "输入内容不正确，请检查后重试。",
+    "BULK_EMPTY": "没有可注册的行。",
+    "BULK_TOO_MANY": "单次最多可注册500条。",
+    "BULK_VALIDATION_FAILED": "上传的Excel存在错误，注册已取消。请查看各行错误。",
+    "BULK_FIELD_REQUIRED": "{field} — 为必填项。",
+    "BULK_FIELD_TOO_LONG": "{field} — 超过{max}字上限（当前{length}字）。",
+    "BULK_CODE_DUPLICATE_IN_FILE": "该编号在Excel文件内重复。",
+    "BULK_CODE_DUPLICATE_EXISTING": "该编号已被注册。",
     "INVALID_STATUS_TRANSITION": "不允许此状态变更。",
     "CANCEL_REASON_REQUIRED": "请输入取消原因。",
     "INVALID_DEPOSIT_CURRENCY": "定金币种不正确。",

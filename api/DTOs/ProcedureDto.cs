@@ -19,3 +19,6 @@ public record UpdateProcedureRequest(
     [Required, MaxLength(50)] string NameKo,
     int SortOrder,
     bool IsActive);
+
+// 엑셀 일괄등록 — BulkConsultantRequest와 동일한 이유로 DataAnnotations 미부착(ConsultantDto.cs 주석 참고).
+public record BulkProcedureRequest(int Row, string? Code, string? NameZhCn, string? NameZhTw, string? NameEn, string? NameKo, int SortOrder);

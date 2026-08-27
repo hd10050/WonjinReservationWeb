@@ -125,7 +125,19 @@
       "formTitleEdit": "編輯顧問",
       "formNameLabel": "顧問姓名",
       "formSortOrderLabel": "排序",
-      "formActiveLabel": "啟用狀態"
+      "formActiveLabel": "啟用狀態",
+      "bulk": {
+        "button": "Excel批量匯入",
+        "templateButton": "下載範本",
+        "title": "顧問Excel批量匯入",
+        "fileLabel": "選擇Excel檔案",
+        "colRow": "列",
+        "colError": "錯誤",
+        "errorBanner": "有{count}列存在錯誤，無法註冊。請修改Excel後重新上傳。",
+        "submit": "批量註冊",
+        "submitDisabled": "有{count}項錯誤 — 修改後重新上傳",
+        "successMessage": "已註冊{count}筆。"
+      }
     },
     "procedures": {
       "title": "療程管理",
@@ -144,7 +156,19 @@
       "formCodeLabel": "療程編號",
       "formNameLabel": "療程名稱",
       "formSortOrderLabel": "排序",
-      "formActiveLabel": "啟用狀態"
+      "formActiveLabel": "啟用狀態",
+      "bulk": {
+        "button": "Excel批量匯入",
+        "templateButton": "下載範本",
+        "title": "療程Excel批量匯入",
+        "fileLabel": "選擇Excel檔案",
+        "colRow": "列",
+        "colError": "錯誤",
+        "errorBanner": "有{count}列存在錯誤，無法註冊。請修改Excel後重新上傳。",
+        "submit": "批量註冊",
+        "submitDisabled": "有{count}項錯誤 — 修改後重新上傳",
+        "successMessage": "已註冊{count}筆。"
+      }
     },
     "users": {
       "title": "帳戶管理",
@@ -315,6 +339,13 @@
     "CONSULTANT_NOT_FOUND": "找不到該顧問。",
     "CONSULTANT_INACTIVE": "無法分配給已停用的顧問。",
     "VALIDATION_FAILED": "輸入內容不正確，請檢查後再試一次。",
+    "BULK_EMPTY": "沒有可註冊的列。",
+    "BULK_TOO_MANY": "單次最多可註冊500筆。",
+    "BULK_VALIDATION_FAILED": "上傳的Excel存在錯誤，註冊已取消。請查看各列錯誤。",
+    "BULK_FIELD_REQUIRED": "{field} — 為必填項目。",
+    "BULK_FIELD_TOO_LONG": "{field} — 超過{max}字上限（目前{length}字）。",
+    "BULK_CODE_DUPLICATE_IN_FILE": "該編號在Excel檔案內重複。",
+    "BULK_CODE_DUPLICATE_EXISTING": "該編號已被註冊。",
     "INVALID_STATUS_TRANSITION": "不允許此狀態變更。",
     "CANCEL_REASON_REQUIRED": "請輸入取消原因。",
     "INVALID_DEPOSIT_CURRENCY": "訂金幣別不正確。",

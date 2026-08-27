@@ -125,7 +125,19 @@
       "formTitleEdit": "Edit Consultant",
       "formNameLabel": "Consultant Name",
       "formSortOrderLabel": "Sort Order",
-      "formActiveLabel": "Active"
+      "formActiveLabel": "Active",
+      "bulk": {
+        "button": "Bulk Upload (Excel)",
+        "templateButton": "Download Template",
+        "title": "Bulk Upload Consultants",
+        "fileLabel": "Select Excel File",
+        "colRow": "Row",
+        "colError": "Error",
+        "errorBanner": "{count} row(s) have errors and cannot be registered. Fix the Excel file and upload again.",
+        "submit": "Register All",
+        "submitDisabled": "{count} error(s) — fix and re-upload",
+        "successMessage": "{count} record(s) registered."
+      }
     },
     "procedures": {
       "title": "Procedures",
@@ -144,7 +156,19 @@
       "formCodeLabel": "Procedure Code",
       "formNameLabel": "Procedure Name",
       "formSortOrderLabel": "Sort Order",
-      "formActiveLabel": "Active"
+      "formActiveLabel": "Active",
+      "bulk": {
+        "button": "Bulk Upload (Excel)",
+        "templateButton": "Download Template",
+        "title": "Bulk Upload Procedures",
+        "fileLabel": "Select Excel File",
+        "colRow": "Row",
+        "colError": "Error",
+        "errorBanner": "{count} row(s) have errors and cannot be registered. Fix the Excel file and upload again.",
+        "submit": "Register All",
+        "submitDisabled": "{count} error(s) — fix and re-upload",
+        "successMessage": "{count} record(s) registered."
+      }
     },
     "users": {
       "title": "Account Management",
@@ -315,6 +339,13 @@
     "CONSULTANT_NOT_FOUND": "Consultant not found.",
     "CONSULTANT_INACTIVE": "Cannot assign to an inactive consultant.",
     "VALIDATION_FAILED": "Invalid input. Please check and try again.",
+    "BULK_EMPTY": "There are no rows to register.",
+    "BULK_TOO_MANY": "You can register up to 500 records at once.",
+    "BULK_VALIDATION_FAILED": "The uploaded Excel file has errors, so registration was cancelled. Check the row errors below.",
+    "BULK_FIELD_REQUIRED": "{field} — required.",
+    "BULK_FIELD_TOO_LONG": "{field} — exceeds the {max}-character limit ({length} characters).",
+    "BULK_CODE_DUPLICATE_IN_FILE": "This code is duplicated within the Excel file.",
+    "BULK_CODE_DUPLICATE_EXISTING": "This code is already registered.",
     "INVALID_STATUS_TRANSITION": "This status change is not allowed.",
     "CANCEL_REASON_REQUIRED": "Please enter a cancellation reason.",
     "INVALID_DEPOSIT_CURRENCY": "Invalid deposit currency.",

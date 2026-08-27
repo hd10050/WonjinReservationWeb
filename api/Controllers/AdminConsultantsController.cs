@@ -68,4 +68,41 @@ public class AdminConsultantsController(AppDbContext db) : ControllerBase
 
         return Ok(new ConsultantLookupDto(consultant.Id, consultant.Name, consultant.IsActive, consultant.SortOrder));
     }
+
+    // 엑셀 일괄등록 — excel-bulk-upload-pattern-reference.md 레이어3(all-or-nothing).
+    // 문제 행이 하나라도 있으면 아무것도 저장하지 않고 전체 행 오류를 한 번에 반환한다.
+    [HttpPost("bulk")]
+    [Authorize(Roles = "Admin,HospitalManager")]
+    [EnableRateLimiting("admin-write")]
+    public async Task<ActionResult> BulkCreate([FromBody] List<BulkConsultantRequest> requests)
+    {
+        if (requests.Count == 0) return BadRequest(new { code = "BULK_EMPTY" });
+        if (requests.Count > 500) return BadRequest(new { code = "BULK_TOO_MANY" });
+
+        var rowErrors = new List<BulkRowError>();
+        foreach (var r in requests)
+        {
+            if (string.IsNullOrWhiteSpace(r.Name))
+                rowErrors.Add(new BulkRowError(r.Row, "BULK_FIELD_REQUIRED", "name"));
+            else if (r.Name.Trim().Length > 30)
+                rowErrors.Add(new BulkRowError(r.Row, "BULK_FIELD_TOO_LONG", "name", r.Name.Trim().Length, 30));
+        }
+        if (rowErrors.Count > 0)
+            return BadRequest(new { code = "BULK_VALIDATION_FAILED", rowErrors });
+
+        var now = DateTimeOffset.UtcNow;
+        var consultants = requests.Select(r => new Consultant
+        {
+            Name = r.Name!.Trim(),
+            SortOrder = r.SortOrder,
+            IsActive = true,
+            CreatedAt = now,
+            UpdatedAt = now,
+        }).ToList();
+        db.Consultants.AddRange(consultants);
+        HttpContext.Items["AuditSummary"] = $"실장 {consultants.Count}건 일괄등록";
+        await db.SaveChangesAsync();
+
+        return Ok(new { successCount = consultants.Count });
+    }
 }
