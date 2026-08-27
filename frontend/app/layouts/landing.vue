@@ -127,13 +127,4 @@ useHead({
   script: [{ type: 'application/ld+json', innerHTML: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }],
 })
 
-// 🔴 5-3절 — 헤더의 언어 선택 UI는 <head> 인라인 감지 스크립트와 같은 raw document.cookie
-// 포맷으로 두 쿠키를 함께 기록해야 한다. useCookie()는 값을 JSON 인코딩("ko")해 저장하므로
-// 그 스크립트의 정규식 파싱(ko)과 어긋난다 — 반드시 raw document.cookie로 직접 쓸 것.
-function markManualLocale(code: string) {
-  if (import.meta.server) return
-  const expires = new Date(Date.now() + 31536000000).toUTCString()
-  document.cookie = `wj_lang=${code}; expires=${expires}; path=/; samesite=lax`
-  document.cookie = `wj_lang_manual=1; expires=${expires}; path=/; samesite=lax`
-}
 </script>
