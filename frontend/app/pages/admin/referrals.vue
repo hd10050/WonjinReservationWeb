@@ -156,11 +156,11 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-if="!data?.length">
+          <tr v-if="!data?.items.length">
             <td colspan="9" class="p-6 text-center text-muted-foreground">{{ t('admin.referrals.empty') }}</td>
           </tr>
           <tr
-            v-for="r in data"
+            v-for="r in data?.items"
             :key="`${r.referralCode}|${r.utmSource}|${r.utmMedium}|${r.utmCampaign}`"
             class="border-t border-border"
           >
@@ -177,6 +177,8 @@
         </tbody>
       </table>
     </div>
+
+    <Pagination :page="page" :total-pages="totalPages" @update:page="goPage" />
   </div>
 </template>
 
@@ -202,13 +204,21 @@ const defaultTo = todayKst()
 const query = computed(() => {
   const from = (route.query.from as string) || defaultFrom
   return {
+    page: Number(route.query.page) || 1,
+    pageSize: 20,
     from,
     to: clampDateRangeEnd(from, (route.query.to as string) || defaultTo),
     search: (route.query.search as string) || undefined,
   }
 })
 
-const { data } = await useApi<ReferralStat[]>('/api/admin/stats/referrals', { query })
+const { data } = await useApi<PagedResult<ReferralStat>>('/api/admin/stats/referrals', { query })
+
+const page = computed(() => query.value.page)
+const totalPages = computed(() => data.value ? Math.max(1, Math.ceil(data.value.total / data.value.pageSize)) : 1)
+function goPage(p: number) {
+  navigateTo({ query: { ...route.query, page: p } })
+}
 
 const formFrom = ref(query.value.from)
 const formTo = ref(query.value.to)
@@ -217,7 +227,7 @@ const { toMinValue, rangeTooLong } = useDateRangeFilter(formFrom, formTo)
 
 function applyFilters() {
   if (rangeTooLong.value) return
-  navigateTo({ query: { from: formFrom.value, to: formTo.value, search: formSearch.value || undefined } })
+  navigateTo({ query: { from: formFrom.value, to: formTo.value, search: formSearch.value || undefined, page: 1 } })
 }
 
 // 인플루언서 링크 관리(B안, 2026-08-27 신설) — 짧은 URL(/go/{code}) 매핑 CRUD. consultants.vue의

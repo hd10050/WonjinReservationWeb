@@ -128,13 +128,17 @@ public class AdminStatsController(AppDbContext db) : ControllerBase
     // 좁힌다(6-3절 원칙1과 동일 기법 — 컨트롤러 공유는 재사용, 노출 범위만 재선언).
     [HttpGet("referrals")]
     [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<List<ReferralStatDto>>> GetReferralStats(
-        [FromQuery] DateOnly from, [FromQuery] DateOnly to, [FromQuery] string? search = null)
+    public async Task<ActionResult<PagedResult<ReferralStatDto>>> GetReferralStats(
+        [FromQuery] DateOnly from, [FromQuery] DateOnly to, [FromQuery] string? search = null,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         // 🔴 [ApiController]는 DateOnly 미지정 시 400이 아니라 default로 조용히 바인딩한다(실측 확인,
         // GetConsultantKpi와 동일 사유).
         if (from == default || to == default || to < from)
             return BadRequest(new { code = "INVALID_DATE_RANGE" });
+
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        page = Math.Max(page, 1);
 
         var (fromUtc, toUtc) = ToKstRangeUtc(from, to);
 
@@ -152,16 +156,25 @@ public class AdminStatsController(AppDbContext db) : ControllerBase
                 || EF.Functions.ILike(s.UtmMedium, $"%{keyword}%", "\\")
                 || EF.Functions.ILike(s.UtmCampaign, $"%{keyword}%", "\\"));
         }
-        var visits = await visitsQuery
+        var groupedQuery = visitsQuery
             .GroupBy(s => new { s.ReferralCode, s.UtmSource, s.UtmMedium, s.UtmCampaign })
             .Select(g => new
             {
                 g.Key.ReferralCode, g.Key.UtmSource, g.Key.UtmMedium, g.Key.UtmCampaign,
                 VisitCount = g.Sum(s => s.VisitCount),
-            })
+            });
+
+        // 페이징(17장 절대 원칙) — 조합 수(그룹 수) 기준 전체 건수를 먼저 세고, 정렬 후 이 페이지만 가져온다.
+        var total = await groupedQuery.CountAsync();
+        var visits = await groupedQuery
+            .OrderByDescending(x => x.VisitCount)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
         // 2단계 — 같은 조합의 reservations 집계(15-2절 "예약 수 | reservations 같은 조합 COUNT").
+        // 🔴 이 조회 자체는 페이지 단위가 아니라 기간 전체를 스캔한다(ix_reservations_created_at 커버,
+        // 17장 표) — 조합별 집계이지 개별 행 목록이 아니므로 페이지네이션 대상은 위 groupedQuery(출력 행) 뿐이다.
         var reservations = await db.Reservations
             .Where(r => r.CreatedAt >= fromUtc && r.CreatedAt < toUtc)
             .GroupBy(r => new { r.ReferralCode, r.UtmSource, r.UtmMedium, r.UtmCampaign })
@@ -177,6 +190,7 @@ public class AdminStatsController(AppDbContext db) : ControllerBase
         // 3단계 — 메모리에서 DTO 매핑(11-6절: GroupBy().Select(new record(...)) 직접 호출 금지와 동일 이유로
         // 집계 프로젝션은 익명 타입으로 받고 record 생성은 여기서 한다). landing_daily_stats에 없는 조합은
         // 애초에 방문 기록이 없다는 뜻이라 표에 올릴 근거가 없으므로 기준 집합에 넣지 않는다(15-2절 "그룹" 원문).
+        // visits는 이미 VisitCount 내림차순으로 페이징된 상태 — 매핑만 하면 순서가 그대로 유지된다.
         var items = visits.Select(v =>
         {
             reservationByKey.TryGetValue((v.ReferralCode, v.UtmSource, v.UtmMedium, v.UtmCampaign), out var r);
@@ -187,10 +201,9 @@ public class AdminStatsController(AppDbContext db) : ControllerBase
             return new ReferralStatDto(v.ReferralCode, v.UtmSource, v.UtmMedium, v.UtmCampaign,
                 v.VisitCount, reservationCount, conversionRate, confirmedCount, confirmedRate);
         })
-        .OrderByDescending(x => x.VisitCount)
         .ToList();
 
-        return Ok(items);
+        return Ok(new PagedResult<ReferralStatDto>(items, total, page, pageSize));
     }
 
     // 주 시작일(일요일) 기준 집계(D16). date_trunc('week',…)는 월요일 시작이라 하루 밀어 계산 — EF Core LINQ로

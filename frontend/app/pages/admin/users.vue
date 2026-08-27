@@ -56,18 +56,25 @@
       </CardHeader>
       <CardContent class="flex flex-wrap items-end gap-4">
         <div class="flex flex-col gap-1.5">
-          <Label for="f-edit-role">{{ t('admin.users.formRoleLabel') }}</Label>
-          <NativeSelect id="f-edit-role" v-model="editRole" class="w-44">
-            <NativeSelectOption value="Admin">{{ t('admin.users.roleAdmin') }}</NativeSelectOption>
-            <NativeSelectOption value="HospitalManager">{{ t('admin.users.roleHospitalManager') }}</NativeSelectOption>
-            <NativeSelectOption value="Consultant">{{ t('admin.users.roleConsultant') }}</NativeSelectOption>
-          </NativeSelect>
+          <Label for="f-edit-name">{{ t('admin.users.formNameLabel') }}</Label>
+          <Input id="f-edit-name" v-model="editName" maxlength="30" class="w-40" />
         </div>
-        <div class="flex items-center gap-1.5 pb-2">
-          <Checkbox id="f-edit-suspended" v-model="editSuspended" />
-          <Label for="f-edit-suspended" class="text-sm font-normal">{{ t('admin.users.formSuspendedLabel') }}</Label>
-        </div>
-        <Button @click="submitEdit">{{ t('common.save') }}</Button>
+        <!-- 본인 계정은 이름만 수정 가능 — 역할·정지는 자기자신 조작 방지 원칙(6절)상 백엔드가 차단한다. -->
+        <template v-if="editingId !== currentUserId">
+          <div class="flex flex-col gap-1.5">
+            <Label for="f-edit-role">{{ t('admin.users.formRoleLabel') }}</Label>
+            <NativeSelect id="f-edit-role" v-model="editRole" class="w-44">
+              <NativeSelectOption value="Admin">{{ t('admin.users.roleAdmin') }}</NativeSelectOption>
+              <NativeSelectOption value="HospitalManager">{{ t('admin.users.roleHospitalManager') }}</NativeSelectOption>
+              <NativeSelectOption value="Consultant">{{ t('admin.users.roleConsultant') }}</NativeSelectOption>
+            </NativeSelect>
+          </div>
+          <div class="flex items-center gap-1.5 pb-2">
+            <Checkbox id="f-edit-suspended" v-model="editSuspended" />
+            <Label for="f-edit-suspended" class="text-sm font-normal">{{ t('admin.users.formSuspendedLabel') }}</Label>
+          </div>
+        </template>
+        <Button :disabled="!editName.trim()" @click="submitEdit">{{ t('common.save') }}</Button>
         <Button variant="outline" @click="editingId = null">{{ t('common.cancel') }}</Button>
         <span v-if="editError" class="text-sm text-destructive">{{ editError }}</span>
       </CardContent>
@@ -96,8 +103,8 @@
             <td class="px-3 py-2">{{ u.isSuspended ? t('admin.users.suspendedLabel') : t('admin.users.activeLabel') }}</td>
             <td class="px-3 py-2">{{ formatDate(u.createdAt) }}</td>
             <td class="px-3 py-2 text-right">
-              <button v-if="u.id !== currentUserId" type="button" class="text-sm underline" @click="startEdit(u)">{{ t('admin.users.edit') }}</button>
-              <span v-else class="text-xs text-muted-foreground">{{ t('admin.users.self') }}</span>
+              <button type="button" class="text-sm underline" @click="startEdit(u)">{{ t('admin.users.edit') }}</button>
+              <span v-if="u.id === currentUserId" class="ml-1 text-xs text-muted-foreground">({{ t('admin.users.self') }})</span>
             </td>
           </tr>
         </tbody>
@@ -187,6 +194,7 @@ async function submitCreate() {
 
 // ── 역할 변경·정지 ─────────────────────────────────────────
 const editingId = ref<number | null>(null)
+const editName = ref('')
 const editRole = ref<AdminRole>('Consultant')
 const editSuspended = ref(false)
 const editOriginalSuspended = ref(false)
@@ -194,6 +202,7 @@ const editError = ref('')
 
 function startEdit(u: AdminUser) {
   editingId.value = u.id
+  editName.value = u.name
   editRole.value = u.role
   editSuspended.value = u.isSuspended
   editOriginalSuspended.value = u.isSuspended
@@ -203,13 +212,18 @@ function startEdit(u: AdminUser) {
 
 async function submitEdit() {
   if (editingId.value === null) return
+  const isSelf = editingId.value === currentUserId.value
   // 16장 보안 체크리스트 — 파괴적 액션(정지)에 확인 UI 필수. 활성→정지로 새로 전환하는 경우에만 확인.
-  if (editSuspended.value && !editOriginalSuspended.value && !confirm(t('admin.users.suspendConfirm'))) return
+  if (!isSelf && editSuspended.value && !editOriginalSuspended.value && !confirm(t('admin.users.suspendConfirm'))) return
   editError.value = ''
   try {
     await authFetch(`/api/admin/users/${editingId.value}`, {
       method: 'PATCH',
-      body: { role: editRole.value, isSuspended: editSuspended.value },
+      // 본인 계정은 role·isSuspended를 아예 보내지 않는다 — 값이 그대로여도 필드가 있으면 백엔드가
+      // 자기자신 조작 방지 원칙(CANNOT_MODIFY_SELF)으로 차단한다(AdminUsersController.Update).
+      body: isSelf
+        ? { name: editName.value.trim() }
+        : { role: editRole.value, isSuspended: editSuspended.value, name: editName.value.trim() },
     })
     editingId.value = null
     await refresh()

@@ -11,8 +11,9 @@ public class Reservation
     public string WechatId { get; set; } = string.Empty;
     // 고객 직접 입력, KST 벽시계 날짜·시각 (D10). Date는 2026-08-28 추가 — 라이브 서비스 기존 행
     // 호환을 위해 NULL 허용이되 신규 제출은 프론트·백엔드 모두 필수(visit_date와 동일 취급).
+    // 🔴 D26(2026-08-28) — "상관없음" 체크 시 둘 다 NULL로 저장(시각 무관 표시).
     public DateOnly? PreferredContactDate { get; set; }
-    public TimeOnly PreferredContactTime { get; set; }
+    public TimeOnly? PreferredContactTime { get; set; }
     public string Locale { get; set; } = string.Empty;
     public string Status { get; set; } = "New"; // New | Consulting | Confirmed | Visited | Cancelled
 

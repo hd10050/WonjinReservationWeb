@@ -76,14 +76,18 @@ public class AdminUsersController(AppDbContext db, IPasswordService pwd, IRefres
     [EnableRateLimiting("admin-write")]
     public async Task<ActionResult<AdminUserDto>> Update(int id, [FromBody] UpdateUserRequest req)
     {
-        if (req.Role is null && req.IsSuspended is null)
+        if (req.Role is null && req.IsSuspended is null && req.Name is null)
             return BadRequest(new { code = "NO_CHANGES" });
         if (req.Role is not null && !ValidRoles.Contains(req.Role))
             return BadRequest(new { code = "INVALID_ROLE" });
+        if (req.Name is not null && string.IsNullOrWhiteSpace(req.Name))
+            return BadRequest(new { code = "VALIDATION_FAILED" });
 
         // 자기 자신의 역할·정지 상태는 조작 불가 — 실수로 자기 권한을 낮추거나 자기 계정을 정지시켜
         // 아무도 못 푸는 상태가 되는 것을 막는다(admin-panel-pattern-reference.md 6절, 자기자신 조작 방지 필수).
-        if (id == GetSelfId())
+        // 🔴 2026-08-28 예외 추가 — 본인 이름만은 변경 가능(Role·IsSuspended는 여전히 차단).
+        var isSelf = id == GetSelfId();
+        if (isSelf && (req.Role is not null || req.IsSuspended is not null))
             return BadRequest(new { code = "CANNOT_MODIFY_SELF" });
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id);
@@ -91,22 +95,25 @@ public class AdminUsersController(AppDbContext db, IPasswordService pwd, IRefres
 
         var prevRole = user.Role;
         var prevSuspended = user.IsSuspended;
+        var prevName = user.Name;
         var changed = false;
 
         if (req.Role is not null && req.Role != user.Role) { user.Role = req.Role; changed = true; }
         if (req.IsSuspended is not null && req.IsSuspended != user.IsSuspended) { user.IsSuspended = req.IsSuspended.Value; changed = true; }
+        if (req.Name is not null && req.Name.Trim() != user.Name) { user.Name = req.Name.Trim(); changed = true; }
 
         if (!changed) return Ok(ToDto(user));
 
         user.UpdatedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync();
 
-        // 역할 변경·정지 둘 다 세션을 즉시 무력화한다 — AT는 최대 15분 남아있을 수 있어 RT를 전량
-        // 폐기해 다음 자동갱신(12분 간격)에서 막는다(7-3절 AccountStateFilter와 함께 완전 차단).
-        await rtService.RevokeAllForUserAsync(user.Id);
+        // 역할 변경·정지는 세션을 즉시 무력화해야 하지만, 이름만 바뀐 경우(본인 이름 수정 포함)까지
+        // 세션을 전량 폐기하면 방금 수정한 본인이 바로 튕겨나가므로 역할·정지 변경 시에만 수행한다.
+        if (req.Role is not null || req.IsSuspended is not null)
+            await rtService.RevokeAllForUserAsync(user.Id);
 
         HttpContext.Items["AuditSummary"] =
-            $"계정 #{user.Id}({user.Email}) 변경 — 역할 {prevRole}→{user.Role}, 정지 {prevSuspended}→{user.IsSuspended}";
+            $"계정 #{user.Id}({user.Email}) 변경 — 역할 {prevRole}→{user.Role}, 정지 {prevSuspended}→{user.IsSuspended}, 이름 {prevName}→{user.Name}";
 
         return Ok(ToDto(user));
     }

@@ -3,43 +3,49 @@
     <h1 class="text-xl font-semibold text-foreground">{{ t('admin.auditLogs.title') }}</h1>
 
     <Card>
-      <CardContent class="flex flex-wrap items-end gap-4">
-        <div class="flex flex-col gap-1.5">
-          <Label for="f-actor">{{ t('admin.auditLogs.filterActorLabel') }}</Label>
-          <NativeSelect id="f-actor" v-model="formActorId" class="w-56">
-            <NativeSelectOption value="">{{ t('admin.auditLogs.filterActorAll') }}</NativeSelectOption>
-            <NativeSelectOption v-for="u in actors?.items" :key="u.id" :value="String(u.id)">{{ u.email }}</NativeSelectOption>
-          </NativeSelect>
+      <CardContent class="flex flex-col gap-4">
+        <div class="flex flex-wrap items-end gap-4">
+          <div class="flex flex-col gap-1.5">
+            <Label for="f-actor">{{ t('admin.auditLogs.filterActorLabel') }}</Label>
+            <NativeSelect id="f-actor" v-model="formActorId" class="w-56">
+              <NativeSelectOption value="">{{ t('admin.auditLogs.filterActorAll') }}</NativeSelectOption>
+              <NativeSelectOption v-for="u in actors?.items" :key="u.id" :value="String(u.id)">{{ u.email }}</NativeSelectOption>
+            </NativeSelect>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <Label for="f-entity-type">{{ t('admin.auditLogs.filterEntityTypeLabel') }}</Label>
+            <NativeSelect id="f-entity-type" v-model="formEntityType" class="w-44">
+              <NativeSelectOption value="">{{ t('admin.auditLogs.filterAll') }}</NativeSelectOption>
+              <NativeSelectOption v-for="et in ENTITY_TYPES" :key="et" :value="et">{{ et }}</NativeSelectOption>
+            </NativeSelect>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <Label for="f-action">{{ t('admin.auditLogs.filterActionLabel') }}</Label>
+            <NativeSelect id="f-action" v-model="formAction" class="w-44">
+              <NativeSelectOption value="">{{ t('admin.auditLogs.filterAll') }}</NativeSelectOption>
+              <NativeSelectOption v-for="a in ACTIONS" :key="a" :value="a">{{ a }}</NativeSelectOption>
+            </NativeSelect>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <Label for="f-from">{{ t('admin.auditLogs.filterFromLabel') }}</Label>
+            <DatePicker id="f-from" v-model="formFrom" :locale="inputLang" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <Label for="f-to">{{ t('admin.auditLogs.filterToLabel') }}</Label>
+            <DatePicker id="f-to" v-model="formTo" :locale="inputLang" :min-value="toMinValue" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <Label for="f-search">{{ t('admin.auditLogs.filterSearchLabel') }}</Label>
+            <Input id="f-search" v-model="formSearch" maxlength="200" class="w-56" @keyup.enter="applyFilters" />
+          </div>
         </div>
-        <div class="flex flex-col gap-1.5">
-          <Label for="f-entity-type">{{ t('admin.auditLogs.filterEntityTypeLabel') }}</Label>
-          <NativeSelect id="f-entity-type" v-model="formEntityType" class="w-44">
-            <NativeSelectOption value="">{{ t('admin.auditLogs.filterAll') }}</NativeSelectOption>
-            <NativeSelectOption v-for="et in ENTITY_TYPES" :key="et" :value="et">{{ et }}</NativeSelectOption>
-          </NativeSelect>
+        <!-- 🔴 필터 필드 줄과 별도 줄로 고정 — 같은 줄에 두면 필드 개수에 따라 줄바꿈 위치가 바뀌면서
+             버튼이 위/아래로 오르내렸다(사용자 재현 보고). 항상 필터 아래 고정된 한 줄에 둔다. -->
+        <div class="flex items-center gap-2">
+          <Button size="sm" :disabled="rangeTooLong" @click="applyFilters">{{ t('admin.reservations.filterApply') }}</Button>
+          <Button size="sm" variant="outline" @click="resetFilters">{{ t('admin.reservations.filterReset') }}</Button>
         </div>
-        <div class="flex flex-col gap-1.5">
-          <Label for="f-action">{{ t('admin.auditLogs.filterActionLabel') }}</Label>
-          <NativeSelect id="f-action" v-model="formAction" class="w-44">
-            <NativeSelectOption value="">{{ t('admin.auditLogs.filterAll') }}</NativeSelectOption>
-            <NativeSelectOption v-for="a in ACTIONS" :key="a" :value="a">{{ a }}</NativeSelectOption>
-          </NativeSelect>
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <Label for="f-from">{{ t('admin.auditLogs.filterFromLabel') }}</Label>
-          <DatePicker id="f-from" v-model="formFrom" :locale="inputLang" />
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <Label for="f-to">{{ t('admin.auditLogs.filterToLabel') }}</Label>
-          <DatePicker id="f-to" v-model="formTo" :locale="inputLang" :min-value="toMinValue" />
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <Label for="f-search">{{ t('admin.auditLogs.filterSearchLabel') }}</Label>
-          <Input id="f-search" v-model="formSearch" maxlength="200" class="w-56" />
-        </div>
-        <Button size="sm" :disabled="rangeTooLong" @click="applyFilters">{{ t('admin.reservations.filterApply') }}</Button>
-        <Button size="sm" variant="outline" @click="resetFilters">{{ t('admin.reservations.filterReset') }}</Button>
-        <p v-if="rangeTooLong" class="w-full text-sm text-destructive">{{ t('admin.common.filterRangeError') }}</p>
+        <p v-if="rangeTooLong" class="text-sm text-destructive">{{ t('admin.common.filterRangeError') }}</p>
       </CardContent>
     </Card>
 

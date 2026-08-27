@@ -62,14 +62,18 @@
 
           <div class="flex flex-col gap-2">
             <Label for="contactDate">{{ t('landing.form.contactDate') }}</Label>
-            <DatePicker id="contactDate" v-model="contactDate" :locale="inputLang" :invalid="errors.contactDate" />
+            <DatePicker id="contactDate" v-model="contactDate" :locale="inputLang" :disabled="contactIndifferent" :invalid="errors.contactDate" />
             <p v-if="errors.contactDate" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
           </div>
 
           <div class="flex flex-col gap-2">
             <Label for="contactTime">{{ t('landing.form.contactTime') }}</Label>
-            <TimePicker id="contactTime" v-model="contactTime" :locale="inputLang" :invalid="errors.contactTime" />
+            <TimePicker id="contactTime" v-model="contactTime" :locale="inputLang" :disabled="contactIndifferent" :invalid="errors.contactTime" />
             <p v-if="errors.contactTime" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
+            <label class="flex items-center gap-2 text-sm">
+              <Checkbox v-model="contactIndifferent" @update:model-value="onToggleContactIndifferent" />
+              {{ t('landing.form.contactTimeIndifferent') }}
+            </label>
           </div>
 
           <!-- honeypot(12-1절) — 사람에게는 보이지 않는 필드. 채워지면 봇으로 간주한다. -->
@@ -138,6 +142,15 @@ const gender = ref('')
 const wechatId = ref('')
 const contactDate = ref('')
 const contactTime = ref('')
+const contactIndifferent = ref(false)
+// 체크 시 값은 지우기만 한다 — 전송하지 않는다는 사실은 submit()에서 ContactTimeIndifferent 플래그로
+// 표현하고, 필드 자체는 disabled로만 막는다(D26).
+function onToggleContactIndifferent(checked: boolean | 'indeterminate') {
+  if (checked) {
+    contactDate.value = ''
+    contactTime.value = ''
+  }
+}
 const consent = ref(false)
 const honeypot = ref('')
 
@@ -171,8 +184,8 @@ function validate(): boolean {
   errors.birthDate = !birthDate.value
   errors.gender = !gender.value
   errors.wechatId = !wechatId.value.trim()
-  errors.contactDate = !contactDate.value
-  errors.contactTime = !contactTime.value
+  errors.contactDate = !contactIndifferent.value && !contactDate.value
+  errors.contactTime = !contactIndifferent.value && !contactTime.value
   errors.consent = !consent.value
   return !Object.values(errors).some(Boolean)
 }
@@ -190,8 +203,9 @@ async function submit() {
         birthDate: birthDate.value,
         gender: gender.value,
         wechatId: wechatId.value,
-        preferredContactDate: contactDate.value,
-        preferredContactTime: `${contactTime.value}:00`,
+        preferredContactDate: contactIndifferent.value ? null : contactDate.value,
+        preferredContactTime: contactIndifferent.value ? null : `${contactTime.value}:00`,
+        contactTimeIndifferent: contactIndifferent.value,
         locale: locale.value,
         privacyConsent: consent.value,
         honeypot: honeypot.value,

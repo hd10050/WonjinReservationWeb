@@ -4,13 +4,16 @@ namespace WonjinApi.DTOs;
 
 // 공개 예약 신청(11-1절). record 검증 애노테이션은 파라미터에 직접 부착할 것 — [property: ...]는
 // 런타임 500을 던진다(11-8절 함정, 실측 확인).
+// 🔴 D26(2026-08-28) — ContactTimeIndifferent(상관없음)가 true면 Date·Time 둘 다 null로 저장하고
+// 아래 두 필드의 필수 검증을 건너뛴다(ReservationsController.Create).
 public record ReservationCreateRequest(
     [Required, MaxLength(50)] string Name,
     DateOnly BirthDate,
     [Required] string Gender,
     [Required, MaxLength(50)] string WechatId,
-    DateOnly PreferredContactDate,
-    TimeOnly PreferredContactTime,
+    DateOnly? PreferredContactDate,
+    TimeOnly? PreferredContactTime,
+    bool ContactTimeIndifferent,
     [Required] string Locale,
     bool PrivacyConsent,
     string? Honeypot,
@@ -48,7 +51,7 @@ public record ReservationLogDto(int Id, string Action, string? Note, string Acto
 
 public record ReservationDetailDto(
     int Id, string Code, string Name, DateOnly BirthDate, string Gender, string WechatId,
-    DateOnly? PreferredContactDate, TimeOnly PreferredContactTime, string Locale, string Status,
+    DateOnly? PreferredContactDate, TimeOnly? PreferredContactTime, string Locale, string Status,
     int? ConsultantId, string? ConsultantName,
     DateOnly? VisitDate, TimeOnly? VisitTime,
     decimal? DepositAmount, string DepositCurrency, bool DepositPaid, string? CancelReason,

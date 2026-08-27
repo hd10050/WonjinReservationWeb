@@ -39,10 +39,15 @@ public class ReservationsController(AppDbContext db, IPushSender pushSender, ILo
         if (req.BirthDate == default)
             return BadRequest(new { code = "INVALID_BIRTH_DATE" });
 
-        // 연락 희망 날짜(D10, 2026-08-28 추가) — 비-nullable DateOnly라 누락 시 400이 아니라 default로
-        // 조용히 바인딩된다(11-8절 함정, 생년월일과 동일) → 명시적으로 검사한다.
-        if (req.PreferredContactDate == default)
-            return BadRequest(new { code = "INVALID_CONTACT_DATE" });
+        // 연락 희망 날짜·시각(D10) — D26(2026-08-28): "상관없음" 체크 시 둘 다 필수 검증을 건너뛰고
+        // null로 저장한다. 체크 안 했으면 이전과 동일하게 둘 다 필수.
+        if (!req.ContactTimeIndifferent)
+        {
+            if (req.PreferredContactDate is null || req.PreferredContactDate == default)
+                return BadRequest(new { code = "INVALID_CONTACT_DATE" });
+            if (req.PreferredContactTime is null)
+                return BadRequest(new { code = "INVALID_CONTACT_TIME" });
+        }
 
         var nowKst = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Kst);
         var kstDate = DateOnly.FromDateTime(nowKst.DateTime);
@@ -71,8 +76,8 @@ public class ReservationsController(AppDbContext db, IPushSender pushSender, ILo
             BirthDate = req.BirthDate,
             Gender = req.Gender,
             WechatId = req.WechatId.Trim(),
-            PreferredContactDate = req.PreferredContactDate,
-            PreferredContactTime = req.PreferredContactTime,
+            PreferredContactDate = req.ContactTimeIndifferent ? null : req.PreferredContactDate,
+            PreferredContactTime = req.ContactTimeIndifferent ? null : req.PreferredContactTime,
             Locale = req.Locale,
             UtmSource = Truncate(req.UtmSource, 100),
             UtmMedium = Truncate(req.UtmMedium, 100),

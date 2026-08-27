@@ -37,7 +37,10 @@
           <div><span class="text-muted-foreground">{{ t('admin.reservationDetail.wechatId') }}: </span>{{ detail.wechatId }}</div>
           <div>
             <span class="text-muted-foreground">{{ t('admin.reservationDetail.preferredContactTime') }} ({{ t('admin.reservationDetail.preferredContactTimeHint') }}): </span>
-            {{ [detail.preferredContactDate, detail.preferredContactTime.slice(0, 5)].filter(Boolean).join(' ') }}
+            <template v-if="detail.preferredContactDate && detail.preferredContactTime">
+              {{ [detail.preferredContactDate, detail.preferredContactTime.slice(0, 5)].join(' ') }}
+            </template>
+            <template v-else>{{ t('admin.reservationDetail.contactTimeIndifferent') }}</template>
           </div>
           <div><span class="text-muted-foreground">{{ t('admin.reservationDetail.locale') }}: </span>{{ detail.locale }}</div>
           <div><span class="text-muted-foreground">{{ t('admin.reservationDetail.receivedAt') }}: </span>{{ formatKst(detail.createdAt) }}</div>

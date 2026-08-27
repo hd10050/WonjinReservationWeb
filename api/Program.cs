@@ -97,6 +97,14 @@ builder.Services.AddCors(options =>
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    // 🔴 2026-08-28 추가 — 기본은 빈 바디라 프론트가 이유를 알 방법이 없었다. 이 프로젝트의 모든 실패
+    // 응답은 {code:"..."} 고정 포맷(위 InvalidModelStateResponseFactory와 동일 원칙)이라 429도 맞춘다 —
+    // 프론트 각 catch 블록은 이미 e.data.code를 t(`errors.${code}`)로 그대로 읽으므로 추가 분기가 필요 없다.
+    options.OnRejected = (context, token) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        return new ValueTask(context.HttpContext.Response.WriteAsJsonAsync(new { code = "RATE_LIMITED" }, token));
+    };
 
     // 이메일+IP 조합 파티션 — 단일 병원이라 직원 전원이 같은 사무실 IP를 공유하므로
     // 순수 IP 기준을 쓰면 출근 시간 동시 로그인이 서로의 한도를 갉아먹는다(7-2절).
@@ -129,13 +137,13 @@ builder.Services.AddRateLimiter(options =>
         });
     });
 
-    // 공개 예약 폼(11-1·7-5절) — IP 파티션, 분당 5회. 광고 랜딩發 남용 방지가 목적이라
-    // 로그인처럼 이메일 조합이 필요 없다(계정이 없는 익명 제출이므로).
+    // 공개 예약 폼(11-1·7-5절) — IP 파티션, 5분당 5회(2026-08-28 1분→5분 변경, 사용자 지시). 광고 랜딩發
+    // 남용 방지가 목적이라 로그인처럼 이메일 조합이 필요 없다(계정이 없는 익명 제출이므로).
     options.AddPolicy("reservation-create", context =>
         RateLimitPartition.GetFixedWindowLimiter(GetClientIp(context, internalSecret), _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = 5,
-            Window = TimeSpan.FromMinutes(1),
+            Window = TimeSpan.FromMinutes(5),
             QueueLimit = 0,
         }));
 

@@ -86,6 +86,7 @@
 | D22 | **🔴 푸터 주소는 로케일별로 다른 문구 — 12-1-1절 "번역 안 함" 원칙의 예외**(2026-08-26) | 상호·사업자등록번호는 여전히 원문 고정(번역 금지 원칙 유지)이지만, **주소만 사용자 지시로 로케일별 표기를 분리**: ko는 등록원문("서울시 서초구 강남대로 419 파고다타워 12-18층") 유지, zh-CN은 `首尔市 瑞草区 江南大路419 PAGODA 12-18楼`, zh-TW·en은 영문 주소 `PAGODA tower 17th floor 1306~6 Seocho-dong Seocho-gu, SEOUL`(사용자가 zh-TW도 영문 표기를 명시적으로 선택). JSON-LD `PostalAddress`도 이 영문 주소 형식으로 함께 갱신(`streetAddress: "PAGODA Tower 17F, 1306-6 Seocho-dong"` 등). `landing.vue`의 `ADDRESS_BY_LOCALE` 상수로 구현(i18n JSON 키 아님 — 사업자 정보는 언어별 "번역"이 아니라 "다른 표기"이므로 기존 `BUSINESS_NAME`/`BUSINESS_REG_NO`와 같은 패턴 유지) |
 | D23 | **날짜·시간 입력 = 커스텀 `DatePicker`/`TimePicker`(D11 날짜입력 부분 대체, 2026-08-27)** | shadcn Popover+Calendar(reka-ui 기반)로 `DatePicker`, reka-ui `TimeField`로 `TimePicker` 구현(`components/ui/date-picker`·`components/ui/time-picker`). v-model은 기존 네이티브 input과 동일하게 `"YYYY-MM-DD"`/`"HH:mm"` 문자열(빈 문자열=미입력)이라 제출 로직·API 계약은 불변. `locale` prop에 각 페이지의 BCP-47 태그(`useInputLang()` 공용 컴포저블)를 그대로 전달해 팝업 캘린더 요일·월 이름까지 코드로 제어된다(9-2절① 잔여 한계 해소). 시간은 24시간제로 고정(로케일별 오전/오후 표기 차이 제거). 신규 npm 의존성은 `@internationalized/date`(reka-ui의 기존 전이 의존성을 직접 의존성으로 승격) 하나뿐 — CSS 테마는 shadcn 변수를 자동 상속. 예약 달력(`admin/calendar.vue`, 12-6절)은 애초에 네이티브 위젯이 아니라 자체 그리드라 이 결정과 무관 — 범위에서 제외(사용자 확인, 재론 불필요). **같은 세션에서 폼 필수 필드의 브라우저 기본 검증 팝업 문제도 함께 해소** — 브라우저 기본 검증 메시지가 페이지 로케일이 아니라 브라우저/OS 언어를 따라 표시되는 것을 사용자가 재현 보고(날짜 위젯과 근본 원인 동일: 네이티브 브라우저 UI가 앱 로케일을 안 따름). `<form novalidate>` + 커스텀 `validate()`(필드별 인라인 에러 텍스트 + `aria-invalid`)로 대체(랜딩 폼·어드민 로그인 2곳, `required` 사용처 전수 grep으로 확인한 범위). 신규 i18n 키: `common.pickDate`·`common.clear`·`common.fieldRequired`·`admin.login.invalidEmail`(4개 로케일 파일 키 집합 동일 확인 완료) |
 | D25 | **시술 카테고리 마스터 신설 + 시술은 카테고리에 필수 소속 + 정렬순서 폐지**(2026-08-28) | `categories` 테이블 신설(`code` UNIQUE + 언어별 이름 4개 + `is_active`, 8-3-1절). `procedures.category_id`는 **NOT NULL**(FK → `categories.id` ON DELETE RESTRICT) — 출시 전이라 기존 시술 행이 없어 바로 NOT NULL로 추가한다(사용자 확인). **`procedures.sort_order`와 카테고리의 정렬 컬럼을 두지 않는다** — 카테고리·시술을 나열하는 모든 화면(관리 탭 목록, 예약 상세 시술 선택)에서 정렬은 **현재 UI 로케일의 이름 컬럼 오름차순**(`name_<locale>`)으로 한다. [시술·수술 관리] 메뉴는 별도 메뉴를 늘리지 않고 **한 화면 안 탭 2개(카테고리 관리 / 시술·수술 관리)**로 구성한다. 카테고리도 시술·실장과 동일하게 **DELETE 없음 — `is_active=false` 비활성화만**(D13). 카테고리·시술 둘 다 엑셀 일괄등록 지원(시술 엑셀은 소속 카테고리를 **카테고리 코드**로 지정). 예약 상세의 시술 선택은 **카테고리별 아코디언**(기본 전부 접힘, 이미 선택된 시술이 든 카테고리만 펼침, 시술이 없거나 비활성인 카테고리는 숨김 — 단 이미 선택된 시술이 든 카테고리는 유지) |
+| D26 | **연락 희망 시각에 "상관없음" 체크박스 추가**(2026-08-28) | 고객이 연락 희망 날짜·시각(D10)을 특정하지 않고도 신청 가능하도록 체크박스 신설 — 체크 시 `preferred_contact_date`/`preferred_contact_time` 둘 다 NULL로 저장(값을 지우는 것이지 특수 표시값이 아니다), 어드민 예약 상세엔 "상관없음"으로 표시한다. 라이브 서비스라 `preferred_contact_time`을 기존 `TimeOnly`(NOT NULL)에서 `TimeOnly?`로 마이그레이션(`ALTER COLUMN ... DROP NOT NULL`) |
 
 ---
 
@@ -450,13 +451,14 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 |---|---|---|---|
 | `auth` | `POST /api/auth/login` | **이메일 + IP** (7-2절 주의) | 분당 20 |
 | `refresh` | `POST /api/auth/refresh` | 사용자 ID | 분당 10 |
-| `reservation-create` | `POST /api/reservations` (공개 폼) | IP | 분당 5 |
+| `reservation-create` | `POST /api/reservations` (공개 폼) | IP | **5분당 5**(2026-08-28 1분→5분 변경, 사용자 지시) |
 | `admin-write` | 관리자 쓰기 전체(POST/PUT/PATCH/DELETE) | 사용자 ID | 분당 60 |
 | — | 관리자 읽기(GET) | 없음 | 인증으로 보호 |
 | — | `POST /api/internal/landing-visit` | 없음 | 내부 시크릿 헤더로 보호(11-1절) |
 | — | `GET /api/internal/influencer-links/{code}` | 없음 | 내부 시크릿 헤더로 보호(11-1절, B안 2026-08-27) — 프론트 서버만 호출해 남용 경로 자체가 없다 |
 
 **정책을 새로 만들 때 지킬 것**
+- **429 응답도 다른 실패 응답과 동일하게 `{code:"RATE_LIMITED"}` 구조로 나간다**(`RateLimiterOptions.OnRejected`, 2026-08-28 추가) — 기본값(빈 바디)이면 프론트가 사유를 표시할 방법이 없다. 프론트 각 화면의 기존 `e.data.code` 읽는 패턴을 그대로 재사용하므로 화면별 추가 분기가 필요 없다.
 - **기존 정책을 습관적으로 재사용하지 말 것.** 호출 빈도·트리거가 다른 엔드포인트가 같은 정책을 공유하면, 한쪽의 정상 호출이 다른 쪽 한도를 소진시켜 세션이 통째로 튕긴다(`refresh`가 `auth`를 재사용하면 안 되는 이유와 같다).
 - 파티션 키로 쓰는 IP는 Cloudflare가 설정하는 위조 불가 헤더(`CF-Connecting-IP`)에서 얻는다. 브라우저가 보낸 `X-Forwarded-For`를 그대로 신뢰하지 않는다.
 - `UseAuthentication()` → `UseRateLimiter()` 순서를 반드시 지킨다. 반대면 사용자 ID 파티션이 전부 IP로 폴백된다.
@@ -592,7 +594,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 | `gender` | varchar(10) | NOT NULL, CHECK `IN ('Female','Male','Other')` |
 | `wechat_id` | varchar(50) | NOT NULL |
 | `preferred_contact_date` | date | **NULL**(라이브 서비스 기존 행 호환, D10) — 고객이 입력한 연락 희망 날짜. 신규 제출은 프론트·백엔드 필수. **KST 기준**(9-2절), 타임존 없는 벽시계 날짜 (`visit_date`와 동일 취급) |
-| `preferred_contact_time` | time | NOT NULL — 고객이 입력한 연락 희망 시각. **KST 기준**(9-2절), 타임존 없는 벽시계 시각 (D10) |
+| `preferred_contact_time` | time | **NULL**(D26, 2026-08-28 — "상관없음" 체크 시 NULL) — 고객이 입력한 연락 희망 시각. **KST 기준**(9-2절), 타임존 없는 벽시계 시각 (D10) |
 | `locale` | varchar(10) | NOT NULL — 고객이 신청한 언어. 실장이 응대 언어를 판단하는 근거 |
 | `status` | varchar(20) | NOT NULL DEFAULT `'New'`, CHECK `IN ('New','Consulting','Confirmed','Visited','Cancelled')` |
 | `consultant_id` | int | NULL, FK → **`consultants.id`** `ON DELETE RESTRICT` (실장은 삭제하지 않으므로 RESTRICT가 안전 — 실수로 삭제를 시도해도 DB가 막는다) |
@@ -957,7 +959,7 @@ public record PagedResult<T>(IEnumerable<T> Items, int Total, int Page, int Page
 
 | 메서드 | 경로 | 비고 |
 |---|---|---|
-| POST | `/api/reservations` | 예약 신청. rate limit(IP 분당 5회) + honeypot + 개인정보 동의 서버 재검증 |
+| POST | `/api/reservations` | 예약 신청. rate limit(IP 5분당 5회, 2026-08-28 1분→5분 변경) + honeypot + 개인정보 동의 서버 재검증 |
 
 > **공개 API는 이 하나뿐이다.** 초안에 있던 `GET /api/procedures`(활성 시술 목록)는 **삭제했다** — 랜딩 폼에는 시술 선택 필드가 없고(12-1절, 요구사항 2번), 관리자 화면은 `/api/admin/procedures`를 쓰므로 **이 공개 API를 호출하는 화면이 하나도 없었다.** 아무 화면도 참조하지 않는 공개 엔드포인트는 그 자체로 불필요한 노출면이다. 랜딩에서 시술 목록이 필요해지면 그때 다시 만든다.
 
@@ -1088,7 +1090,7 @@ ORDER BY week_start;
 
 | 메서드 | 경로 | 비고 |
 |---|---|---|
-| GET / POST / PATCH | `/api/admin/users[/{id}]` | 계정 발급·역할 변경·정지. 자기 자신 조작 차단 + RT 전량 폐기. **DELETE 없음** — 계정도 정지(`is_suspended`)로만 막는다(감사 로그 행위자 추적 유지) |
+| GET / POST / PATCH | `/api/admin/users[/{id}]` | 계정 발급·역할 변경·정지·**이름 변경**(2026-08-28 추가). 자기 자신은 **역할·정지 조작은 차단하되 이름만은 예외적으로 허용**(요청에 역할·정지 필드가 있으면 값이 기존과 같아도 `CANNOT_MODIFY_SELF`) — 이름만 바뀐 경우는 RT를 폐기하지 않는다(역할 변경·정지 시에만 세션 전량 폐기). **DELETE 없음** — 계정도 정지(`is_suspended`)로만 막는다(감사 로그 행위자 추적 유지) |
 | GET | `/api/admin/audit-logs` | 필터: `actorId`, `entityType`, `action`, `from`, `to`, `search` |
 | GET | `/api/admin/stats/referrals` | **어드민 전용(D5)** — 유입 경로별 방문수·예약수·전환율 |
 | GET / POST / PUT | `/api/admin/influencer-links[/{id}]` | **어드민 전용**(B안, 2026-08-27 신설, 8-12·15-3절) — 인플루언서 짧은 링크(`/go/{code}`) 매핑 관리. `includeInactive`·`search`(코드+표시명) 쿼리 + `PagedResult`(기본 20건). **DELETE 없음** — `isActive=false`로 비활성화. `code`는 PUT 대상이 아니다(생성 후 불변 — 이미 배포된 URL이 깨지지 않도록) |
@@ -1199,7 +1201,7 @@ public record LoginRequest([Required, MaxLength(254)] string Email, [Required, M
 | 생년월일 | `DatePicker`(D23) | ✅ |
 | 성별 | radio (여성/남성/기타) | ✅ |
 | 위챗 ID | text | ✅ |
-| 연락 희망 일시 | `DatePicker` + `TimePicker`(D23, 라벨에 "한국시간 UTC +9" 병기, 2026-08-28 날짜 추가) | ✅ |
+| 연락 희망 일시 | `DatePicker` + `TimePicker`(D23, 라벨에 "한국시간 UTC +9" 병기, 2026-08-28 날짜 추가) + **"상관없음" 체크박스**(D26, 체크 시 두 필드 비활성화·미전송) | ✅(체크박스 선택 시 예외) |
 | 개인정보 수집·이용 동의 | checkbox + 처리방침 링크 | ✅ |
 | (honeypot) | 숨김 필드 | — |
 
@@ -1595,7 +1597,7 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 | 예약 달력(그리드 배지) | `WHERE status IN ('Confirmed','Visited') AND visit_date BETWEEN ? AND ? GROUP BY visit_date`(2026-08-27, 건수만) | `ix_reservations_visit_date` (부분 — **필터 조건이 쿼리와 정확히 일치해야 탄다**) |
 | 예약 달력(선택일 상세) | `WHERE status IN ('Confirmed','Visited') AND visit_date=?`(2026-08-27, 클릭 시에만) | `ix_reservations_visit_date` (동일 부분 인덱스) |
 | 실장 KPI | `WHERE created_at >= ? GROUP BY consultant_id` | `ix_reservations_consultant_id_status` + `ix_reservations_created_at` |
-| 유입 경로 | `WHERE created_at BETWEEN ? AND ? GROUP BY referral_code, utm_*` | `ix_reservations_created_at` (F10 — 코드 선행 인덱스는 이 쿼리를 못 탄다) |
+| 유입 경로 | `WHERE stat_date BETWEEN ? AND ? GROUP BY referral_code, utm_* ORDER BY visit_count DESC LIMIT 20`(2026-08-28 페이징 추가 — 조합 수 기준 `PagedResult`) | `ix_landing_daily_stats_stat_date` (F10 — 코드 선행 인덱스는 이 쿼리를 못 탄다) |
 | 감사 로그 | `ORDER BY created_at DESC LIMIT 20` | `ix_audit_logs_created_at` |
 | 토큰 갱신 | `WHERE token_hash=?` | 🔴 `ix_refresh_tokens_token_hash` |
 | 계정 관리 | `WHERE role=?` | `ix_users_role` |

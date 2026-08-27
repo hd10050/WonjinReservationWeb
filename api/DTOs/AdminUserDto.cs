@@ -13,5 +13,6 @@ public record CreateUserRequest(
     [Required, MaxLength(30)] string Name
 );
 
-// 역할 변경·정지/해제만 다룬다(11-5절 — "계정 발급·역할 변경·정지"). 이름 변경은 이 엔드포인트 범위 밖.
-public record UpdateUserRequest(string? Role, bool? IsSuspended);
+// 역할 변경·정지/해제 + 이름 변경(2026-08-28 추가, AdminUsersController.Update 참고 — 본인 계정은
+// Name만 허용, Role·IsSuspended는 자기자신 조작 방지 원칙(admin-panel-pattern-reference.md 6절)대로 차단).
+public record UpdateUserRequest(string? Role, bool? IsSuspended, [MaxLength(30)] string? Name);
