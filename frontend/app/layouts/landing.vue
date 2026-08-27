@@ -1,13 +1,39 @@
 <template>
   <div class="flex min-h-screen flex-col bg-background">
     <header class="border-b bg-card">
-      <div class="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-        <NuxtLink :to="localePath('index')" class="flex items-center">
+      <div class="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
+        <NuxtLink :to="localePath('index')" class="flex shrink-0 items-center">
           <img src="/logo.svg" :alt="t('common.appName')" class="h-12 w-auto">
         </NuxtLink>
+
+        <nav class="flex flex-1 items-center justify-center gap-4 text-sm font-medium">
+          <NuxtLink :to="localePath('index')" class="text-muted-foreground hover:text-foreground">{{ t('landing.nav.home') }}</NuxtLink>
+          <DropdownMenuRoot>
+            <DropdownMenuTrigger class="flex items-center gap-1 text-muted-foreground hover:text-foreground aria-expanded:text-foreground">
+              {{ t('landing.nav.procedures') }}
+              <ChevronDown class="size-3.5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuContent :side-offset="8" align="center" class="z-50 max-h-[70vh] min-w-40 overflow-y-auto rounded-lg border bg-card p-1 text-sm shadow-md">
+                <DropdownMenuItem
+                  v-for="category in PROCEDURE_CATEGORIES"
+                  :key="category.slug"
+                  as-child
+                  class="block cursor-pointer rounded-md px-3 py-1.5 text-foreground outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+                >
+                  <NuxtLink :to="localePath({ name: 'procedures-category', params: { category: category.slug } })">
+                    {{ category.name[locale as Locale] }}
+                  </NuxtLink>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenuPortal>
+          </DropdownMenuRoot>
+          <NuxtLink :to="localePath('inquiry')" class="text-muted-foreground hover:text-foreground">{{ t('landing.nav.inquiry') }}</NuxtLink>
+        </nav>
+
         <DropdownMenuRoot>
           <DropdownMenuTrigger
-            class="flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground aria-expanded:border-primary aria-expanded:text-foreground"
+            class="flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-foreground aria-expanded:border-primary aria-expanded:text-foreground"
           >
             <Globe class="size-3.5" />
             {{ currentLocaleName }}
@@ -51,11 +77,14 @@
         </div>
       </div>
     </footer>
+
+    <InquiryFab />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ChevronDown, Globe } from '@lucide/vue'
+import { PROCEDURE_CATEGORIES, type Locale } from '~/data/procedures'
 import {
   DropdownMenuContent,
   DropdownMenuItem,
