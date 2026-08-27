@@ -741,6 +741,23 @@ var kstDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcN
 - **`MAX(code)+1` 방식 금지**(F4) — 조회와 삽입 사이에 다른 요청이 끼어들면 UNIQUE 위반 500이 난다.
 - 하루 **9999건**까지 수용한다. 초과하면 자리수를 늘려야 하므로, 그 규모에 도달하면 형식을 재검토한다(현재 광고 규모에서는 도달하지 않는다).
 
+### 8-12. `influencer_links` — 인플루언서 짧은 링크 매핑 (B안, 2026-08-27 신설)
+
+| 컬럼 | 타입 | 제약 |
+|---|---|---|
+| `id` | int | PK |
+| `code` | varchar(50) | **UNIQUE** — `/go/{code}` URL 경로 세그먼트. 영문·숫자·하이픈·언더스코어만 허용(URL 경로가 되므로), 생성 후 변경 불가 |
+| `display_name` | varchar(100) | NOT NULL — 관리 화면에 보이는 인플루언서 표시명 |
+| `utm_source` / `utm_campaign` | varchar(100) | NOT NULL DEFAULT `''` |
+| `utm_medium` | varchar(100) | NOT NULL DEFAULT `'influencer'` |
+| `locale` | varchar(10) | NOT NULL DEFAULT `'zh-CN'`, CHECK `IN ('zh-CN','zh-TW','en','ko')` — 리다이렉트 목적지 언어 |
+| `is_active` | boolean | NOT NULL DEFAULT true — 비활성화만, DELETE 없음(이 프로젝트 마스터 데이터 공통 관례, D13과 동일) |
+| `created_at` / `updated_at` | timestamptz | NOT NULL |
+
+**인덱스**: `ux_influencer_links_code`(UNIQUE, `/go/{code}` 조회가 이 컬럼 단독으로 조회), `ix_influencer_links_is_active_created_at`(관리 목록 기본 조회 `WHERE is_active=? ORDER BY created_at DESC`).
+
+> `reservations.referral_code`(자유 문자열)와 FK로 연결하지 않는다 — 이 매핑 없이 직접 `?ref=` 쿼리로 들어온 코드도 그대로 유입 경로 통계에 집계되어야 하기 때문(15-2절과 호환). 15-2절의 "매핑 테이블은 만들지 않는다"(2026-08-25 원문)는 **2026-08-27 사용자 요청으로 대체**됐다 — 아래 15-3절 참고.
+
 ---
 
 ## 9. 입력 값 규칙 (길이 제한 · 날짜/시간)
@@ -764,6 +781,8 @@ var kstDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcN
 | 처리 이력 메모 | `varchar(300)` | `[MaxLength(300)]` | `maxlength="300"` |
 | UTM 각 항목 | `varchar(100)` | 서버에서 100자로 **절단**(거부 아님) | — (URL 파라미터) |
 | 추천 코드 | `varchar(50)` | 서버에서 50자로 **절단** | — (URL 파라미터) |
+| 인플루언서 링크 코드(`influencer_links.code`) | `varchar(50)` | `[MaxLength(50), RegularExpression]` — 거부(위 추천 코드와 달리 관리자 직접 입력값이라 절단하지 않는다) | `maxlength="50"` |
+| 인플루언서 표시명 | `varchar(100)` | `[MaxLength(100)]` | `maxlength="100"` |
 
 > **비밀번호 상한 64자는 BCrypt 72바이트 한계 이내이면서 긴 패스프레이즈를 허용하는 값이다.** 서버만 64로 올리고 HTML `maxlength`를 옛 값으로 남겨두면 브라우저가 입력 자체를 잘라버려 사용자가 원인을 알 수 없는 로그인 실패를 겪는다(실제 발생한 버그).
 >
@@ -1044,6 +1063,8 @@ ORDER BY week_start;
 | GET / POST / PATCH | `/api/admin/users[/{id}]` | 계정 발급·역할 변경·정지. 자기 자신 조작 차단 + RT 전량 폐기. **DELETE 없음** — 계정도 정지(`is_suspended`)로만 막는다(감사 로그 행위자 추적 유지) |
 | GET | `/api/admin/audit-logs` | 필터: `actorId`, `entityType`, `action`, `from`, `to`, `search` |
 | GET | `/api/admin/stats/referrals` | **어드민 전용(D5)** — 유입 경로별 방문수·예약수·전환율 |
+| GET / POST / PUT | `/api/admin/influencer-links[/{id}]` | **어드민 전용**(B안, 2026-08-27 신설, 8-12·15-3절) — 인플루언서 짧은 링크(`/go/{code}`) 매핑 관리. `PagedResult` 페이징 적용. **DELETE 없음** — `isActive=false`로 비활성화. `code`는 PUT 대상이 아니다(생성 후 불변 — 이미 배포된 URL이 깨지지 않도록) |
+| GET | `/api/internal/influencer-links/{code}` | **내부 전용**(11-1절 F11과 동일 원칙) — 프론트 서버(Nitro)의 `/go/{code}` 리다이렉트가 `X-Internal-Secret` 헤더로만 호출. 코드 없음·비활성·시크릿 불일치 모두 404(엔드포인트 존재 자체를 숨김) |
 
 ### 11-6. 🔴 통계 쿼리 작성 시 함정
 
@@ -1290,7 +1311,7 @@ function submitSearch(value: string) {
 | 예약 통계 | **주(일~토) 단위** 추이(**표 + 라인 차트**) + 시술별 집계(**표 + 막대 차트**) + 언어별 분포(**표 + 도넛 차트**) + **담당 실장별 집계(표 + 막대 차트)**(D21) |
 | 계정 관리 | 계정 목록 + 발급 폼 + 역할 변경 + 정지 (어드민 전용) |
 | 로그 | 감사 로그 목록 + 필터 (어드민 전용) |
-| 유입 경로 분석 | 코드/캠페인별 방문수·예약수·전환율 (어드민 전용) |
+| 유입 경로 분석 | 코드/캠페인별 방문수·예약수·전환율 (어드민 전용) + 토글형 인플루언서 짧은 링크 관리 섹션(15-3절, `/go/{code}` 발급·복사) |
 
 ---
 
@@ -1377,6 +1398,8 @@ var statusCode = executed.Exception is not null ? 500 : context.HttpContext.Resp
 | `/api/admin/procedures` | PUT | `update` | `procedure` |
 | `/api/admin/users` | POST | `create` | `user` |
 | `/api/admin/users` | PATCH | `update` | `user` |
+| `/api/admin/influencer-links` | POST | `create` | `influencer_link` |
+| `/api/admin/influencer-links` | PUT | `update` | `influencer_link` |
 
 > 🔴 **`/notes`·`/status`가 붙은 항목은 세그먼트가 2개**라 `/api/admin/reservations` 단독 규칙과 **동시에 매치된다.** 구체성(세그먼트 개수) 내림차순 정렬이 없으면 배열 순서에 따라 상담 기록 추가가 "예약 수정"으로 오분류된다 — 14장의 정렬 규칙이 이 표에서 실제로 필요한 이유다.
 >
@@ -1439,7 +1462,31 @@ DO UPDATE SET visit_count = wonjin.landing_daily_stats.visit_count + 1;
 
 > 이 메뉴는 **어드민에게만** 노출한다. 사이드바 조건부 렌더링과 **API 액션 레벨 `[Authorize(Roles="Admin")]`을 둘 다** 적용한다(6-3절 원칙 2).
 >
-> 추천코드 ↔ 인플루언서 표시명 매핑 테이블은 **요구되지 않았으므로 만들지 않는다.** 1차에는 코드 원본을 그대로 표시하고, 표시명 관리가 필요해지면 그때 마스터 테이블을 추가한다.
+> 🔴 **2026-08-27 대체**: "추천코드 ↔ 인플루언서 표시명 매핑 테이블은 요구되지 않았으므로 만들지 않는다"(2026-08-25 원문)는 사용자가 인플루언서에게 줄 URL이 너무 길어 다루기 어렵다는 문제를 제기하며 대체됐다. 아래 15-3절 참고.
+
+### 15-3. 인플루언서 짧은 링크 — `/go/{code}` (B안, 2026-08-27 신설)
+
+**문제**: 15-1절 원문 그대로면 인플루언서에게 `https://도메인/?ref=<코드>&utm_source=<채널>&utm_medium=influencer&utm_campaign=<캠페인명>`처럼 쿼리 파라미터 4개짜리 URL을 그대로 전달해야 한다 — 파라미터 이름·값을 인플루언서가 직접 다뤄야 해 오타·누락 위험이 크고(대소문자·공백 차이만으로 15-2절 집계가 갈라진다, 실측 확인 — `referral_code`엔 trim/lowercase 정규화가 없음), 공유하기에도 번거롭다.
+
+**해결**: `influencer_links`(8-12절) 매핑 테이블 + 짧은 리다이렉트 경로 `/go/{code}`.
+
+```
+인플루언서에게 주는 URL:  https://도메인/go/cathy-xhs
+                                   │
+                                   ▼
+프론트(Nitro) server/routes/go/[code].get.ts
+                                   │  GET /api/internal/influencer-links/{code} (X-Internal-Secret 헤더)
+                                   ▼
+백엔드가 influencer_links에서 UTM·locale 조회 → 302 리다이렉트
+                                   │
+                                   ▼
+실제 랜딩:  https://도메인{/zh-tw|/en|/ko}/?ref=cathy-xhs&utm_source=...&utm_medium=...&utm_campaign=...
+```
+
+- 인플루언서는 코드 하나(`cathy-xhs`)만 기억하면 된다 — UTM 파라미터 이름·값을 몰라도 되고, 로케일도 관리자가 미리 지정해둔 값을 자동으로 따라간다.
+- 코드가 없거나 비활성 상태면 11-1절 F11과 동일한 원칙으로 조용히 홈(`/`)으로 리다이렉트한다 — 원인을 노출하지 않는다.
+- `/go/{code}` → `?ref=` 이후의 흐름(방문 집계 UPSERT, 예약 신청 시 스냅샷 저장, 15-2절 노출)은 15-1·15-2절과 완전히 동일하다 — 이 기능은 URL을 짧게 만드는 앞단만 추가할 뿐, 집계 로직 자체는 바뀌지 않는다.
+- 관리 폼은 `/admin/referrals` 화면 안에 토글로 접어둔 별도 섹션이다(D5와 동일하게 어드민 전용, 새 상위 메뉴 아님) — 11-5절 `/api/admin/influencer-links` 참고.
 
 ---
 

@@ -41,6 +41,26 @@ public class InternalController(AppDbContext db, IConfiguration config) : Contro
         return Ok();
     }
 
+    // /go/{code} 리다이렉트 전용(B안, 2026-08-27 신설) — 프론트 서버(Nitro)만 호출한다. landing-visit과
+    // 동일한 원칙(11-1절): 시크릿이 없거나 다르면 404로 엔드포인트 존재 자체를 숨긴다. 코드가 없거나
+    // 비활성 상태여도 같은 404 — 방문자에게 "이 코드가 존재하는지"를 노출하지 않는다.
+    [HttpGet("influencer-links/{code}")]
+    public async Task<ActionResult<InfluencerLinkResolveDto>> ResolveInfluencerLink(
+        string code, [FromHeader(Name = "X-Internal-Secret")] string? secret)
+    {
+        var expected = config["InternalSecret"];
+        if (string.IsNullOrEmpty(expected) || string.IsNullOrEmpty(secret) || !FixedTimeEquals(secret, expected))
+            return NotFound();
+
+        var link = await db.InfluencerLinks.AsNoTracking()
+            .Where(l => l.Code == code && l.IsActive)
+            .Select(l => new { l.UtmSource, l.UtmMedium, l.UtmCampaign, l.Locale })
+            .FirstOrDefaultAsync();
+        if (link is null) return NotFound();
+
+        return Ok(new InfluencerLinkResolveDto(link.UtmSource, link.UtmMedium, link.UtmCampaign, link.Locale));
+    }
+
     // 타이밍 사이드채널 방지 — 시크릿 비교는 항상 상수 시간으로.
     private static bool FixedTimeEquals(string a, string b) =>
         CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(a), Encoding.UTF8.GetBytes(b));
