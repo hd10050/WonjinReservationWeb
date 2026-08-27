@@ -16,7 +16,8 @@
       "menu": "Menu",
       "pushOn": "New reservation alerts on",
       "pushOff": "New reservation alerts off",
-      "pushDenied": "Notifications blocked — enable them in your browser settings"
+      "pushDenied": "Notifications blocked — enable them in your browser settings",
+      "filterRangeError": "The search period can be at most 1 year. Please narrow the range and try again."
     },
     "nav": {
       "dashboard": "Dashboard",

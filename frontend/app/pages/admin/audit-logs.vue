@@ -36,8 +36,9 @@
         <Label for="f-search">{{ t('admin.auditLogs.filterSearchLabel') }}</Label>
         <Input id="f-search" v-model="formSearch" maxlength="200" class="w-56" />
       </div>
-      <Button size="sm" @click="applyFilters">{{ t('admin.reservations.filterApply') }}</Button>
+      <Button size="sm" :disabled="rangeTooLong" @click="applyFilters">{{ t('admin.reservations.filterApply') }}</Button>
       <Button size="sm" variant="outline" @click="resetFilters">{{ t('admin.reservations.filterReset') }}</Button>
+      <p v-if="rangeTooLong" class="w-full text-sm text-destructive">{{ t('admin.common.filterRangeError') }}</p>
     </div>
 
     <div class="overflow-x-auto rounded-md border border-border">
@@ -76,7 +77,7 @@
 
 <script setup lang="ts">
 import type { AdminUser, AuditLogEntry, PagedResult } from '~/types/reservation'
-import { todayKst } from '~/utils/datetime'
+import { clampDateRangeEnd, todayKst } from '~/utils/datetime'
 
 definePageMeta({ middleware: 'admin', layout: 'admin', i18n: false })
 useHead({ title: '로그(감사) | Admin', meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
@@ -96,16 +97,21 @@ const defaultFrom = `${todayKst().slice(0, 7)}-01`
 const defaultTo = todayKst()
 
 // 🔴 검색 입력을 반응형 query에 직접 물리지 말 것(12-4절) — [필터 적용] 클릭 시에만 route.query 반영
-const query = computed(() => ({
-  page: Number(route.query.page) || 1,
-  pageSize: 20,
-  actorId: route.query.actorId ? Number(route.query.actorId) : undefined,
-  entityType: (route.query.entityType as string) || undefined,
-  action: (route.query.action as string) || undefined,
-  from: (route.query.from as string) || defaultFrom,
-  to: (route.query.to as string) || defaultTo,
-  search: (route.query.search as string) || undefined,
-}))
+// 🔴 조회 기간 상한(1년+1일)은 useDateRangeFilter가 필터 폼(UI)만 막는다 — URL 직접 조작·북마크는
+// 폼을 거치지 않아 그 방어를 우회한다. 실제 조회에 쓰는 이 query 자체에서 clamp해 우회를 막는다.
+const query = computed(() => {
+  const from = (route.query.from as string) || defaultFrom
+  return {
+    page: Number(route.query.page) || 1,
+    pageSize: 20,
+    actorId: route.query.actorId ? Number(route.query.actorId) : undefined,
+    entityType: (route.query.entityType as string) || undefined,
+    action: (route.query.action as string) || undefined,
+    from,
+    to: clampDateRangeEnd(from, (route.query.to as string) || defaultTo),
+    search: (route.query.search as string) || undefined,
+  }
+})
 const { data } = await useApi<PagedResult<AuditLogEntry>>('/api/admin/audit-logs', { query })
 // 행위자 필터 드롭다운용 — 계정 수가 적어 페이지 1개(최대 100)로 충분(9-1절 규모 전제와 동일)
 const { data: actors } = await useApi<PagedResult<AdminUser>>('/api/admin/users', { query: () => ({ page: 1, pageSize: 100 }) })
@@ -125,9 +131,10 @@ const formAction = ref(query.value.action ?? '')
 const formFrom = ref(query.value.from)
 const formTo = ref(query.value.to)
 const formSearch = ref(query.value.search ?? '')
-const { toMinValue } = useDateRangeFilter(formFrom, formTo)
+const { toMinValue, rangeTooLong } = useDateRangeFilter(formFrom, formTo)
 
 function applyFilters() {
+  if (rangeTooLong.value) return
   navigateTo({
     query: {
       page: 1,

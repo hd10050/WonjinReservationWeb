@@ -12,7 +12,8 @@
           <Label for="f-to">{{ t('admin.kpi.filterTo') }}</Label>
           <DatePicker id="f-to" v-model="formTo" :locale="inputLang" :min-value="toMinValue" />
         </div>
-        <Button @click="applyFilters">{{ t('admin.kpi.filterApply') }}</Button>
+        <Button :disabled="rangeTooLong" @click="applyFilters">{{ t('admin.kpi.filterApply') }}</Button>
+        <p v-if="rangeTooLong" class="w-full text-sm text-destructive">{{ t('admin.common.filterRangeError') }}</p>
       </CardContent>
     </Card>
 
@@ -60,7 +61,7 @@
 <script setup lang="ts">
 import { Bar } from 'vue-chartjs'
 import type { ConsultantKpi } from '~/types/reservation'
-import { todayKst } from '~/utils/datetime'
+import { clampDateRangeEnd, todayKst } from '~/utils/datetime'
 
 definePageMeta({ middleware: 'admin', layout: 'admin', i18n: false })
 useHead({ title: '실장 KPI | Admin', meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
@@ -74,18 +75,21 @@ const defaultFrom = `${todayKst().slice(0, 7)}-01`
 const defaultTo = todayKst()
 
 // 🔴 검색 입력을 반응형 query에 직접 물리지 말 것(12-4절)과 동일 이유로 URL 쿼리를 computed로 감싼다.
-const query = computed(() => ({
-  from: (route.query.from as string) || defaultFrom,
-  to: (route.query.to as string) || defaultTo,
-}))
+// 🔴 조회 기간 상한(1년+1일)은 useDateRangeFilter가 필터 폼(UI)만 막는다 — URL 직접 조작·북마크는
+// 폼을 거치지 않아 그 방어를 우회한다. 실제 조회에 쓰는 이 query 자체에서 clamp해 우회를 막는다.
+const query = computed(() => {
+  const from = (route.query.from as string) || defaultFrom
+  return { from, to: clampDateRangeEnd(from, (route.query.to as string) || defaultTo) }
+})
 
 const { data } = await useApi<ConsultantKpi[]>('/api/admin/stats/consultants', { query })
 
 const formFrom = ref(query.value.from)
 const formTo = ref(query.value.to)
-const { toMinValue } = useDateRangeFilter(formFrom, formTo)
+const { toMinValue, rangeTooLong } = useDateRangeFilter(formFrom, formTo)
 
 function applyFilters() {
+  if (rangeTooLong.value) return
   navigateTo({ query: { from: formFrom.value, to: formTo.value } })
 }
 

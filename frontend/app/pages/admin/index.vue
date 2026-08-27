@@ -67,12 +67,13 @@
         </div>
         <div class="flex flex-col gap-1.5">
           <Label class="invisible">{{ t('admin.reservations.filterApply') }}</Label>
-          <Button @click="applyFilters">{{ t('admin.reservations.filterApply') }}</Button>
+          <Button :disabled="rangeTooLong" @click="applyFilters">{{ t('admin.reservations.filterApply') }}</Button>
         </div>
         <div class="flex flex-col gap-1.5">
           <Label class="invisible">{{ t('admin.reservations.filterReset') }}</Label>
           <Button variant="outline" @click="resetFilters">{{ t('admin.reservations.filterReset') }}</Button>
         </div>
+        <p v-if="rangeTooLong" class="w-full text-sm text-destructive">{{ t('admin.common.filterRangeError') }}</p>
       </CardContent>
     </Card>
 
@@ -117,6 +118,7 @@
 <script setup lang="ts">
 import type { ConsultantLookup, PagedResult, ReservationListItem, ReservationSummary } from '~/types/reservation'
 import { RefreshCw } from '@lucide/vue'
+import { clampDateRangeEnd } from '~/utils/datetime'
 
 definePageMeta({ middleware: 'admin', layout: 'admin', i18n: false })
 useHead({ title: '예약 대시보드 | Admin', meta: [{ name: 'robots', content: 'noindex, nofollow' }] })
@@ -134,15 +136,20 @@ const defaultFrom = `${todayKst().slice(0, 8)}01`
 const defaultTo = todayKst()
 
 // 🔴 검색 입력을 반응형 query에 직접 물리지 말 것(12-4절) — URL 쿼리를 computed로 감싸 제출 시에만 반응
-const query = computed(() => ({
-  page: Number(route.query.page) || 1,
-  pageSize: 20,
-  status: (route.query.status as string) || undefined,
-  consultantId: route.query.consultantId ? Number(route.query.consultantId) : undefined,
-  from: (route.query.from as string) || defaultFrom,
-  to: (route.query.to as string) || defaultTo,
-  search: (route.query.search as string) || undefined,
-}))
+// 🔴 조회 기간 상한(1년+1일)은 useDateRangeFilter가 필터 폼(UI)만 막는다 — URL 직접 조작·북마크는
+// 폼을 거치지 않아 그 방어를 우회한다. 실제 조회에 쓰는 이 query 자체에서 clamp해 우회를 막는다.
+const query = computed(() => {
+  const from = (route.query.from as string) || defaultFrom
+  return {
+    page: Number(route.query.page) || 1,
+    pageSize: 20,
+    status: (route.query.status as string) || undefined,
+    consultantId: route.query.consultantId ? Number(route.query.consultantId) : undefined,
+    from,
+    to: clampDateRangeEnd(from, (route.query.to as string) || defaultTo),
+    search: (route.query.search as string) || undefined,
+  }
+})
 
 // 8-4절/12-4절 — 대시보드 필터는 기본 활성 실장만, "비활성 포함" 체크 시 퇴사자도 필터 대상에 노출
 const showInactiveConsultants = ref(false)
@@ -181,7 +188,7 @@ const formConsultantId = ref(query.value.consultantId ? String(query.value.consu
 const formFrom = ref(query.value.from)
 const formTo = ref(query.value.to)
 const formSearch = ref(query.value.search ?? '')
-const { toMinValue } = useDateRangeFilter(formFrom, formTo)
+const { toMinValue, rangeTooLong } = useDateRangeFilter(formFrom, formTo)
 
 // 🔴 버그(2026-08-27) — "비활성 포함" 체크 후 비활성 실장을 선택하고 체크를 다시 해제하면 목록이
 // 활성 실장만으로 교체돼 선택돼 있던 값이 <select>에 더 이상 없는 옵션이 된다. 네이티브 select는
@@ -194,6 +201,7 @@ watch(consultants, (list) => {
 })
 
 function applyFilters() {
+  if (rangeTooLong.value) return
   navigateTo({
     query: {
       page: 1,

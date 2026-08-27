@@ -13,5 +13,12 @@ export function useDateRangeFilter(from: Ref<string>, to: Ref<string>) {
     if (f && t && t < f) to.value = f
   })
 
-  return { toMinValue }
+  // 조회 기간 상한 = 1년 + 1일(같은 날을 시작·종료 양쪽에 포함해도 "만 1년"이 되도록 여유 하루를
+  // 둠). DateValue.add()/compare()로 실제 캘린더 연산(윤년 포함)을 거쳐 비교 — 365일 고정일수 가정 금지.
+  const rangeTooLong = computed(() => {
+    if (!from.value || !to.value) return false
+    return parseDate(to.value).compare(parseDate(from.value).add({ years: 1, days: 1 })) > 0
+  })
+
+  return { toMinValue, rangeTooLong }
 }
