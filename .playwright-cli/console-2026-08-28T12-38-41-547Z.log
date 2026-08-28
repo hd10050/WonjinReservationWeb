@@ -1,7 +1,0 @@
-[    3124ms] [LOG] S.fn.init @ https://www.k-wonjin.co.kr/inc_main/js/common.js:70
-[    3171ms] [LOG] HeadlessChrome @ https://rum.beusable.net/script/b200721e144944u271/695f8803ae:0
-[    3171ms] [LOG] HeadlessChrome @ https://rum.beusable.net/script/b200721e145047u401/1b7b7f22ef:0
-[    3171ms] [LOG] HeadlessChrome @ https://rum.beusable.net/script/b200721e145218u789/6c59b3929e:0
-[    4529ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ :0
-[    5111ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ :0
-[    5126ms] [WARNING] The powerPreference option is currently ignored when calling requestAdapter() on Windows. See https://crbug.com/369219127 @ :0

@@ -1,5 +1,0 @@
-[     272ms] [WARNING] Mixed Content: The page at 'https://www.k-wonjin.co.kr/contents/stemcell/stemcell' was loaded over HTTPS, but requested an insecure element 'http://k-wonjin.co.kr/img/common/sprite.svg'. This request was automatically upgraded to HTTPS, For more information see https://blog.chromium.org/2019/10/no-more-mixed-messages-about-https.html @ https://www.k-wonjin.co.kr/inc_main/js/swiper.min.js:11
-[     309ms] [LOG] S.fn.init @ https://www.k-wonjin.co.kr/inc_main/js/common.js:70
-[     530ms] [LOG] HeadlessChrome @ https://rum.beusable.net/script/b200721e144944u271/695f8803ae:0
-[     530ms] [LOG] HeadlessChrome @ https://rum.beusable.net/script/b200721e145047u401/1b7b7f22ef:0
-[     530ms] [LOG] HeadlessChrome @ https://rum.beusable.net/script/b200721e145218u789/6c59b3929e:0
