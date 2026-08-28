@@ -14,6 +14,9 @@
       </div>
     </section>
 
+    <!-- 병원 시스템·특장점 섹션(2026-08-28) — 데이터가 있는 카테고리만, "고민이 있으신가요?" 위에. -->
+    <ProcedureMedicalSystem v-if="medical" :blocks="medical" />
+
     <section
       ref="listTarget"
       class="mx-auto max-w-6xl px-4 py-10 transition-all duration-700 sm:px-6 sm:py-16"
@@ -70,6 +73,7 @@
 
 <script setup lang="ts">
 import { findCategory, type Locale } from '~/data/procedures'
+import { PROCEDURE_MEDICAL } from '~/data/procedureMedical'
 import { CATEGORY_ICONS } from '~/utils/categoryIcons'
 
 // heroOverlayHeader(2026-08-28) — 이 페이지도 풀블리드 히어로가 있어 홈과 동일하게 오버레이 헤더 적용.
@@ -86,6 +90,8 @@ const category = computed(() => findCategory(route.params.category as string))
 if (!category.value) {
   throw createError({ statusCode: 404, statusMessage: 'Category not found' })
 }
+
+const medical = computed(() => (category.value ? PROCEDURE_MEDICAL[category.value.slug] : undefined))
 
 useSeo({
   title: () => category.value?.name[locale.value as Locale] ?? '',
