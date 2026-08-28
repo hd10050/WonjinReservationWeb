@@ -15,18 +15,19 @@
       <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
 
       <!-- 2026-08-28 폴리스(사용자 지시) — 텍스트+CTA를 하단좌측→중앙우측으로 이동, 3단 순차 등장
-           애니메이션 추가(heroFadeUp, 0/150/300ms 지연). above-the-fold지만 데이터가 아니라 이미
-           SSR로 렌더된 정적 텍스트의 1회성 장식 연출이라 화면 깜빡임 금지 원칙과 무관.
+           애니메이션 추가(heroFadeUp). above-the-fold지만 데이터가 아니라 이미 SSR로 렌더된 정적
+           텍스트의 1회성 장식 연출이라 화면 깜빡임 금지 원칙과 무관.
            🔴 정정 — `h-full`(height:100%)은 부모(`section`)가 `min-h-[88vh]`(min-height)만 갖고
            명시적 `height`가 없어 퍼센트 높이 해석 기준이 안 됨(CSS 스펙상 percentage height는
            부모의 "명시된 height"만 인정, min-height는 불인정) — 실측 결과 텍스트 박스가 224px
            높이로 쪼그라들어 맨 위에 붙어있었다(수직 중앙 정렬 실패, 사용자 재지적으로 발견).
-           `absolute inset-0`은 containing block의 실제 렌더 박스에 직접 고정되므로 이 문제가 없다. -->
+           `absolute inset-0`은 containing block의 실제 렌더 박스에 직접 고정되므로 이 문제가 없다.
+           🔴 지연값 2배 확대(사용자 재지시, "효과가 잘 안보임") — 0/150/300ms → 0/300/600ms. -->
       <div class="absolute inset-0 z-10 mx-auto flex max-w-6xl items-center justify-end px-4 sm:px-6">
         <div class="flex max-w-xl flex-col items-end gap-4 text-right">
           <p class="motion-safe:animate-[heroFadeUp_0.7s_ease-out_both] font-display text-6xl font-black leading-none tracking-tight text-white sm:text-8xl">{{ t('common.appName') }}</p>
-          <h1 class="motion-safe:animate-[heroFadeUp_0.7s_ease-out_both] motion-safe:[animation-delay:150ms] text-2xl font-bold text-white sm:text-4xl">{{ t('landing.home.heroTitle') }}</h1>
-          <Button as-child size="lg" class="motion-safe:animate-[heroFadeUp_0.7s_ease-out_both] motion-safe:[animation-delay:300ms] mt-4 w-fit">
+          <h1 class="motion-safe:animate-[heroFadeUp_0.7s_ease-out_both] motion-safe:[animation-delay:300ms] text-2xl font-bold text-white sm:text-4xl">{{ t('landing.home.heroTitle') }}</h1>
+          <Button as-child size="lg" class="motion-safe:animate-[heroFadeUp_0.7s_ease-out_both] motion-safe:[animation-delay:600ms] mt-4 w-fit">
             <NuxtLink :to="localePath('inquiry')">{{ t('procedures.inquireCta') }}</NuxtLink>
           </Button>
         </div>
@@ -38,7 +39,8 @@
         <h2 class="mb-10 text-center text-2xl font-bold text-foreground sm:text-4xl">{{ t('landing.home.categoriesHeading') }}</h2>
         <!-- 2026-08-28 폴리스(사용자 지시) — 카드 순차 등장(스타거). 하나의 IntersectionObserver
              결과(categoriesRevealed)를 전 카드가 공유하되, 인덱스별 transition-delay만 다르게 줘서
-             왼쪽부터 순서대로 나타나는 것처럼 보이게 한다(카드마다 별도 옵저버 불필요, 최소 구현). -->
+             왼쪽부터 순서대로 나타나는 것처럼 보이게 한다(카드마다 별도 옵저버 불필요, 최소 구현).
+             🔴 카드당 지연 2배 확대(사용자 재지시) — 60ms → 120ms. -->
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           <NuxtLink
             v-for="(category, i) in PROCEDURE_CATEGORIES"
@@ -46,7 +48,7 @@
             :to="localePath({ name: 'procedures-category', params: { category: category.slug } })"
             class="group relative aspect-[4/5] overflow-hidden rounded-xl transition-all duration-500"
             :class="categoriesRevealed ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
-            :style="{ transitionDelay: categoriesRevealed ? `${i * 60}ms` : '0ms' }"
+            :style="{ transitionDelay: categoriesRevealed ? `${i * 120}ms` : '0ms' }"
           >
             <img
               :src="`/img/hero/${category.heroImages[0]}`"
@@ -81,6 +83,36 @@
           <img src="/img/about/reception.jpg" :alt="t('landing.home.introHeading')" loading="lazy" class="col-span-2 aspect-video rounded-xl object-cover">
           <img src="/img/about/lounge.jpg" alt="" loading="lazy" class="aspect-square rounded-xl object-cover">
           <img src="/img/about/consult.jpg" alt="" loading="lazy" class="aspect-square rounded-xl object-cover">
+        </div>
+      </div>
+    </section>
+
+    <!-- 둘러보기(2026-08-28, 사용자 지시로 추가) — 원문 "원진성형외과 · 피부과 둘러보기" 섹션.
+         원본 페이지는 층별 인터랙티브 탭이 있으나 12F 외 층은 클릭해야만 로드되는 동적 콘텐츠라
+         이번엔 헤딩+본문만 반영(층별 세부는 범위 외). -->
+    <section
+      ref="tourTarget"
+      class="border-y bg-muted/30 px-4 py-16 text-center transition-all duration-700 sm:px-6 sm:py-20"
+      :class="tourRevealed ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
+    >
+      <div class="mx-auto max-w-3xl">
+        <h2 class="mb-4 font-display text-2xl font-bold text-foreground sm:text-4xl">{{ t('landing.home.tourHeading') }}</h2>
+        <p class="text-lg text-muted-foreground">{{ t('landing.home.tourBody') }}</p>
+      </div>
+    </section>
+
+    <!-- 1:1 맞춤 서비스 4가지(2026-08-28, 사용자 지시로 추가) — 원문 "전문적인 의료진과 플래너가
+         1:1 맞춤형 고객 만족 시스템을 제공합니다." 섹션의 4개 특징 카드. -->
+    <section
+      ref="featuresTarget"
+      class="mx-auto max-w-6xl px-4 py-16 transition-all duration-700 sm:px-6 sm:py-24"
+      :class="featuresRevealed ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
+    >
+      <h2 class="mx-auto mb-12 max-w-3xl text-center font-display text-2xl font-bold text-foreground sm:text-4xl">{{ t('landing.home.serviceHeading') }}</h2>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div v-for="feature in FEATURES" :key="feature" class="rounded-xl border bg-card p-6">
+          <h3 class="mb-2 text-lg font-semibold text-foreground">{{ t(`landing.home.${feature}Title`) }}</h3>
+          <p class="text-sm text-muted-foreground">{{ t(`landing.home.${feature}Desc`) }}</p>
         </div>
       </div>
     </section>
@@ -123,9 +155,14 @@ onUnmounted(() => {
   if (sliderTimer) clearInterval(sliderTimer)
 })
 
-// 스크롤 리빌(8절) — fold 아래 두 섹션만 대상. 히어로는 above-the-fold라 대상에서 제외(화면 깜빡임 금지).
+// 스크롤 리빌(8절) — fold 아래 섹션만 대상. 히어로는 above-the-fold라 대상에서 제외(화면 깜빡임 금지).
 const { target: categoriesTarget, revealed: categoriesRevealed } = useScrollReveal()
 const { target: introTarget, revealed: introRevealed } = useScrollReveal()
+const { target: tourTarget, revealed: tourRevealed } = useScrollReveal()
+const { target: featuresTarget, revealed: featuresRevealed } = useScrollReveal()
+
+// 4가지 서비스 특징(landing.home.feature1~4 Title/Desc) — i18n 키 이름 패턴만 반복 참조, 데이터 아님.
+const FEATURES = ['feature1', 'feature2', 'feature3', 'feature4']
 
 // 🔴 UTM 캡처 + landing-visit 방문기록은 layouts/landing.vue로 옮겼다(최종 리뷰 발견 +
 // 재검증에서 landing-visit 이전 누락 재지적) — 여기 홈에만 있으면 /procedures/eye/glam-eye?
