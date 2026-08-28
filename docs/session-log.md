@@ -3,6 +3,10 @@
 > CLAUDE.md의 "세션 요약"에서 밀려난 항목을 시간순으로 누적하는 아카이브.
 > CLAUDE.md에는 최신 1건만 인라인으로 남기고, 나머지는 여기에 쌓는다. **삭제 금지.**
 
+- **2026-08-28 (60)** — 인플루언서 링크(`/go/{code}`) 방문이 통계에 안 잡히던 결함 수정: 내부 조회 timeout 2초가 너무 짧아 응답이 2초를 넘기면 실패 → 무속성(생 URL) 리다이렉트로 떨어졌던 것 → 10초로 연장 + 실패해도 최소 `ref=code`는 보존(정상/실패(코드없음) 양쪽 케이스 curl 실측 완료). ※ (61)에서 진짜 근본원인은 `landing-visit` fire-and-forget의 `waitUntil` 누락임이 드러남.
+
+- **2026-08-28 (59)** — 상담폼 연락희망날짜 과거선택 차단(프론트 min-value + 백엔드 PAST_CONTACT_DATE, KST 기준) · 전 프로젝트 DatePicker 공통 결함 수정: 팝오버 재오픈 시 항상 이번 달로 리셋되던 것을 `default-placeholder`로 선택된 달부터 열리게 함(reka-ui Calendar가 재마운트마다 placeholder를 today()로 초기화하는 게 원인, 실측 확인), main 직접 작업
+
 - **2026-08-28 (53) — 상담폼 연락희망 날짜 추가 + 홈 슬로건 제거 + 로그인 페이지 랜딩헤더 공유 + 예약 상세 예약금 라디오 shadcn화, `main` 직접 작업**: 사용자 지시 5건.
   **① 상담폼 연락 희망 날짜(D10 확장)**: `reservations.preferred_contact_date`(`date`) 신설. 라이브 서비스라 기존 예약 행이 있어 **DB는 `NULL` 허용**, 신규 제출만 프론트·백엔드 필수(생년월일과 동일 패턴). `Reservation.PreferredContactDate` `DateOnly?`, `AddPreferredContactDate` 마이그레이션(단일 `AddColumn date nullable:true`, 원치 않는 DropIndex 없음 확인). `ReservationCreateRequest`에 `DateOnly PreferredContactDate` 추가 + `ReservationsController.Create`에서 `== default` 명시 검사 → 400 `INVALID_CONTACT_DATE`(비-nullable DateOnly는 누락 시 default로 조용히 바인딩되는 11-8절 함정, 생년월일과 동일). `ReservationDetailDto`/`AdminReservationsController.GetDetail`에 `DateOnly? PreferredContactDate` 추가. 프론트 `inquiry.vue`에 `DatePicker`(`contactDate` ref, 생년월일과 동일한 D23 위젯) + `validate()`에 필수 체크. `types/reservation.ts` `ReservationDetail.preferredContactDate: string | null`. 예약 상세 `[id].vue` 고객정보에 `[date, time].filter(Boolean).join(' ')`로 "연락 희망 일시: 2026-09-15 14:30" 표시(레거시 NULL이면 시각만). i18n: `admin.reservationDetail.preferredContactTime` 값 "연락 희망 시각"→"연락 희망 일시"(키 불변, 4파일 값만), `landing.form.contactDate`·`errors.INVALID_CONTACT_DATE` 신규(4파일).
   **② 홈 슬로건 제거**: `landing.home.heroSubtitle`("정밀한 진단과 상담으로 완성하는 아름다움")을 4개 로케일 JSON에서 삭제 + `index.vue`의 `<p>{{ heroSubtitle }}</p>` 제거 + `useSeo({description})` 인자 제거(heroTitle만 유지). 그 키는 index.vue 2곳에서만 쓰여 다른 영향 없음(grep 확인).
