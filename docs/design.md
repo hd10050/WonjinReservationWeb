@@ -460,7 +460,7 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 **정책을 새로 만들 때 지킬 것**
 - **429 응답도 다른 실패 응답과 동일하게 `{code:"RATE_LIMITED"}` 구조로 나간다**(`RateLimiterOptions.OnRejected`, 2026-08-28 추가) — 기본값(빈 바디)이면 프론트가 사유를 표시할 방법이 없다. 프론트 각 화면의 기존 `e.data.code` 읽는 패턴을 그대로 재사용하므로 화면별 추가 분기가 필요 없다.
 - **기존 정책을 습관적으로 재사용하지 말 것.** 호출 빈도·트리거가 다른 엔드포인트가 같은 정책을 공유하면, 한쪽의 정상 호출이 다른 쪽 한도를 소진시켜 세션이 통째로 튕긴다(`refresh`가 `auth`를 재사용하면 안 되는 이유와 같다).
-- 파티션 키로 쓰는 IP는 Cloudflare가 설정하는 위조 불가 헤더(`CF-Connecting-IP`)에서 얻는다. 브라우저가 보낸 `X-Forwarded-For`를 그대로 신뢰하지 않는다.
+- 파티션 키로 쓰는 IP는 Cloudflare가 설정하는 위조 불가 헤더(`CF-Connecting-IP`)에서 얻는다. 브라우저가 보낸 `X-Forwarded-For`를 그대로 신뢰하지 않는다. 🔴 **프론트 프록시(`server/api/[...].ts`)가 백엔드로 relay할 때 이 헤더 이름 그대로 `cf-connecting-ip`로 실어야 한다**(2026-08-28 정정 — `x-forwarded-for`로 보내고 있어 백엔드 `GetClientIp()`가 값을 못 찾고 전 방문자가 한 버킷으로 뭉개져 있었음. 프론트가 보내는 헤더 이름 == 백엔드가 읽는 헤더 이름을 항상 코드로 대조할 것).
 - `UseAuthentication()` → `UseRateLimiter()` 순서를 반드시 지킨다. 반대면 사용자 ID 파티션이 전부 IP로 폴백된다.
 
 > 🔴 **인증 초기화(`fetchMe()`)를 전 페이지에서 실행하지 말 것**(F5). 표준 Nuxt 인증 플러그인은 모든 라우트에서 `fetchMe()`를 호출하지만, **이 프로젝트는 공개 랜딩에 광고 트래픽이 몰리는 구조**라 그대로 두면 방문자 수만큼 `/api/auth/me` 401 요청이 백엔드로 간다(부하 + 로그 오염 + 랜딩 응답 지연). 인증 상태가 필요한 곳은 관리자 화면뿐이므로 경로로 게이팅한다.
@@ -1462,13 +1462,19 @@ var statusCode = executed.Exception is not null ? 500 : context.HttpContext.Resp
 ```ts
 // server/plugins 또는 랜딩 SSR 경로 — fire-and-forget + 실패 무시
 // ⚠️ await 없음. 이 요청이 실패해도 랜딩은 정상 렌더되어야 한다(지표 < 접수).
-$fetch('/api/internal/landing-visit', {
+// 🔴 timeout은 10000 — Render 콜드스타트(수 초)가 2초를 넘겨 방문이 통째로 유실됐다(2026-08-28,
+//    인플루언서 링크 방문 미집계 재조사). Cloudflare Workers는 fetch 대기가 CPU·wall time 제약에
+//    안 걸린다(Context7 확인).
+// 🔴 await 없는 fetch는 Workers가 SSR 응답 반환 시 강제 종료할 수 있으므로 event.waitUntil로
+//    이 fetch 완료까지 워커 종료를 미룬다(응답은 블로킹 안 함 → F6 위반 아님).
+const visitTask = $fetch('/api/internal/landing-visit', {
   baseURL: config.apiBaseInternal,
   method: 'POST',
   headers: { 'X-Internal-Secret': config.internalSecret },   // public 아님 — 브라우저에 노출 금지
   body: { referralCode, utmSource, utmMedium, utmCampaign },
-  timeout: 2000,
+  timeout: 10000,
 }).catch(() => {})
+useRequestEvent()?.waitUntil?.(visitTask)
 ```
 
 ```sql

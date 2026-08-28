@@ -44,6 +44,10 @@ async function onSelectLocale(code: string) {
 const route = useRoute()
 const isInquiryPage = computed(() => route.path.replace(/\/$/, '') === localePath('inquiry').replace(/\/$/, ''))
 const config = useRuntimeConfig()
+// SSR h3 이벤트 참조 — 아래 방문기록 fire-and-forget을 event.waitUntil로 묶기 위해 setup 최상단에서
+// (Nuxt 인스턴스가 확실히 활성인 지점에서) 미리 잡아둔다. useRequestEvent()를 if 블록 안에서 늦게
+// 호출하면 NUXT_E1001(인스턴스 컨텍스트 밖 호출) 경고가 뜬다 — 실측 확인.
+const nuxtApp = useNuxtApp()
 
 // 🔴 UTM 캡처 + landing-visit 방문기록은 광고가 어느 페이지로든(시술 상세 딥링크 포함) 착지할 수
 // 있으므로 홈 페이지가 아니라 이 레이아웃(모든 공개 페이지 공용)에서 잡는다(최종 리뷰 발견 —
@@ -55,6 +59,14 @@ captureUtm()
 
 // 15-1절 — 랜딩 SSR 시점에 프론트 서버가 내부 시크릿 헤더와 함께 방문을 기록한다.
 // 🔴 await 하지 않는다(F6) — 방문 집계 실패·지연이 랜딩 렌더 응답 시간에 영향을 주면 안 된다.
+// 🔴 2026-08-28 정정 (인플루언서 링크 방문이 통계에 안 잡히는 버그 재조사) — 세션 (60)은 /go/{code}
+// 조회 timeout만 10초로 늘렸으나, 정작 landing_daily_stats에 방문을 쓰는 건 이 호출이고 여기는
+// timeout:2000 그대로였다. Render 콜드스타트(수 초)면 2초를 넘겨 catch로 유실된다.
+//  ① timeout 2000 → 10000 (세션 60에서 /go 조회에 적용한 것과 동일 — Cloudflare Workers는 fetch
+//     대기 시간이 CPU 시간·요청 wall time 제약에 안 걸림, Context7 공식문서 확인).
+//  ② event.waitUntil — await 없는 fire-and-forget은 Workers가 SSR 응답을 반환하는 순간 아직
+//     진행 중인 fetch를 강제 종료할 수 있다(콜드스타트면 항상 미완). waitUntil로 이 fetch가 끝날
+//     때까지 워커 종료를 미룬다 — 응답 자체는 블로킹하지 않으므로 F6·화면 깜빡임 원칙과 무관.
 if (import.meta.server) {
   const utmQuery = {
     referralCode: (route.query.ref as string) || '',
@@ -62,12 +74,13 @@ if (import.meta.server) {
     utmMedium: (route.query.utm_medium as string) || '',
     utmCampaign: (route.query.utm_campaign as string) || '',
   }
-  $fetch(`${config.apiBaseInternal}/api/internal/landing-visit`, {
+  const visitTask = $fetch(`${config.apiBaseInternal}/api/internal/landing-visit`, {
     method: 'POST',
     headers: { 'X-Internal-Secret': config.internalSecret as string },
     body: utmQuery,
-    timeout: 2000,
+    timeout: 10000,
   }).catch(() => {})
+  nuxtApp.ssrContext?.event?.waitUntil?.(visitTask)
 }
 
 // 5-1절 hreflang alternate + <html lang> 자동 생성.
