@@ -7,7 +7,9 @@
     "loading": "Loading...",
     "pickDate": "Pick a date",
     "clear": "Clear",
-    "fieldRequired": "Please fill in this field."
+    "fieldRequired": "Please fill in this field.",
+    "prev": "Previous",
+    "next": "Next"
   },
   "admin": {
     "common": {

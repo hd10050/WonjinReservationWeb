@@ -87,17 +87,39 @@
       </div>
     </section>
 
-    <!-- 둘러보기(2026-08-28, 사용자 지시로 추가) — 원문 "원진성형외과 · 피부과 둘러보기" 섹션.
-         원본 페이지는 층별 인터랙티브 탭이 있으나 12F 외 층은 클릭해야만 로드되는 동적 콘텐츠라
-         이번엔 헤딩+본문만 반영(층별 세부는 범위 외). -->
+    <!-- 둘러보기(2026-08-28, 사용자 지시로 원본 위젯 전체 재구현) — 원문 "원진성형외과 · 피부과
+         둘러보기" 섹션. 층별(12~18F) 탭+이미지 캐러셀+시설 목록을 원본 인라인 스크립트(floorImages/
+         floorMeta)를 그대로 읽어 HospitalFloorTour.vue로 재구현(무한루프 클론 슬라이드는 생략,
+         단순 index 순환으로 충분 — 최소 구현). -->
     <section
       ref="tourTarget"
-      class="border-y bg-muted/30 px-4 py-16 text-center transition-all duration-700 sm:px-6 sm:py-20"
+      class="border-y bg-muted/30 px-4 py-16 transition-all duration-700 sm:px-6 sm:py-20"
       :class="tourRevealed ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
     >
-      <div class="mx-auto max-w-3xl">
-        <h2 class="mb-4 font-display text-2xl font-bold text-foreground sm:text-4xl">{{ t('landing.home.tourHeading') }}</h2>
-        <p class="text-lg text-muted-foreground">{{ t('landing.home.tourBody') }}</p>
+      <div class="mx-auto max-w-6xl">
+        <div class="mb-10 text-center">
+          <h2 class="mb-4 font-display text-2xl font-bold text-foreground sm:text-4xl">{{ t('landing.home.tourHeading') }}</h2>
+          <p class="text-lg text-muted-foreground">{{ t('landing.home.tourBody') }}</p>
+        </div>
+        <HospitalFloorTour />
+      </div>
+    </section>
+
+    <!-- 시설 소개 6가지(2026-08-28, 사용자 지시로 추가) — 원문 "프리미엄 안티에이징 센터" 등
+         article.information 6개 카드(안티에이징·검진센터·마취과·안전시스템×2·편의시설). -->
+    <section
+      ref="centersTarget"
+      class="mx-auto max-w-6xl px-4 py-16 transition-all duration-700 sm:px-6 sm:py-24"
+      :class="centersRevealed ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
+    >
+      <div class="grid gap-8 sm:grid-cols-2">
+        <div v-for="center in HOSPITAL_CENTERS" :key="center.slug" class="overflow-hidden rounded-xl border bg-card">
+          <img :src="`/img/about/center/${center.image}`" :alt="center.title[locale as Locale]" loading="lazy" class="aspect-video w-full object-cover">
+          <div class="p-6">
+            <h3 class="mb-2 text-lg font-semibold text-foreground">{{ center.title[locale as Locale] }}</h3>
+            <p class="text-sm text-muted-foreground">{{ center.desc[locale as Locale] }}</p>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -127,6 +149,7 @@
 
 <script setup lang="ts">
 import { PROCEDURE_CATEGORIES, type Locale } from '~/data/procedures'
+import { HOSPITAL_CENTERS } from '~/data/hospitalTour'
 
 // 🔴 heroOverlayHeader(2026-08-28, 랜딩 비주얼 리디자인 5절) — layouts/landing.vue가 이 메타를 읽어
 // LandingHeader에 overlay prop을 전달한다. 풀블리드 히어로가 있는 페이지만 true로 선언할 것.
@@ -159,6 +182,7 @@ onUnmounted(() => {
 const { target: categoriesTarget, revealed: categoriesRevealed } = useScrollReveal()
 const { target: introTarget, revealed: introRevealed } = useScrollReveal()
 const { target: tourTarget, revealed: tourRevealed } = useScrollReveal()
+const { target: centersTarget, revealed: centersRevealed } = useScrollReveal()
 const { target: featuresTarget, revealed: featuresRevealed } = useScrollReveal()
 
 // 4가지 서비스 특징(landing.home.feature1~4 Title/Desc) — i18n 키 이름 패턴만 반복 참조, 데이터 아님.

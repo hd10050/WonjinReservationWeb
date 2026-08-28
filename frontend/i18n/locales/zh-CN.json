@@ -7,7 +7,9 @@
     "loading": "加载中...",
     "pickDate": "选择日期",
     "clear": "清除",
-    "fieldRequired": "请填写此项。"
+    "fieldRequired": "请填写此项。",
+    "prev": "上一个",
+    "next": "下一个"
   },
   "admin": {
     "common": {
