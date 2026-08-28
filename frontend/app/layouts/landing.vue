@@ -6,10 +6,11 @@
       <slot />
     </main>
 
-    <!-- 푸터 배경(2026-08-28, 사용자 지시) — bg-card(흰색) → bg-foreground(#283618 짙은 산림녹, D20 팔레트).
-         텍스트·링크는 primary-foreground(크림)로 대비 확보. 홈 하단 CTA 그라디언트 끝색과 동일해 이어진다. -->
-    <footer class="bg-foreground text-primary-foreground">
-      <div class="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-8 text-sm text-primary-foreground/70">
+    <!-- 푸터 배경(2026-08-28, 사용자 지시 2차) — bg-foreground(#283618)이 너무 짙다는 피드백으로
+         bg-primary(#606C38 올리브, D20 팔레트)로 완화. 홈 하단 CTA 그라디언트 끝색(to-primary)과
+         동일해 자연스럽게 이어진다. 텍스트·링크는 primary-foreground(크림)로 대비 확보. -->
+    <footer class="bg-primary text-primary-foreground">
+      <div class="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-8 text-sm text-primary-foreground/80">
         <!-- M8 — 사업자정보(상호·사업자번호)는 원문(한국어 등록명) 그대로 표기(고유명사 번역 금지 원칙).
              대표전화는 화면에 노출하지 않고 JSON-LD에만 포함(예약 폼 유도 우선, 2026-08-26 사용자 결정).
              주소만 예외: 2026-08-26 사용자 지시로 로케일별 표기 문구를 분리(ko는 등록원문 유지,

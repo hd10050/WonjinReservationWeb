@@ -139,19 +139,24 @@
       </div>
     </section>
 
-    <!-- 하단 문의 CTA(2026-08-28, 사용자 지시로 리디자인) — 기존엔 올리브 밴드에 버튼 하나뿐이라
-         빈약했다. 헤딩+보조문구+버튼 3단 구성 + 팔레트 그라디언트(primary→foreground)로 무게를
-         주고, 끝색(foreground=짙은 산림녹)이 바로 아래 푸터(bg-foreground)로 자연스럽게 이어진다.
+    <!-- 하단 문의 CTA(2026-08-28, 사용자 지시로 리디자인·2차 폴리스) — 세리프(font-display) 제거해
+         제너릭한 느낌 완화, 문구는 위챗 상담 안내로 교체. 배경은 primary 계열 세로 그라디언트
+         (옅은 올리브→올리브)로 바로 아래 푸터(bg-primary)와 자연스럽게 이어진다. 버튼은 크림
+         필(pill) + hover 리프트로 교체(기존 탄색 버튼이 올리브 위에서 탁해 보였음).
          fold 아래라 형제 섹션과 동일하게 스크롤 리빌 적용. -->
     <section
       ref="ctaTarget"
-      class="bg-gradient-to-b from-primary to-foreground px-4 py-20 text-center transition-all duration-700 sm:px-6 sm:py-28"
+      class="bg-gradient-to-b from-primary/80 to-primary px-4 py-20 text-center transition-all duration-700 sm:px-6 sm:py-24"
       :class="ctaRevealed ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
     >
-      <div class="mx-auto max-w-2xl">
-        <h2 class="font-display text-3xl font-bold text-primary-foreground sm:text-5xl">{{ t('landing.home.ctaHeading') }}</h2>
-        <p class="mt-4 text-lg text-primary-foreground/80">{{ t('landing.home.ctaBody') }}</p>
-        <Button as-child size="lg" variant="secondary" class="mt-8">
+      <div class="mx-auto max-w-xl">
+        <h2 class="text-2xl font-bold text-primary-foreground sm:text-4xl">{{ t('landing.home.ctaHeading') }}</h2>
+        <p class="mt-3 text-primary-foreground/80">{{ t('landing.home.ctaBody') }}</p>
+        <Button
+          as-child
+          size="lg"
+          class="mt-8 h-12 rounded-full bg-primary-foreground px-10 text-base font-semibold text-primary shadow-lg transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-xl"
+        >
           <NuxtLink :to="localePath('inquiry')">{{ t('procedures.inquireCta') }}</NuxtLink>
         </Button>
       </div>
