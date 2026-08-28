@@ -7,16 +7,22 @@
  * D20 브랜드 팔레트 — coolors.co "Olive Garden Feast"(9.76만 좋아요) 확정, 2026-08-26.
  * 원본 5색: #606C38(올리브) · #283618(짙은 산림녹) · #FEFAE0(따뜻한 크림) · #DDA15E(탄) · #BC6C25(번트오렌지)
  * 아래 값은 표준 sRGB→OKLCH 변환식으로 계산한 정확한 값(임의 추정 아님).
- * muted/border/ring은 같은 색상군(올리브 120°, 크림/탄 68~100°) 안에서 명도만 조정해 파생한 값 — 새 색상 도입 아님.
+ * primary/secondary/destructive/foreground/accent은 D20 그대로 — 이번 리디자인은 색을 바꾸지 않음.
  * 다크 모드는 요구되지 않아 만들지 않음(D11 나머지 반영) — 필요해지면 그때 추가.
+ *
+ * 🔴 2026-08-28 랜딩 비주얼 리디자인 — background/muted/border/input만 중립화(docs/superpowers/specs/
+ * 2026-08-28-landing-visual-redesign-design.md 4절). 병원 공식 사이트(k-wonjin.co.kr)를 playwright-cli로
+ * 실측(getComputedStyle)한 배경색을 그대로 채택 — #FEFDF7 웜크림(hue 98.9°) → #FFFFFF 순백,
+ * 섹션 밴드는 #F8F8F8 중립 회색. 전역 변수라 어드민 화면에도 적용됨(카드는 border+shadow-sm이 있어
+ * 흰 배경 위에서도 구분됨, Card.vue 확인 완료).
  */
 :root {
   --radius: 0.625rem;
 
-  --background: oklch(0.994 0.008 99.8);   /* #FEFDF7 — 원본 #FEFAE0 크림보다 채도를 낮춰 더 밝고 옅게(2026-08-27 피드백) */
+  --background: oklch(1 0 0);              /* #FFFFFF — k-wonjin.co.kr 본문 배경 실측값 */
   --foreground: oklch(0.312 0.053 129.6);  /* #283618 짙은 산림녹 */
 
-  --card: oklch(1 0 0);                    /* 흰색 — 크림 배경 위에서 카드가 뜨도록 */
+  --card: oklch(1 0 0);                    /* 흰색 그대로 — border+shadow로 배경과 구분(Card.vue) */
   --card-foreground: oklch(0.312 0.053 129.6);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.312 0.053 129.6);
@@ -27,20 +33,45 @@
   --secondary: oklch(0.753 0.11 67.8);     /* #DDA15E 탄 */
   --secondary-foreground: oklch(0.312 0.053 129.6);
 
-  --muted: oklch(0.94 0.02 100);           /* 파생 — 크림보다 살짝 어두운 중립 */
-  --muted-foreground: oklch(0.5 0.03 120); /* 파생 — 올리브 계열 중간 톤 텍스트 */
+  --muted: oklch(0.9791 0 0);              /* #F8F8F8 — k-wonjin.co.kr 섹션 밴드 실측값(중립 회색, 크림기 제거) */
+  --muted-foreground: oklch(0.5 0.03 120); /* 파생 — 올리브 계열 중간 톤 텍스트(무변경) */
 
-  --accent: oklch(0.88 0.05 100);          /* 파생 — 연한 탄색 틴트, hover 배경용 */
+  --accent: oklch(0.88 0.05 100);          /* 파생 — 연한 탄색 틴트, hover 배경용(무변경) */
   --accent-foreground: oklch(0.312 0.053 129.6);
 
   --destructive: oklch(0.609 0.13 57.3);   /* #BC6C25 번트오렌지 — 파괴적 액션은 항상 확인 텍스트 동반(16장) */
 
-  --border: oklch(0.88 0.02 100);          /* 파생 */
-  --input: oklch(0.88 0.02 100);
-  --ring: oklch(0.6 0.09 120);             /* 파생 — primary 색상군의 포커스 링 */
+  --border: oklch(0.9368 0.0029 264.5);    /* #E9EAEC — 중립 회색(크림 hue 제거) */
+  --input: oklch(0.9368 0.0029 264.5);     /* #E9EAEC — border와 동일 */
+  --ring: oklch(0.6 0.09 120);             /* 파생 — primary 색상군의 포커스 링(무변경) */
+}
+
+/*
+ * 랜딩 디스플레이 세리프(2026-08-28, 랜딩 비주얼 리디자인 5·9절) — Playfair Display, OFL 라이선스.
+ * 라틴 문자만 셀프호스팅(CSP font-src 'self' 제약, docs/superpowers/specs/2026-08-28-landing-visual-
+ * redesign-design.md 9절). CJK(중국어·한국어)는 시스템 폰트로 렌더링 — unicode-range로 라틴 외
+ * 문자는 이 폰트를 아예 요청하지 않도록 제한(Google Fonts 원본 latin subset과 동일 범위).
+ */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/playfair-display-latin-700.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('/fonts/playfair-display-latin-900.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @theme inline {
+  --font-display: 'Playfair Display', ui-serif, Georgia, serif;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -72,4 +103,14 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/*
+ * 홈 히어로 Ken Burns 줌(2026-08-28, 랜딩 비주얼 리디자인 8절) — 순수 CSS만 사용, 라이브러리 불필요.
+ * 템플릿에서 motion-safe:animate-[kenburns_20s_ease-in-out_infinite]로 참조(Tailwind arbitrary value).
+ * motion-safe: variant가 prefers-reduced-motion: reduce에서 자동으로 애니메이션을 걷어낸다(접근성).
+ */
+@keyframes kenburns {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
 }

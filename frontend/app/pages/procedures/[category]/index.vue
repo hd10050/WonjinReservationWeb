@@ -1,19 +1,25 @@
 <!-- frontend/app/pages/procedures/[category]/index.vue -->
 <template>
   <div v-if="category">
+    <!-- 히어로 풀블리드 확대(2026-08-28, 랜딩 비주얼 리디자인 7절: min-h-80(320px) → min-h-[70vh]).
+         above-the-fold라 스크롤 리빌 대상에서 제외(화면 깜빡임 금지 원칙). -->
     <section
-      class="relative flex min-h-80 items-end bg-cover bg-center text-background"
-      :style="{ backgroundImage: `linear-gradient(to top, rgba(0,0,0,.6), rgba(0,0,0,.25)), url(/img/hero/${category.heroImages[0]})` }"
+      class="relative flex min-h-[70vh] items-end bg-cover bg-center text-background"
+      :style="{ backgroundImage: `linear-gradient(to top, rgba(0,0,0,.7), rgba(0,0,0,.25)), url(/img/hero/${category.heroImages[0]})` }"
     >
-      <div class="mx-auto w-full max-w-3xl px-4 pb-10">
-        <component :is="CATEGORY_ICONS[category.icon]" class="mb-3 size-8" />
-        <h1 class="text-3xl font-bold">{{ category.name[locale as Locale] }}</h1>
-        <p class="mt-3 max-w-xl text-background/90">{{ category.intro[locale as Locale] }}</p>
+      <div class="mx-auto w-full max-w-6xl px-4 pb-12 sm:px-6 sm:pb-16">
+        <component :is="CATEGORY_ICONS[category.icon]" class="mb-4 size-10" />
+        <h1 class="font-display text-4xl font-bold sm:text-6xl">{{ category.name[locale as Locale] }}</h1>
+        <p class="mt-4 max-w-xl text-base text-background/90 sm:text-lg">{{ category.intro[locale as Locale] }}</p>
       </div>
     </section>
 
-    <section class="mx-auto max-w-3xl px-4 py-10">
-      <h2 class="mb-6 text-xl font-semibold text-foreground">
+    <section
+      ref="listTarget"
+      class="mx-auto max-w-6xl px-4 py-10 transition-all duration-700 sm:px-6 sm:py-16"
+      :class="listRevealed ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
+    >
+      <h2 class="mb-6 text-xl font-semibold text-foreground sm:text-2xl">
         {{ t('procedures.concernHeading', { category: category.name[locale as Locale] }) }}
       </h2>
 
@@ -21,20 +27,20 @@
         <li v-for="(item, i) in category.items" :key="item.slug">
           <NuxtLink
             :to="localePath({ name: 'procedures-category-procedure', params: { category: category.slug, procedure: item.slug } })"
-            class="flex flex-col gap-4 py-6 sm:flex-row sm:items-center"
+            class="flex flex-col gap-6 py-8 sm:flex-row sm:items-center"
             :class="{ 'sm:flex-row-reverse': i % 2 === 1 }"
           >
             <img
               :src="`/img/${item.imageCategory ?? category.slug}/${item.image}`"
               :alt="item.name[locale as Locale]"
               loading="lazy"
-              class="h-48 w-full rounded-lg object-cover sm:w-64 sm:shrink-0"
+              class="h-64 w-full rounded-xl object-cover sm:w-96 sm:shrink-0"
             >
             <div class="flex flex-1 flex-col gap-2">
               <ul v-if="item.concerns[locale as Locale]?.length" class="space-y-1 text-sm text-muted-foreground">
                 <li v-for="(concern, ci) in item.concerns[locale as Locale]" :key="ci">{{ concern }}</li>
               </ul>
-              <h3 class="text-lg font-semibold text-foreground">{{ item.name[locale as Locale] }}</h3>
+              <h3 class="text-xl font-semibold text-foreground sm:text-2xl">{{ item.name[locale as Locale] }}</h3>
             </div>
           </NuxtLink>
         </li>
@@ -61,7 +67,10 @@
 import { findCategory, type Locale } from '~/data/procedures'
 import { CATEGORY_ICONS } from '~/utils/categoryIcons'
 
-definePageMeta({ layout: 'landing' })
+// heroOverlayHeader(2026-08-28) — 이 페이지도 풀블리드 히어로가 있어 홈과 동일하게 오버레이 헤더 적용.
+definePageMeta({ layout: 'landing', heroOverlayHeader: true })
+
+const { target: listTarget, revealed: listRevealed } = useScrollReveal()
 
 const route = useRoute()
 const { t, locale } = useI18n()

@@ -1,13 +1,13 @@
 <template>
   <div class="flex min-h-screen flex-col bg-background">
-    <LandingHeader @select-locale="onSelectLocale" />
+    <LandingHeader :overlay="Boolean(route.meta.heroOverlayHeader)" @select-locale="onSelectLocale" />
 
     <main class="flex-1">
       <slot />
     </main>
 
     <footer class="border-t bg-card">
-      <div class="mx-auto flex max-w-3xl flex-col items-center gap-2 px-4 py-6 text-sm text-muted-foreground">
+      <div class="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-sm text-muted-foreground">
         <!-- M8 — 사업자정보(상호·사업자번호)는 원문(한국어 등록명) 그대로 표기(고유명사 번역 금지 원칙).
              대표전화는 화면에 노출하지 않고 JSON-LD에만 포함(예약 폼 유도 우선, 2026-08-26 사용자 결정).
              주소만 예외: 2026-08-26 사용자 지시로 로케일별 표기 문구를 분리(ko는 등록원문 유지,

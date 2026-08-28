@@ -1,27 +1,27 @@
 <!-- frontend/app/pages/procedures/[category]/[procedure].vue -->
 <template>
-  <div v-if="item" class="mx-auto max-w-3xl px-4 py-12">
-    <div class="grid gap-8 sm:grid-cols-2 sm:items-center">
+  <div v-if="item" class="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+    <div class="grid gap-10 sm:grid-cols-2 sm:items-center">
       <div>
         <p v-if="item.label?.[locale as Locale]" class="mb-2 text-sm text-muted-foreground">{{ item.label[locale as Locale] }}</p>
-        <h1 class="text-3xl font-bold text-foreground">{{ item.name[locale as Locale] }}</h1>
-        <p v-if="item.description[locale as Locale]" class="mt-4 whitespace-pre-line text-muted-foreground">{{ item.description[locale as Locale] }}</p>
-        <Button as-child class="mt-6">
+        <h1 class="font-display text-4xl font-bold text-foreground sm:text-5xl">{{ item.name[locale as Locale] }}</h1>
+        <p v-if="item.description[locale as Locale]" class="mt-4 whitespace-pre-line text-lg text-muted-foreground">{{ item.description[locale as Locale] }}</p>
+        <Button as-child size="lg" class="mt-6">
           <NuxtLink :to="localePath('inquiry')">{{ t('procedures.inquireCta') }}</NuxtLink>
         </Button>
       </div>
       <img
         :src="`/img/${item.imageCategory ?? categorySlug}/${item.image}`"
         :alt="item.name[locale as Locale]"
-        class="w-full rounded-xl object-cover"
+        class="aspect-square w-full rounded-xl object-cover sm:aspect-[4/5]"
       >
     </div>
   </div>
 
-  <div v-else-if="other" class="mx-auto max-w-3xl px-4 py-16 text-center">
-    <h1 class="text-2xl font-bold text-foreground">{{ other.name[locale as Locale] }}</h1>
+  <div v-else-if="other" class="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6">
+    <h1 class="font-display text-3xl font-bold text-foreground sm:text-4xl">{{ other.name[locale as Locale] }}</h1>
     <p class="mt-4 text-muted-foreground">{{ t('procedures.comingSoon') }}</p>
-    <Button as-child class="mt-6">
+    <Button as-child size="lg" class="mt-6">
       <NuxtLink :to="localePath('inquiry')">{{ t('procedures.inquireCta') }}</NuxtLink>
     </Button>
   </div>
