@@ -142,8 +142,7 @@ Phase 0~8(스캐폴딩·인증·랜딩+예약폼·예약대시보드/상세/상�
 ## 참고 문서
 `docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종) · 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md` · `excel-bulk-upload-pattern-reference.md`
 
-## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (55)까지 이동 완료)
-- **2026-08-28 (56)** — 관리자 화면 UX 개선 5건(시술탭 엑셀버튼·카테고리 필터·검색영역 Card 통일·비활성체크박스 위치·유입경로 검색), main 직접 작업. 상세는 `docs/session-log.md` (56)
-- **2026-08-28 (57)** — 유입경로 페이징·감사로그 검색UX·계정 본인이름수정·상담폼 rate limit 피드백(1분→5분+429 code화)·연락희망시각 상관없음 체크박스(D26) 5건 + 같은 세션 재점검(체크박스 이벤트바인딩 결함 1건 발견·수정), main 직접 작업. 상세는 `docs/session-log.md` (57)
+## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (57)까지 이동 완료)
 - **2026-08-28 (58)** — 웹푸시+IP레이트리밋 감사(레이트리밋 헤더불일치 결함 발견, 수정 대기) · "로그인 느림" 4차 재조사로 Vite dev optimizeDeps 근본원인 발견·수정 완료(위 주의사항 참고) · 감사에서 발견한 나머지 2건(웹푸시 발송이 예약접수 응답 블로킹→백그라운드 스코프 분리, "IP 분당" 주석 오기→"5분당" 정정) 수정 완료, main 직접 작업
 - **2026-08-28 (59)** — 상담폼 연락희망날짜 과거선택 차단(프론트 min-value + 백엔드 PAST_CONTACT_DATE, KST 기준) · 전 프로젝트 DatePicker 공통 결함 수정: 팝오버 재오픈 시 항상 이번 달로 리셋되던 것을 `default-placeholder`로 선택된 달부터 열리게 함(reka-ui Calendar가 재마운트마다 placeholder를 today()로 초기화하는 게 원인, 실측 확인), main 직접 작업
+- **2026-08-28 (60)** — 인플루언서 링크(`/go/{code}`) 방문이 통계에 안 잡히던 결함 수정: 내부 조회 timeout 2초가 Render 콜드스타트 상황에서 너무 짧아 실패 시 무속성(생 URL) 리다이렉트로 떨어졌던 것으로 추정 → 10초로 연장 + 실패해도 최소 `ref=code`는 보존(로컬 상시가동 환경 특성상 콜드스타트 자체는 재현 불가, 정상/실패(코드없음) 양쪽 케이스 curl 실측 완료). rate limit 429 UX는 코드 수정 없이 기존 구현 설명만 응답
