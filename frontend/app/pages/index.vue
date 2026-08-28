@@ -139,10 +139,22 @@
       </div>
     </section>
 
-    <section class="bg-primary px-4 py-16 text-center sm:px-6 sm:py-20">
-      <Button as-child size="lg" variant="secondary">
-        <NuxtLink :to="localePath('inquiry')">{{ t('procedures.inquireCta') }}</NuxtLink>
-      </Button>
+    <!-- 하단 문의 CTA(2026-08-28, 사용자 지시로 리디자인) — 기존엔 올리브 밴드에 버튼 하나뿐이라
+         빈약했다. 헤딩+보조문구+버튼 3단 구성 + 팔레트 그라디언트(primary→foreground)로 무게를
+         주고, 끝색(foreground=짙은 산림녹)이 바로 아래 푸터(bg-foreground)로 자연스럽게 이어진다.
+         fold 아래라 형제 섹션과 동일하게 스크롤 리빌 적용. -->
+    <section
+      ref="ctaTarget"
+      class="bg-gradient-to-b from-primary to-foreground px-4 py-20 text-center transition-all duration-700 sm:px-6 sm:py-28"
+      :class="ctaRevealed ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
+    >
+      <div class="mx-auto max-w-2xl">
+        <h2 class="font-display text-3xl font-bold text-primary-foreground sm:text-5xl">{{ t('landing.home.ctaHeading') }}</h2>
+        <p class="mt-4 text-lg text-primary-foreground/80">{{ t('landing.home.ctaBody') }}</p>
+        <Button as-child size="lg" variant="secondary" class="mt-8">
+          <NuxtLink :to="localePath('inquiry')">{{ t('procedures.inquireCta') }}</NuxtLink>
+        </Button>
+      </div>
     </section>
   </div>
 </template>
@@ -184,6 +196,7 @@ const { target: introTarget, revealed: introRevealed } = useScrollReveal()
 const { target: tourTarget, revealed: tourRevealed } = useScrollReveal()
 const { target: centersTarget, revealed: centersRevealed } = useScrollReveal()
 const { target: featuresTarget, revealed: featuresRevealed } = useScrollReveal()
+const { target: ctaTarget, revealed: ctaRevealed } = useScrollReveal()
 
 // 4가지 서비스 특징(landing.home.feature1~4 Title/Desc) — i18n 키 이름 패턴만 반복 참조, 데이터 아님.
 const FEATURES = ['feature1', 'feature2', 'feature3', 'feature4']

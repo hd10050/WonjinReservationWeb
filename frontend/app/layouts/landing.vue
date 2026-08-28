@@ -6,8 +6,10 @@
       <slot />
     </main>
 
-    <footer class="border-t bg-card">
-      <div class="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-sm text-muted-foreground">
+    <!-- 푸터 배경(2026-08-28, 사용자 지시) — bg-card(흰색) → bg-foreground(#283618 짙은 산림녹, D20 팔레트).
+         텍스트·링크는 primary-foreground(크림)로 대비 확보. 홈 하단 CTA 그라디언트 끝색과 동일해 이어진다. -->
+    <footer class="bg-foreground text-primary-foreground">
+      <div class="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-8 text-sm text-primary-foreground/70">
         <!-- M8 — 사업자정보(상호·사업자번호)는 원문(한국어 등록명) 그대로 표기(고유명사 번역 금지 원칙).
              대표전화는 화면에 노출하지 않고 JSON-LD에만 포함(예약 폼 유도 우선, 2026-08-26 사용자 결정).
              주소만 예외: 2026-08-26 사용자 지시로 로케일별 표기 문구를 분리(ko는 등록원문 유지,
@@ -17,9 +19,9 @@
         </p>
         <p class="text-xs">{{ t('landing.footer.address') }}: {{ businessAddress }}</p>
         <div class="mt-2 flex gap-4">
-          <NuxtLink :to="localePath('privacy')">{{ t('landing.footer.privacy') }}</NuxtLink>
+          <NuxtLink :to="localePath('privacy')" class="transition-colors hover:text-primary-foreground">{{ t('landing.footer.privacy') }}</NuxtLink>
           <!-- 12-2절 — 저작권 표기 자체가 관리자 로그인 진입점(보안 조치 아님, UI 노출 억제일 뿐) -->
-          <NuxtLink to="/admin/login" rel="nofollow">{{ t('landing.footer.copyright', { year: 2026 }) }}</NuxtLink>
+          <NuxtLink to="/admin/login" rel="nofollow" class="transition-colors hover:text-primary-foreground">{{ t('landing.footer.copyright', { year: 2026 }) }}</NuxtLink>
         </div>
       </div>
     </footer>
