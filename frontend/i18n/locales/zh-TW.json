@@ -352,7 +352,7 @@
   },
   "landing": {
     "nav": { "home": "首頁", "procedures": "項目介紹", "inquiry": "諮詢預約", "inquiryFab": "諮詢" },
-    "home": { "heroTitle": "WJ原辰整形外科", "categoriesHeading": "項目分類", "introHeading": "WJ原辰介紹", "introBody": "醫院介紹內容準備中。" },
+    "home": { "heroTitle": "WJ原辰整形外科", "categoriesHeading": "項目分類", "introHeading": "WJ原辰介紹", "introTagline": "30多位各領域專業醫療團隊從始至終提供最優質的醫療服務", "introBody": "由系統化組織組成的醫院專業人員為了實現顧客滿意這一共同的最終目標，在各個專業領域竭盡全力。採用一站式診療系統，可在同一地點進行檢查、診療、手術。" },
     "hero": {
       "title": "預約諮詢",
       "subtitle": "請填寫以下資訊，我們的顧問將透過微信與您聯繫。"

@@ -16,8 +16,13 @@
 
       <!-- 2026-08-28 폴리스(사용자 지시) — 텍스트+CTA를 하단좌측→중앙우측으로 이동, 3단 순차 등장
            애니메이션 추가(heroFadeUp, 0/150/300ms 지연). above-the-fold지만 데이터가 아니라 이미
-           SSR로 렌더된 정적 텍스트의 1회성 장식 연출이라 화면 깜빡임 금지 원칙과 무관. -->
-      <div class="relative z-10 mx-auto flex h-full max-w-6xl items-center justify-end px-4 sm:px-6">
+           SSR로 렌더된 정적 텍스트의 1회성 장식 연출이라 화면 깜빡임 금지 원칙과 무관.
+           🔴 정정 — `h-full`(height:100%)은 부모(`section`)가 `min-h-[88vh]`(min-height)만 갖고
+           명시적 `height`가 없어 퍼센트 높이 해석 기준이 안 됨(CSS 스펙상 percentage height는
+           부모의 "명시된 height"만 인정, min-height는 불인정) — 실측 결과 텍스트 박스가 224px
+           높이로 쪼그라들어 맨 위에 붙어있었다(수직 중앙 정렬 실패, 사용자 재지적으로 발견).
+           `absolute inset-0`은 containing block의 실제 렌더 박스에 직접 고정되므로 이 문제가 없다. -->
+      <div class="absolute inset-0 z-10 mx-auto flex max-w-6xl items-center justify-end px-4 sm:px-6">
         <div class="flex max-w-xl flex-col items-end gap-4 text-right">
           <p class="motion-safe:animate-[heroFadeUp_0.7s_ease-out_both] font-display text-6xl font-black leading-none tracking-tight text-white sm:text-8xl">{{ t('common.appName') }}</p>
           <h1 class="motion-safe:animate-[heroFadeUp_0.7s_ease-out_both] motion-safe:[animation-delay:150ms] text-2xl font-bold text-white sm:text-4xl">{{ t('landing.home.heroTitle') }}</h1>
@@ -56,13 +61,28 @@
       </div>
     </section>
 
+    <!-- WJ 원진 소개(2026-08-28, 사용자 지시) — k-wonjin.co.kr/hospitalinfo/about 참고 재구성.
+         문구는 그 페이지 원문(ko) + 자매 사이트 wonjincn.com/ycjs/yyjs/(zh-CN 공식 번역, zh-TW는
+         간체→번체 기계적 변환) 그대로 사용, en만 동일 의미로 직접 번역(원문 사이트에 대응 문단이
+         없었음). 사진 3장은 같은 페이지에서 가져온 실제 병원 인테리어(원진 공식 사이트 소유,
+         이 프로젝트도 같은 병원 예약 시스템이라 재사용 무방 — 사용자 명시 승인). -->
     <section
       ref="introTarget"
-      class="mx-auto max-w-4xl px-4 py-16 text-center transition-all duration-700 sm:px-6 sm:py-24"
+      class="mx-auto max-w-6xl px-4 py-16 transition-all duration-700 sm:px-6 sm:py-24"
       :class="introRevealed ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
     >
-      <h2 class="mb-4 font-display text-3xl font-bold text-foreground sm:text-5xl">{{ t('landing.home.introHeading') }}</h2>
-      <p class="whitespace-pre-line text-lg text-muted-foreground">{{ t('landing.home.introBody') }}</p>
+      <div class="grid gap-10 sm:grid-cols-2 sm:items-center sm:gap-16">
+        <div>
+          <p class="mb-3 text-sm font-semibold tracking-widest text-primary uppercase">{{ t('landing.home.introHeading') }}</p>
+          <h2 class="mb-6 font-display text-3xl font-bold text-foreground sm:text-5xl">{{ t('landing.home.introTagline') }}</h2>
+          <p class="whitespace-pre-line text-lg text-muted-foreground">{{ t('landing.home.introBody') }}</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3 sm:gap-4">
+          <img src="/img/about/reception.jpg" :alt="t('landing.home.introHeading')" loading="lazy" class="col-span-2 aspect-video rounded-xl object-cover">
+          <img src="/img/about/lounge.jpg" alt="" loading="lazy" class="aspect-square rounded-xl object-cover">
+          <img src="/img/about/consult.jpg" alt="" loading="lazy" class="aspect-square rounded-xl object-cover">
+        </div>
+      </div>
     </section>
 
     <section class="bg-primary px-4 py-16 text-center sm:px-6 sm:py-20">

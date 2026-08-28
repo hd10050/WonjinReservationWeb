@@ -352,7 +352,7 @@
   },
   "landing": {
     "nav": { "home": "首页", "procedures": "项目介绍", "inquiry": "咨询预约", "inquiryFab": "咨询" },
-    "home": { "heroTitle": "WJ原辰整形外科", "categoriesHeading": "项目分类", "introHeading": "WJ原辰介绍", "introBody": "医院介绍内容准备中。" },
+    "home": { "heroTitle": "WJ原辰整形外科", "categoriesHeading": "项目分类", "introHeading": "WJ原辰介绍", "introTagline": "30多位各领域专业医疗团队从始至终提供最优质的医疗服务", "introBody": "由系统化组织组成的医院专业人员为了实现顾客满意这一共同的最终目标，在各个专业领域竭尽全力。采用一站式诊疗系统，可在同一地点进行检查、诊疗、手术。" },
     "hero": {
       "title": "预约咨询",
       "subtitle": "请填写以下信息，我们的顾问将通过微信与您联系。"
