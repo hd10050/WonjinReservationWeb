@@ -121,7 +121,7 @@
 
 ## TODO
 ### 다음 세션 최우선
-- [ ] **랜딩 시술 이미지 6개 누락**(세션요약 (51)) — `eye`(asymmetrical-eye-correction, congenital-ptosis-children) · `nose`(bulbous-nose, tip-plasty) · `breast`(nipple-surgery) · `bodyline`(hip-augmentation) 6개 항목이 4개언어 설명·고민 콘텐츠는 있는데 `frontend/public/img/`에 이미지 파일이 없음. design.md 10절이 이미 이 6개를 "사진 재확인 필요"로 경고해뒀던 것과 정확히 일치 — 병원에 사진 수급 여부 확인 필요(코드 수정 대상 아님)
+- [ ] **랜딩 시술 이미지 6개 누락**(세션요약 (51), 2026-08-28 (71) 임시조치) — `eye`(asymmetrical-eye-correction, congenital-ptosis-children) · `nose`(bulbous-nose, tip-plasty) · `breast`(nipple-surgery) · `bodyline`(hip-augmentation) 6개는 사용자 지시로 목록 페이지의 [그 외] 칩으로 이동 완료(자연스러운 디자인). 🔴 **사진 확보 시**: `procedures.ts`의 해당 `otherItems` 항목을 `items`로 되돌리고 concerns/description 전문을 복원할 것 — git 이력(커밋 메시지 "그 외 이동" 이전)에 원문 그대로 남아있음, 재입력 불필요
 - [ ] **랜딩 중국어(zh-CN/zh-TW) 고민 불릿 39/96건이 설계문서 부록 원문과 다른 요약형 문구**(세션요약 (51)) — ko/en은 부록과 100% verbatim인데 zh만 완전한 문장이 아니라 키워드형으로 압축돼 들어감(예: `breast/augmentation`). 의료광고 문구라 "원문 그대로" 원칙이 특히 중요한 영역 — 출처 확인 또는 병원 검수 필요
 ### 확인 완료 (재론 불필요)
 - **실브라우저 확인 2건 종결(2026-08-28 (66), 사용자 직접 확인)** — 관리자 웹 푸시 OS 알림 표시·Popover(DatePicker) 닫힘 애니메이션 둘 다 실브라우저에서 정상 동작 확인
@@ -145,5 +145,5 @@ Phase 0~8(스캐폴딩·인증·랜딩+예약폼·예약대시보드/상세/상�
 ## 참고 문서
 `docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종) · 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md` · `excel-bulk-upload-pattern-reference.md`
 
-## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (69)까지 이동 완료)
-- **2026-08-28 (70)** — **[WJ 원진 소개] 전체 재조사·완전 반영(사용자 강한 재지시)**. (69)에서도 놓친 게 있다는 지적으로 페이지 인라인 스크립트(`floorImages`/`floorMeta` 객체)를 직접 읽어 12~18층 전체 층별 이미지(총 55장)+시설 목록을 확보하고, `article.information`(6개 시설 카드: 안티에이징센터·검진센터·마취과·안전시스템×2·편의시설) 이미지 6장도 확보(hotlink 우회는 이전과 동일 Referer 헤더). 신규 `frontend/app/data/hospitalTour.ts`(procedures.ts와 동일하게 구조적 다국어 데이터는 i18n JSON이 아니라 TS로) + `frontend/app/components/HospitalFloorTour.vue`(층 탭+이미지 캐러셀+시설 체크리스트, 원본의 무한루프 클론 슬라이드는 단순 index 순환으로 대체)로 원본과 동일한 인터랙티브 위젯 재구현. `common.prev`/`next` 2키 추가(425=425=425=425 키셋 동일 확인). 이미지 총 7.2MB(`frontend/public/img/about/`). `npm run build` 0에러, docker 재빌드 후 실측 — 전 텍스트 블록 순서(소개→둘러보기→시설6개→1:1서비스4개) 정확히 렌더, 층 탭 클릭 시 목록·이미지 전환 확인, 이미지 3장 표본 fetch 200 확인, 375px 오버플로우 없음. main 커밋·push 완료(`acb5901`).
+## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (70)까지 이동 완료)
+- **2026-08-28 (71)** — **reconstruction 히어로 교체 + procedures 목록 정렬 일관성 수정 + 이미지 없는 시술 6개 [그 외] 이동(사용자 지시)**. ①`reconstruction` 카테고리 `heroImages[0]`을 hero01→hero03으로 교체(배열 순서만 변경, 나머지 2장은 유지). ②`procedures/[category]/index.vue`의 홀짝 좌우반전 레이아웃에서 이미지가 오른쪽(`flex-row-reverse`)일 때 설명 텍스트가 컨테이너 왼쪽 끝에 남아 이미지와 멀어 보이던 버그 — 홀수 인덱스에 `sm:items-end sm:text-right` 추가해 텍스트가 항상 이미지 옆에 붙도록 통일(실측: 양쪽 다 이미지-텍스트 간격 24px로 일치). ③이미지 파일 미보유 6개(eye 2·nose 2·breast 1·bodyline 1)를 각 카테고리 `items`→`otherItems`로 이동(concerns/description은 git 이력에 보존, 사진 확보 시 복원 예정 — 위 TODO 참고). `npm run build` 0에러, docker 재빌드 후 4개 카테고리 페이지 전부 실측(그 외 칩 정확히 반영·정렬 간격 확인·reconstruction hero03 표시 확인, 콘솔에러 0·오버플로우 0). main 커밋·push 예정.

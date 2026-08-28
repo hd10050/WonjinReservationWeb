@@ -36,7 +36,12 @@
               loading="lazy"
               class="h-64 w-full rounded-xl object-cover sm:w-96 sm:shrink-0"
             >
-            <div class="flex flex-1 flex-col gap-2">
+            <!-- 🔴 정렬 일관성(2026-08-28 사용자 지시) — 이미지가 왼쪽일 땐 설명이 이미지 바로
+                 오른쪽에 붙지만, `flex-row-reverse`로 이미지가 오른쪽일 땐 이 텍스트 칸(flex-1)이
+                 시각적으로 왼쪽에 위치해 내용이 컨테이너 왼쪽 끝에서 시작 — 이미지와 멀어져 보였다.
+                 홀수 인덱스에서 텍스트를 오른쪽 정렬해 텍스트 칸의 오른쪽 끝(이미지와 맞닿는 쪽)에
+                 내용이 붙도록 해 양쪽 모두 "설명이 이미지 옆"이 되게 통일. -->
+            <div class="flex flex-1 flex-col gap-2" :class="{ 'sm:items-end sm:text-right': i % 2 === 1 }">
               <ul v-if="item.concerns[locale as Locale]?.length" class="space-y-1 text-sm text-muted-foreground">
                 <li v-for="(concern, ci) in item.concerns[locale as Locale]" :key="ci">{{ concern }}</li>
               </ul>

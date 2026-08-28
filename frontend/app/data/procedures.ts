@@ -189,42 +189,14 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         label: { ko: '노화로 처진 눈매를 개선하는', en: 'Correcting Eyes That Have Drooped with Age' },
         image: 'eye-middle-aged-eye-surgery.png',
       },
-      {
-        slug: 'asymmetrical-eye-correction',
-        name: { ko: '짝눈(비대칭) 교정', 'zh-CN': '大小眼（眼部不对称）矫正', 'zh-TW': '大小眼（眼部不對稱）矯正', en: 'Asymmetrical Eye Correction' },
-        concerns: {
-          ko: ['한쪽에만 쌍꺼풀이 있어요.', '양쪽 눈 앞트임 높이가 달라요.', '양쪽 눈 크기나 모양이 달라요.', '양쪽 눈 뜨는 힘이 달라요.', '쌍꺼풀 수술 후 라인이 다르게 나왔어요.', '한쪽 쌍꺼풀이 흐리거나 풀렸어요.'],
-          en: ['I have a double eyelid on only one side.', 'The inner corner height differs between my two eyes.', 'My two eyes differ in size or shape.', 'The eye-opening strength differs between my two eyes.', 'My double eyelid lines came out different after surgery.', 'The double eyelid on one side is faint or has come undone.'],
-          'zh-CN': ['只一侧有双眼皮', '双眼眼角高度不对称', '双眼大小或形状不一样', '双眼睁眼肌肉不一样', '双眼皮手术后线条不一样', '一侧双眼皮不明显或松开'],
-          'zh-TW': ['只一側有雙眼皮', '雙眼眼角高度不對稱', '雙眼大小或形狀不一樣', '雙眼睜眼肌肉不一樣', '雙眼皮手術後線條不一樣', '一側雙眼皮不明顯或鬆開'],
-        },
-        description: {
-          ko: '두 눈의 균형을 맞춰드립니다! 누구나 어느 정도의 짝눈은 있을 수 있지만, 그 차이가 커서 고민이 될 정도라면 개선이 필요합니다. 짝눈의 원인은 눈꺼풀 모양 차이, 좌우 얼굴뼈 차이, 뜨는 근육 힘의 차이 등 다양합니다. 본인의 짝눈 원인을 정확히 찾아내어 맞춤 수술 방법으로 양쪽 눈의 균형을 맞춰드립니다.',
-          'zh-CN': '调整两眼的平衡！两眼不同的原因有眼皮形状不同、面部左右骨骼差异、睁眼肌肉差异等，通过量身定做的手术方案调整两眼平衡。',
-          en: "We'll bring balance to both your eyes! Everyone has some degree of eye asymmetry, but if the difference is significant enough to be a concern, correction may be needed. The causes vary — eyelid shape, facial bone differences, eye-opening muscle strength, and more. We pinpoint the exact cause and use a customized surgical approach to bring balance to both eyes.",
-          'zh-TW': '調整兩眼的平衡！兩眼不同的原因有眼皮形狀不同、面部左右骨骼差異、睜眼肌肉差異等，通過量身定做的手術方案調整兩眼平衡。',
-        },
-        image: 'eye-asymmetrical-eye-correction.png',
-      },
-      {
-        slug: 'congenital-ptosis-children',
-        name: { ko: '소아 선천성 안검하수', 'zh-CN': '儿童先天性上睑下垂', 'zh-TW': '兒童先天性上瞼下垂', en: 'Congenital Ptosis Surgery for Children' },
-        concerns: {
-          ko: ['약시(시력 발달 장애)', '정서 불안(비대칭이 심하면 아이가 스트레스를 받음)', '안검하수 증상(이마 주름, 두통, 집중력 저하, 불안한 행동 등)'],
-          en: ['Amblyopia (impaired visual development)', 'Emotional distress (severe asymmetry can cause stress for the child)', 'Ptosis symptoms (forehead wrinkles, headaches, reduced concentration, restless behavior, etc.)'],
-          'zh-CN': ['弱势(视力发育障碍)', '情绪不安(压力)', '眼睑下垂症状(额头皱纹，头痛，集中障碍)'],
-          'zh-TW': ['弱勢(視力發育障礙)', '情緒不安(壓力)', '眼瞼下垂症狀(額頭皺紋，頭痛，集中障礙)'],
-        },
-        description: {
-          ko: '소중한 우리 아이의 눈을 지켜주세요. 눈을 뜨는 근육이 완전히 발달하지 못해 나타나는 증상으로, 한쪽 눈에만 나타날 수도 있고 양쪽 눈 모두에 나타날 수도 있습니다. 대부분 한쪽 눈에만 나타나는 경우가 많아 비대칭을 완전히 교정하기 어려울 수 있습니다. 그럼에도 이 증상을 개선해야 하는 중요한 이유는 시력 발달에 영향을 줄 수 있고, 또래로부터 놀림을 받을 수 있기 때문입니다.',
-          'zh-CN': '保护我们孩子宝贵的双眼。睁眼肌肉发育不完全导致，大部分单眼发生，很难完全改正不对称情况，重要的是影响视力发育及可能被嘲笑。',
-          en: "Protect your precious child's eyes. This condition occurs when the eye-opening muscle has not fully developed, appearing in one or both eyes — most often just one, making full correction of the asymmetry difficult. Treating it is still important because it can affect visual development and expose the child to teasing.",
-          'zh-TW': '保護我們孩子寶貴的雙眼。睜眼肌肉發育不完全導致，大部分單眼發生，很難完全改正不對稱情況，重要的是影響視力發育及可能被嘲笑。',
-        },
-        image: 'eye-congenital-ptosis-children.png',
-      },
     ],
-    otherItems: [],
+    // 🔴 2026-08-28 사용자 지시 — 이미지 파일 미보유 2건(design.md 10절 "사진 재확인 필요")을
+    // 목록 페이지의 큰 이미지 카드 대신 [그 외] 칩 목록으로 이동(자연스러운 디자인). 이미지 확보 시
+    // 다시 items로 옮기고 concerns/description 전문을 복원할 것(procedures.ts git 이력에 원문 보존됨).
+    otherItems: [
+      { slug: 'asymmetrical-eye-correction', name: { ko: '짝눈(비대칭) 교정', 'zh-CN': '大小眼（眼部不对称）矫正', 'zh-TW': '大小眼（眼部不對稱）矯正', en: 'Asymmetrical Eye Correction' } },
+      { slug: 'congenital-ptosis-children', name: { ko: '소아 선천성 안검하수', 'zh-CN': '儿童先天性上睑下垂', 'zh-TW': '兒童先天性上瞼下垂', en: 'Congenital Ptosis Surgery for Children' } },
+    ],
   },
   {
     slug: 'nose',
@@ -347,30 +319,6 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         image: 'nose-non-implant-rhinoplasty.png',
       },
       {
-        slug: 'bulbous-nose',
-        name: { ko: '복 코 성형', 'zh-CN': '宽大鼻整形', 'zh-TW': '寬大鼻整形', en: 'Bulbous Nose Surgery' },
-        concerns: { ko: [], en: [], 'zh-CN': [], 'zh-TW': [] },
-        description: {
-          ko: '넓고 뭉툭한 코끝을 개선해 갸름하고 생기 있는 인상을 만들어드립니다! 복코란 코끝과 콧볼이 넓고 둥근 코를 말하며, 동양인은 코끝 피부가 두껍고 납작해 복코 비율이 높은 편입니다. 이런 복코는 코끝이 납작해 전체적으로 투박하고 둔한 인상을 줍니다. 원래 코끝 모양에 맞춰 연골로 교정하고, 필요시 지방 제거를 병행해 갸름하고 오똑한 코를 만들어드립니다.',
-          'zh-CN': '改善宽扁的鼻头，打造修长灵动的形象！福鼻是鼻头和鼻翼又宽又圆的鼻子，东方人鼻头皮肤厚且扁平所以比例较高，用软骨矫正鼻头，需要时配合去除脂肪。',
-          en: 'We improve a wide, blunt nasal tip to create a slimmer, more vibrant impression! A "bulbous nose" refers to a nose with a wide, round tip and nostrils — East Asians tend to have thick, flat nasal tip skin, making this common. We correct the tip\'s shape using cartilage, combined with fat removal when needed, to create a slim, well-defined nose.',
-          'zh-TW': '改善寬扁的鼻頭，打造修長靈動的形象！福鼻是鼻頭和鼻翼又寬又圓的鼻子，東方人鼻頭皮膚厚且扁平所以比例較高，用軟骨矯正鼻頭，需要時配合去除脂肪。',
-        },
-        image: 'nose-bulbous-nose.png',
-      },
-      {
-        slug: 'tip-plasty',
-        name: { ko: '코끝 성형', 'zh-CN': '鼻尖整形', 'zh-TW': '鼻尖整形', en: 'Tip Plasty' },
-        concerns: { ko: [], en: [], 'zh-CN': [], 'zh-TW': [] },
-        description: {
-          ko: '코끝 수술은 자가 조직만 사용해 부작용 걱정 없이 자연스럽게 움직이는 코끝을 만들 수 있습니다! 콧대가 높아도 코끝이 둥글고 뭉툭하거나 낮으면 투박한 인상을 줍니다. 콧대 모양도 중요하지만 코끝 역시 코 전체 인상을 결정짓는 요소입니다. 코끝 성형은 기본적으로 자가 조직으로 수술을 진행해 자연스러운 결과와 낮은 부작용을 기대할 수 있으며, 개인의 얼굴 특징과 전체 비율을 고려해 콧대와 코끝 라인을 개선, 원래 코처럼 부드럽게 움직이는 코끝을 만들어드립니다.',
-          'zh-CN': '鼻头手术时只使用自体组织不用担心副作用可以打造活动自然的鼻头！考虑个人面部特点和整体比例改善鼻梁和鼻头整体线条。',
-          en: 'Tip plasty uses only your own tissue, giving you a natural, freely moving nasal tip with no worries about side effects! The tip is just as important as the bridge in determining the overall impression of the nose — we improve the line of the bridge and tip using your own tissue, considering your individual features and proportions.',
-          'zh-TW': '鼻頭手術時只使用自體組織不用擔心副作用可以打造活動自然的鼻頭！考慮個人面部特點和整體比例改善鼻樑和鼻頭整體線條。',
-        },
-        image: 'nose-tip-plasty.png',
-      },
-      {
         slug: 'male-rhinoplasty',
         name: { ko: '남자 코성형', 'zh-CN': '男性鼻整形', 'zh-TW': '男性鼻整形', en: 'Male Rhinoplasty' },
         concerns: {
@@ -390,7 +338,11 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         imageCategory: 'men',
       },
     ],
-    otherItems: [],
+    // 🔴 2026-08-28 사용자 지시 — 이미지 파일 미보유 2건을 [그 외]로 이동(eye 카테고리와 동일 사유).
+    otherItems: [
+      { slug: 'bulbous-nose', name: { ko: '복 코 성형', 'zh-CN': '宽大鼻整形', 'zh-TW': '寬大鼻整形', en: 'Bulbous Nose Surgery' } },
+      { slug: 'tip-plasty', name: { ko: '코끝 성형', 'zh-CN': '鼻尖整形', 'zh-TW': '鼻尖整形', en: 'Tip Plasty' } },
+    ],
   },
   {
     slug: 'ent',
@@ -969,18 +921,6 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         image: 'breast-revision.png',
       },
       {
-        slug: 'nipple-surgery',
-        name: { ko: '유두 성형', 'zh-CN': '乳头整形', 'zh-TW': '乳頭整形', en: 'Nipple Surgery' },
-        concerns: { ko: [], en: [], 'zh-CN': [], 'zh-TW': [] },
-        description: {
-          ko: '완벽한 가슴을 만들어드립니다! 가슴은 볼륨만 풍만하다고 예쁜 것이 아니라, 가슴 크기와 어울리는 유두·유륜이 있어야 완벽한 가슴이 완성됩니다. 유두 지름은 약 1cm, 유륜 너비는 약 3.5~4.5cm가 가장 이상적입니다. 함몰 유두, 비대 유두를 개선하는 동시에 기능적·미용적 문제를 함께 해결해드립니다. (하위: 함몰유두·유두축소·유륜축소)',
-          'zh-CN': '打造完美胸部！胸部的形态并不是饱满就好看，有与乳房大小相匹配的乳头及乳晕才是完美胸部。乳头的直径1cm左右，乳晕的宽度3.5~4.5cm左右是最合适的。改善凹陷乳头、肥大乳头，同时解决机能性、美观性问题。（下设：凹陷乳头矫正、乳头缩小、乳晕缩小）',
-          en: "We create the perfect breast! A beautiful breast isn't just about ample volume — a nipple and areola that suit the breast's size are essential. The ideal nipple diameter is about 1 cm, and the ideal areola width is about 3.5-4.5 cm. We correct inverted or enlarged nipples while resolving functional and aesthetic concerns. (Subtypes: Inverted Nipple Correction, Nipple Reduction, Areola Reduction)",
-          'zh-TW': '打造完美胸部！胸部的形態並不是飽滿就好看，有與乳房大小相匹配的乳頭及乳暈才是完美胸部。乳頭的直徑1cm左右，乳暈的寬度3.5~4.5cm左右是最合適的。改善凹陷乳頭、肥大乳頭，同時解決機能性、美觀性問題。（下設：凹陷乳頭矯正、乳頭縮小、乳暈縮小）',
-        },
-        image: 'breast-nipple-surgery.png',
-      },
-      {
         slug: 'gynecomastia',
         name: { ko: '여성형 유방(여유증)', 'zh-CN': '男性女乳症（男性乳房发育）', 'zh-TW': '男性女乳症（男性乳房發育）', en: 'Gynecomastia' },
         concerns: {
@@ -1000,10 +940,12 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         imageCategory: 'men',
       },
     ],
+    // 🔴 2026-08-28 사용자 지시 — nipple-surgery는 이미지 파일 미보유로 [그 외]에 추가(eye/nose와 동일 사유).
     otherItems: [
       { slug: 'fat-grafting', name: { ko: '가슴 지방 이식', 'zh-CN': '胸部脂肪填充', 'zh-TW': '胸部脂肪填補', en: 'Breast Fat Grafting' } },
       { slug: 'postpartum-breast', name: { ko: '출산 후 가슴 성형', 'zh-CN': '产后胸部整形', 'zh-TW': '產後胸部整形', en: 'Postpartum Breast Surgery' } },
       { slug: 'stemcell-breast-augmentation', name: { ko: '줄기세포 가슴 성형', 'zh-CN': '干细胞隆胸', 'zh-TW': '幹細胞隆乳', en: 'Stem Cell Breast Augmentation' } },
+      { slug: 'nipple-surgery', name: { ko: '유두 성형', 'zh-CN': '乳头整形', 'zh-TW': '乳頭整形', en: 'Nipple Surgery' } },
     ],
   },
   {
@@ -1220,25 +1162,11 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
         label: { ko: '단순 지방흡입이 아닌, 처지고 늘어진 복부를 탄력 있게', en: 'More Than Just Liposuction — Firming a Sagging, Loose Abdomen' },
         image: 'bodyline-abdominoplasty.png',
       },
-      {
-        slug: 'hip-augmentation',
-        name: { ko: '힙업 성형', 'zh-CN': '翘臀整形', 'zh-TW': '提臀整形', en: 'Hip Augmentation' },
-        concerns: {
-          ko: ['힙이 처지고 볼륨이 없어요.', '옷을 입었을 때 볼륨감 있게 보이고 싶어요.', '힙이 비대칭이에요.', '힙이 처지고 납작해서 다리가 짧아 보여요.', '골반이 작아요.', '다이어트·운동·요가로 힙업에 실패했어요.', '사고나 질병으로 힙 조직 일부가 제거됐어요.'],
-          en: ['My hips sag and lack volume.', 'I want to look more voluminous in my clothes.', 'My hips are asymmetrical.', 'My hips sag and are flat, making my legs look short.', 'My pelvis is small.', "Diet, exercise, and yoga haven't given me a hip lift.", 'Some hip tissue was removed due to an accident or illness.'],
-          'zh-CN': ['下垂无丰满感', '想穿衣显丰满', '不对称', '下垂扁平显腿短', '骨盆小', '减肥健身失败', '事故疾病导致组织切除'],
-          'zh-TW': ['下垂無豐滿感', '想穿衣顯豐滿', '不對稱', '下垂扁平顯腿短', '骨盆小', '減肥健身失敗', '事故疾病導致組織切除'],
-        },
-        description: {
-          ko: '탄력 있고 볼륨감 있는 힙은 가슴과 더불어 여성스러운 S라인을 완성하는 데 빼놓을 수 없는 포인트입니다. 힙이 처지고 볼륨이 없으면 옷맵시가 살지 않고 다리도 짧아 보이므로, 힙을 위로 끌어올려 매력적인 힙 라인을 만들어드립니다. (세부 기법: 하비스트젯 자가지방이식/보형물 삽입/복합)',
-          'zh-CN': '胸部再加上有弹力和饱满感的臀部是打造女性S线条必不可缺的亮点，如果臀部下垂没有丰满感，穿衣服体态不会好看而且看起来腿短，所以将臀部向上提起打造魅力的臀部线条。（세부 기법: Harvest-jet脂肪移植——自体脂肪提臀 / 假体植入——永久性提臀 / 多功能——假体+脂肪移植）',
-          en: "Along with the chest, firm, voluminous hips are essential for a feminine S-line figure. We lift the hips upward to create an attractive hip line. (Specific techniques: Harvest Jet Autologous Fat Grafting / Implant Insertion / Combined Approach)",
-          'zh-TW': '胸部再加上有彈力和飽滿感的臀部是打造女性S線條必不可缺的亮點，如果臀部下垂沒有豐滿感，穿衣服體態不會好看而且看起來腿短，所以將臀部向上提起打造魅力的臀部線條。（세부 기법: Harvest-jet脂肪移植——自體脂肪提臀 / 假體植入——永久性提臀 / 多功能——假體+脂肪移植）',
-        },
-        image: 'bodyline-hip-augmentation.png',
-      },
     ],
-    otherItems: [],
+    // 🔴 2026-08-28 사용자 지시 — hip-augmentation은 이미지 파일 미보유로 [그 외]로 이동.
+    otherItems: [
+      { slug: 'hip-augmentation', name: { ko: '힙업 성형', 'zh-CN': '翘臀整形', 'zh-TW': '提臀整形', en: 'Hip Augmentation' } },
+    ],
   },
   {
     slug: 'men',
@@ -1331,7 +1259,8 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
     slug: 'reconstruction',
     name: { ko: '재건', 'zh-CN': '修复重建', 'zh-TW': '重建', en: 'Reconstructive Surgery' },
     icon: 'HeartHandshake',
-    heroImages: ['reconstruction-hero01.jpg', 'reconstruction-hero02.jpg', 'reconstruction-hero03.jpg'],
+    // 🔴 2026-08-28 사용자 지시 — heroImages[0]가 실제 표시되는 히어로 사진이라 hero03을 맨 앞으로.
+    heroImages: ['reconstruction-hero03.jpg', 'reconstruction-hero01.jpg', 'reconstruction-hero02.jpg'],
     intro: {
       ko: 'WJ 원진은 수년간의 경험과 끊임 없는 연구를 통해 미용성형 뿐만 아니라 재건성형의 풍부한 경험을 가지고 있습니다. WJ 원진만의 노하우로 상처받은 마음까지 치료하고자 노력합니다.',
       'zh-CN': '重建整形——梦想着平凡的外貌和平凡生活的您，WJ原辰与您同行。WJ原辰经过多年的经验和不断的研究不仅具有美容整形的经验，还具有重建整形的丰富经验，WJ原辰通过独有的技术诀窍尽最大的努力治疗您受伤的心灵。',
