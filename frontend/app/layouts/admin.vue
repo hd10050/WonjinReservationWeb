@@ -60,18 +60,26 @@
           <!-- 새 예약 웹 푸시 토글 — 노출 조건은 isSupported뿐(5-5절, granted로만 게이팅하면
                default·denied 유저는 여기서 켤 방법이 사라진다). ClientOnly로 감싸는 이유는 이
                v-if가 브라우저 전용 값으로 엘리먼트 존재 자체를 게이팅해 hydration mismatch를
-               일으키기 때문(5-3절 — 텍스트 보간과 다른 종류의 문제). -->
+               일으키기 때문(5-3절 — 텍스트 보간과 다른 종류의 문제).
+               🔴 켜짐/꺼짐 구분이 아이콘 색만으로는 눈에 안 띈다는 사용자 피드백(2026-08-28) —
+               꺼진 상태(default·granted-미구독)는 secondary색 + 우측 상단 pulse 점으로 "설정 필요"를
+               강조하고, denied는 muted로 가라앉혀 클릭해도 소용없다는 걸 시각적으로도 전달한다. -->
           <ClientOnly>
             <button
               v-if="isSupported"
               type="button"
-              class="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              class="relative rounded-md p-1.5 hover:bg-accent hover:text-accent-foreground"
+              :class="isSubscribed ? 'text-primary' : permission === 'denied' ? 'text-muted-foreground' : 'text-secondary'"
               :aria-label="pushButtonLabel"
               :title="pushButtonLabel"
               @click="onTogglePush"
             >
               <BellOff v-if="permission === 'denied'" class="size-4" />
-              <Bell v-else class="size-4" :class="{ 'fill-current text-primary': isSubscribed }" />
+              <Bell v-else class="size-4" :class="{ 'fill-current': isSubscribed }" />
+              <span v-if="!isSubscribed && permission !== 'denied'" class="absolute right-0.5 top-0.5 flex size-2" aria-hidden="true">
+                <span class="absolute inline-flex size-full animate-ping rounded-full bg-secondary opacity-75" />
+                <span class="relative inline-flex size-2 rounded-full bg-secondary" />
+              </span>
             </button>
           </ClientOnly>
           <!-- 2026-08-27 — 계정 정보를 배지로 구분 + 로그아웃 버튼 바로 왼쪽으로 배치 -->
