@@ -10,13 +10,13 @@ namespace WonjinApi.Controllers;
 
 [ApiController]
 [Route("api/reservations")]
-public class ReservationsController(AppDbContext db, IPushSender pushSender, ILogger<ReservationsController> logger) : ControllerBase
+public class ReservationsController(AppDbContext db, IServiceScopeFactory scopeFactory, ILogger<ReservationsController> logger) : ControllerBase
 {
     private static readonly TimeZoneInfo Kst = TimeZoneInfo.FindSystemTimeZoneById("Asia/Seoul");
     private static readonly string[] SupportedLocales = ["zh-CN", "zh-TW", "en", "ko"];
     private static readonly string[] SupportedGenders = ["Female", "Male", "Other"];
 
-    // 공개 예약 신청(11-1절). rate limit(IP 분당 5회, Program.cs "reservation-create") +
+    // 공개 예약 신청(11-1절). rate limit(IP 5분당 5회, Program.cs "reservation-create") +
     // honeypot + 개인정보 동의 서버 재검증. 이 프로젝트의 공개 API는 이 엔드포인트 하나뿐이다.
     [HttpPost]
     [EnableRateLimiting("reservation-create")]
@@ -96,16 +96,27 @@ public class ReservationsController(AppDbContext db, IPushSender pushSender, ILo
         });
         await db.SaveChangesAsync();
 
-        // 새 예약 접수 알림(웹 푸시) — 알림 발송 실패가 예약 접수 자체를 막으면 안 되므로
-        // try/catch로 격리한다(web-push-notification-guide.md 3-5절 원칙과 동일).
-        try
+        // 새 예약 접수 알림(웹 푸시) — 성능감사(2026-08-28) 발견: await로 붙어있어 고객의 접수
+        // 응답이 관리자 알림 발송(구독자 수만큼 FCM 등에 순차 HTTP 호출) 완료까지 그대로 기다렸다.
+        // 발송 실패가 접수를 막으면 안 된다는 원칙(web-push-notification-guide.md 3-5절)에는 맞았지만
+        // "실패"만 막았을 뿐 "지연"은 그대로 전이됐다 — 응답을 기다리지 않는 백그라운드로 분리한다.
+        // 🔴 컨트롤러의 Scoped DI 스코프는 응답 반환과 함께 해제되므로, 그 밖에서 Scoped 서비스인
+        // IPushSender(내부에서 AppDbContext 사용)를 쓰려면 반드시 새 스코프를 만들어야 한다
+        // (RefreshTokenCleanupService가 BackgroundService에서 쓰는 것과 동일 원칙). ILogger<T>는
+        // 싱글턴이라 스코프 해제와 무관하게 그대로 캡처해 써도 안전하다.
+        _ = Task.Run(async () =>
         {
-            await pushSender.SendNewReservationAlertAsync(reservation.Id, reservation.Name, code);
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "새 예약 웹 푸시 발송 실패: reservationId={Id}", reservation.Id);
-        }
+            using var scope = scopeFactory.CreateScope();
+            try
+            {
+                var scopedPushSender = scope.ServiceProvider.GetRequiredService<IPushSender>();
+                await scopedPushSender.SendNewReservationAlertAsync(reservation.Id, reservation.Name, code);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "새 예약 웹 푸시 발송 실패: reservationId={Id}", reservation.Id);
+            }
+        });
 
         return Ok(new ReservationCreateResponse(code, reservation.WechatId));
     }
