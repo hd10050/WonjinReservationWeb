@@ -30,6 +30,10 @@ export interface ProcedureCategory {
   intro: Record<Locale, string>
   items: ProcedureItem[]
   otherItems: ProcedureOtherItem[]
+  /** "{...}에 어떤 고민이 있으신가요?" 헤딩의 {} 자리 문구(카테고리명과 다를 때만). 예: lifting→"피부 탄력" */
+  concernSubject?: Partial<Record<Locale, string>>
+  /** true면 접두어 없이 "어떤 고민이 있으신가요?"로 표시(procedures.concernHeadingNoPrefix 키 사용) */
+  concernNoPrefix?: boolean
 }
 
 export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
@@ -347,6 +351,7 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
   {
     slug: 'ent',
     name: { ko: '이비인후과(코)', 'zh-CN': '耳鼻喉科（鼻部）', 'zh-TW': '耳鼻喉科（鼻部）', en: 'ENT (Nose)' },
+    concernSubject: { ko: '코', 'zh-CN': '鼻部', 'zh-TW': '鼻部', en: 'the nose' },
     icon: 'Stethoscope',
     heroImages: ['ent-hero.jpg'],
     intro: {
@@ -452,6 +457,7 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
   {
     slug: 'lifting',
     name: { ko: '리프팅', 'zh-CN': '提拉', 'zh-TW': '拉提', en: 'Lifting' },
+    concernSubject: { ko: '피부 탄력', 'zh-CN': '肌肤弹力', 'zh-TW': '肌膚彈力', en: 'skin elasticity' },
     icon: 'TrendingUp',
     heroImages: ['lifting-hero.jpg'],
     intro: {
@@ -575,6 +581,7 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
   {
     slug: 'dermatology',
     name: { ko: '피부과', 'zh-CN': '皮肤科', 'zh-TW': '皮膚科', en: 'Dermatology' },
+    concernNoPrefix: true,
     icon: 'Sparkles',
     heroImages: ['dermatology-hero.jpg'],
     intro: {
@@ -716,6 +723,7 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
   {
     slug: 'stemcell',
     name: { ko: '줄기세포', 'zh-CN': '干细胞', 'zh-TW': '幹細胞', en: 'Stem Cell' },
+    concernSubject: { ko: '피부 탄력', 'zh-CN': '肌肤弹力', 'zh-TW': '肌膚彈力', en: 'skin elasticity' },
     icon: 'Dna',
     heroImages: ['stemcell-hero.png'],
     intro: {
@@ -951,6 +959,7 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
   {
     slug: 'contour',
     name: { ko: '윤곽·양악', 'zh-CN': '面部轮廓・双颌', 'zh-TW': '臉部輪廓・雙顎', en: 'Facial Contouring & Double Jaw' },
+    concernSubject: { ko: '얼굴형', 'zh-CN': '脸型', 'zh-TW': '臉型', en: 'your face shape' },
     icon: 'Scan',
     heroImages: ['contour-hero.jpg'],
     intro: {
@@ -1171,6 +1180,7 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
   {
     slug: 'men',
     name: { ko: '남자', 'zh-CN': '男性', 'zh-TW': '男性', en: 'Men' },
+    concernNoPrefix: true,
     icon: 'UserRound',
     heroImages: ['men-hero.jpg'],
     intro: {
@@ -1258,6 +1268,7 @@ export const PROCEDURE_CATEGORIES: ProcedureCategory[] = [
   {
     slug: 'reconstruction',
     name: { ko: '재건', 'zh-CN': '修复重建', 'zh-TW': '重建', en: 'Reconstructive Surgery' },
+    concernNoPrefix: true,
     icon: 'HeartHandshake',
     // 🔴 2026-08-28 사용자 지시 — heroImages[0]가 실제 표시되는 히어로 사진이라 hero03을 맨 앞으로.
     heroImages: ['reconstruction-hero03.jpg', 'reconstruction-hero01.jpg', 'reconstruction-hero02.jpg'],

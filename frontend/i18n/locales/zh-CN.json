@@ -348,6 +348,7 @@
   },
   "procedures": {
     "concernHeading": "{category}有什么困扰吗？",
+    "concernHeadingNoPrefix": "有什么困扰吗？",
     "otherHeading": "其他项目",
     "inquireCta": "立即咨询",
     "comingSoon": "详细内容准备中。"

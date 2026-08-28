@@ -23,7 +23,9 @@
       :class="listRevealed ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
     >
       <h2 class="mb-6 text-xl font-semibold text-foreground sm:text-2xl">
-        {{ t('procedures.concernHeading', { category: category.name[locale as Locale] }) }}
+        {{ category.concernNoPrefix
+          ? t('procedures.concernHeadingNoPrefix')
+          : t('procedures.concernHeading', { category: category.concernSubject?.[locale as Locale] ?? category.name[locale as Locale] }) }}
       </h2>
 
       <ul class="divide-y divide-border">
