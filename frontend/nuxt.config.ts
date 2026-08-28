@@ -84,11 +84,10 @@ export default defineNuxtConfig({
 
   // 🔴 web-security-audit-guide.md 5장 재감사(2026-08-27) 발견 — 백엔드(API)는 이미 보안 헤더가
   // 있었지만(Program.cs) HTML을 실제로 렌더링하는 이 프론트(어드민 패널 포함)엔 전혀 없었다.
-  // Content-Security-Policy는 여기 포함하지 않음(의도적 보류) — 이 프로젝트엔 이미 인라인
-  // 스크립트가 2곳 있는데(이 파일의 언어감지 스크립트는 정적이라 해시 지정 가능하지만,
-  // landing.vue의 JSON-LD는 예약마다 내용이 달라 매번 해시가 바뀌어 정적 해시 방식이 안 통하고
-  // nonce는 Nuxt 통합이 더 큰 작업이라) 섣불리 걸면 그 스크립트들이 깨질 수 있어 별도 설계
-  // 결정으로 미룸(가이드 5장이 요구하는 "추측 방치 금지, 의도적 결정"에 따른 명시적 보류).
+  // Content-Security-Policy는 routeRules(정적 설정)로는 못 건다 — nonce가 매 요청 값이라 빌드
+  // 시점 문자열로 고정할 수 없기 때문. 대신 server/middleware/csp-nonce.ts(요청마다 nonce 생성 +
+  // CSP 헤더 설정) + server/plugins/csp-nonce-html.ts(render:html 훅으로 렌더된 HTML의 모든
+  // <script>에 그 nonce 부여, Nuxt 4 공식 패턴)로 2026-08-28 구현 완료.
   routeRules: {
     '/**': {
       headers: {

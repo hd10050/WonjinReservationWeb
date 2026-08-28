@@ -120,16 +120,16 @@
 
 ## TODO
 ### 다음 세션 최우선
-- [ ] 🔴 **실브라우저 최종 확인 필요 2건**(자동화 도구 환경 제약으로 자동검증 불가): ①**관리자 웹 푸시 OS 알림 표시**(파이프라인·Switch UI·Tooltip 전부 격리 docker E2E 완료 — **남은 건 실브라우저의 OS 알림 표시 자체뿐**) ②**Popover(DatePicker) 닫힘 애니메이션**(2026-08-27) — `document.hidden=true`에서 `opacity`/`pointer-events` 미해제 관측(`data-state`는 정상 전환), 코드는 순정 shadcn 생성 그대로라 실사용자 환경 재현 여부만 확인하면 됨
 - [ ] **랜딩 시술 이미지 6개 누락**(세션요약 (51)) — `eye`(asymmetrical-eye-correction, congenital-ptosis-children) · `nose`(bulbous-nose, tip-plasty) · `breast`(nipple-surgery) · `bodyline`(hip-augmentation) 6개 항목이 4개언어 설명·고민 콘텐츠는 있는데 `frontend/public/img/`에 이미지 파일이 없음. design.md 10절이 이미 이 6개를 "사진 재확인 필요"로 경고해뒀던 것과 정확히 일치 — 병원에 사진 수급 여부 확인 필요(코드 수정 대상 아님)
 - [ ] **랜딩 중국어(zh-CN/zh-TW) 고민 불릿 39/96건이 설계문서 부록 원문과 다른 요약형 문구**(세션요약 (51)) — ko/en은 부록과 100% verbatim인데 zh만 완전한 문장이 아니라 키워드형으로 압축돼 들어감(예: `breast/augmentation`). 의료광고 문구라 "원문 그대로" 원칙이 특히 중요한 영역 — 출처 확인 또는 병원 검수 필요
 ### 확인 완료 (재론 불필요)
+- **실브라우저 확인 2건 종결(2026-08-28 (66), 사용자 직접 확인)** — 관리자 웹 푸시 OS 알림 표시·Popover(DatePicker) 닫힘 애니메이션 둘 다 실브라우저에서 정상 동작 확인
 - 🔴 **IP 레이트리밋, 실배포 라이브 curl로 수정 확인 완료(2026-08-28 (62))** — 진짜 근본원인은 헤더 이름이 `CF-Connecting-IP`였던 것: Render(onrender.com)도 Cloudflare 엣지 뒤라 이 예약된 이름은 Render 앞단 엣지가 위조방지 목적으로 항상 실제 TCP 접속값(요청마다 달라짐)으로 재작성해버림. `X-Wj-Client-Ip`(커스텀, 비예약 이름)로 교체 후 라이브 curl 재검증: 같은 실IP 연속 POST 6회째 정확히 429 확인. 코드: Program.cs `GetClientIp()`·`AuditLogFilter`·프론트 `server/api/[...].ts`
 - **인플루언서 링크 방문 집계는 종결** — `/go/{code}` 라이브 302 리다이렉트(UTM 보존)까지 확인 완료. 실제 카운트 증가는 관리자 로그인·유효 코드가 있어야 확인 가능해 추가 라이브 검증은 하지 않음(코드 로직은 (61)에서 로컬 end-to-end 실측 완료)
-- **CSP 미적용은 계속 의도적 보류**(보안감사 재감사 2026-08-27) — X-Content-Type-Options 등 4개 헤더는 적용 완료, CSP만 보류. `landing.vue`의 JSON-LD 인라인 스크립트가 예약마다 내용이 달라 정적 해시 지정이 안 통함, nonce 방식은 Nuxt 통합 작업 필요 → 도입 우선순위 낮음, 재검토 필요해지면 그때 착수
+- 🔴 **CSP 구현 완료(2026-08-28 (66)) — 옛 "예약마다 내용이 달라 해시 불가" 전제는 오판이었음 정정**. `landing.vue` JSON-LD를 코드로 직접 확인하니 상호명·전화번호·주소 전부 하드코딩 상수라 완전 고정 문자열(로케일과도 무관) — 진짜 걸림돌은 Nuxt SSR 하이드레이션 페이로드(매 요청 실데이터 포함)였음. **nonce 방식 채택**: `frontend/server/middleware/csp-nonce.ts`(요청마다 `crypto.randomUUID()` nonce 생성 + CSP 헤더 설정) + `frontend/server/plugins/csp-nonce-html.ts`(`render:html` 훅으로 렌더된 HTML의 모든 `<script>`에 그 nonce 부여, Nuxt 4 공식 패턴 — Context7로 확인). dev 서버·`NITRO_PRESET=node-server` 프로덕션 빌드 양쪽 로컬 curl로 헤더·전 스크립트(하이드레이션 페이로드·JSON-LD·importmap 포함) nonce 부여 실측 + 브라우저 콘솔 CSP 위반 0건 확인. **design.md 19장 Phase 9 완료 기준("라이브 curl 검증")은 미충족 — production 미병합 상태라 실배포 도메인 curl은 사용자가 production 병합한 뒤 별도 확인 필요**(로컬 검증만으로 "완료" 아님)
 - **상담기록 "수정 이력" UI는 현재 인라인 패널 구조 유지**(2026-08-28 사용자 확인) — 진짜 모달(오버레이)로 바꾸지 않음. 기능은 동일(과거 내용 열람)
 ### Phase 계획 (design.md 19장 = 상세 SSOT, 완료기준·재현 스크립트 전부 그쪽에 있음 — 이 표는 요약만)
-Phase 0~8(스캐폴딩·인증·랜딩+예약폼·예약대시보드/상세/상담기록/상태머신·실장시술CRUD·예약달력·KPI+통계·계정관리+감사로그·유입경로분석) **전부 완료+전건 실측+main 병합 완료**(2026-08-26). Phase 9(SEO·보안감사·배포)는 인프라 실배포(Cloudflare Workers+Render)·보안감사 1라운드+재감사(Low 9건 전부 수정)·SEO 로컬검증까지 완료 — **CSP 도입 결정·실배포 도메인 라이브 curl 검증만 미착수**(위 TODO 참고).
+Phase 0~8(스캐폴딩·인증·랜딩+예약폼·예약대시보드/상세/상담기록/상태머신·실장시술CRUD·예약달력·KPI+통계·계정관리+감사로그·유입경로분석) **전부 완료+전건 실측+main 병합 완료**(2026-08-26). Phase 9(SEO·보안감사·배포)는 인프라 실배포(Cloudflare Workers+Render)·보안감사 1라운드+재감사(Low 9건 전부 수정)·SEO 로컬검증·CSP 구현(로컬 검증)까지 완료 — **실배포 도메인 라이브 curl 검증만 미착수**(production 병합 대기, 위 TODO 참고).
 ## 미결정 (상세: `docs/design.md` 20장)
 - [ ] **M6 랜딩 히어로·소개 콘텐츠**(4개 언어) — Phase 2는 기능 설명 최소 문구로 대체(마케팅 카피 아님), 실제 콘텐츠는 이후 결정
 - [ ] **M2 도메인·Cloudflare 계정** — Phase 9(참고: 최초 어드민 계정은 **사용자가 DB에 직접 삽입**·시딩 코드 없음, 실장·시술 마스터도 관리 화면에서 직접 등록)
@@ -144,6 +144,6 @@ Phase 0~8(스캐폴딩·인증·랜딩+예약폼·예약대시보드/상세/상�
 ## 참고 문서
 `docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종) · 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md` · `excel-bulk-upload-pattern-reference.md`
 
-## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (63)까지 이동 완료)
-- **2026-08-28 (64)** — **IP 레이트리밋·웹푸시 알림 전수감사(파일 전문 정독 26개+grep대조) + 격리 docker E2E 실측 + 종 아이콘 1차 UX 개선(pulse dot)**. 감사 결과 신규 결함 0건(입력필드 3곳 일치·i18n 키 4파일 동일·SSRF화이트리스트·감사로그제외·인덱스 전부 정상). 격리스택(`wj-verify`, 공유스택 무영향)에서 실제 로그인→구독등록→예약제출→`WebPushClient.SendNotificationAsync` 호출까지 E2E 확인(가짜 키라 암호화단계 실패는 정상, 코드결함 아님). 1차로 종 아이콘 색+pulse 점 강조 적용 → (65)에서 사용자 요청으로 Switch로 교체.
+## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (64)까지 이동 완료)
 - **2026-08-28 (65)** — **웹푸시 토글을 실제 on/off Switch + hover Tooltip으로 재구현**(사용자 피드백: "pulse 점보다 진짜 토글이 낫다, denied도 시각적으로 구분되게, hover 설명 번역까지"). `npx shadcn-vue add switch tooltip`으로 신규 컴포넌트 도입(`@vueuse/core` 의존성 자동 추가, `package-lock.json`은 npm@10.9.2로 재생성해 CI 버전고정 원칙 준수). `layouts/admin.vue` — 종+Switch 묶음을 TooltipProvider/Tooltip으로 감싸 hover 시 상태별 설명(`pushOnDesc`/`pushOffDesc`/`pushDeniedDesc`, 4개 로케일 신규 번역, 스크립트로 411키 동일 확인) 노출. denied는 Switch `disabled`+`opacity-60`으로 조작 불가를 시각적으로 전달. 격리 docker 실측: disabled Switch·hover tooltip 실제 텍스트 확인, checked/unchecked의 track 색상·thumb 위치 차이를 `getComputedStyle`로 확인(Tailwind v4가 `transform` 대신 `translate` 속성을 쓴다는 점 확인 — 첫 시도에서 `transform`만 읽어 "안 움직이는 것처럼" 오판했다가 재확인).
+- **2026-08-28 (66)** — **실브라우저 확인 2건 종결(사용자 직접 확인) + CSP 구현**. CSP는 script-src nonce 방식: `landing.vue` JSON-LD가 실제로는 완전 고정 문자열임을 코드로 재확인해 옛 "예약마다 달라 해시 불가" 전제가 틀렸음을 발견했지만, 진짜 걸림돌은 Nuxt SSR 하이드레이션 페이로드(매 요청 실데이터 포함, 정적 해시 불가)였음. `server/middleware/csp-nonce.ts` + `server/plugins/csp-nonce-html.ts`(Nuxt 4 공식 `render:html` 훅 nonce 패턴, Context7로 확인) 신설. dev·`node-server` 프로덕션 빌드 양쪽 로컬 curl로 헤더·전 스크립트(하이드레이션 페이로드·JSON-LD·importmap) nonce 부여 확인 + 브라우저 콘솔 CSP 위반 0건. Phase 9 완료 기준(라이브 curl 검증)은 production 병합 후 별도 확인 필요.
