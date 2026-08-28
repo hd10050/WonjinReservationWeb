@@ -61,12 +61,14 @@ captureUtm()
 // 🔴 await 하지 않는다(F6) — 방문 집계 실패·지연이 랜딩 렌더 응답 시간에 영향을 주면 안 된다.
 // 🔴 2026-08-28 정정 (인플루언서 링크 방문이 통계에 안 잡히는 버그 재조사) — 세션 (60)은 /go/{code}
 // 조회 timeout만 10초로 늘렸으나, 정작 landing_daily_stats에 방문을 쓰는 건 이 호출이고 여기는
-// timeout:2000 그대로였다. Render 콜드스타트(수 초)면 2초를 넘겨 catch로 유실된다.
+// timeout:2000 + await 없는 fire-and-forget 그대로였다. 근본 원인은 ②: Cloudflare Workers는
+// SSR 응답을 반환하면 아직 진행 중인 fetch를 그 시점에 강제 종료할 수 있다(waitUntil로 등록하지
+// 않은 백그라운드 작업은 완료가 보장되지 않는 것이 Workers 규정 동작 — 원점 응답 속도와 무관).
+// 로컬(Nitro dev = Node)에선 프로세스가 응답 후에도 살아있어 이 fetch가 항상 완료돼 재현이 안 됐다.
 //  ① timeout 2000 → 10000 (세션 60에서 /go 조회에 적용한 것과 동일 — Cloudflare Workers는 fetch
 //     대기 시간이 CPU 시간·요청 wall time 제약에 안 걸림, Context7 공식문서 확인).
-//  ② event.waitUntil — await 없는 fire-and-forget은 Workers가 SSR 응답을 반환하는 순간 아직
-//     진행 중인 fetch를 강제 종료할 수 있다(콜드스타트면 항상 미완). waitUntil로 이 fetch가 끝날
-//     때까지 워커 종료를 미룬다 — 응답 자체는 블로킹하지 않으므로 F6·화면 깜빡임 원칙과 무관.
+//  ② nuxtApp.ssrContext.event.waitUntil — 이 fetch가 끝날 때까지 워커 종료를 미룬다
+//     (응답 자체는 블로킹하지 않으므로 F6·화면 깜빡임 원칙과 무관).
 if (import.meta.server) {
   const utmQuery = {
     referralCode: (route.query.ref as string) || '',

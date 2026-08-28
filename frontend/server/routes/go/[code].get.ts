@@ -15,11 +15,10 @@ export default defineEventHandler(async (event) => {
 
   try {
     // 🔴 버그(2026-08-28 사용자 지적 — 인플루언서 링크 방문이 통계에 안 잡히고 쿼리스트링 없는
-    // 생 URL만 잡힘) — timeout이 2000ms로 너무 짧았다. 백엔드(Render)가 idle 후 콜드스타트 상태면
-    // 이 내부 조회 자체가 2초를 넘겨 타임아웃 → catch로 떨어져 아래처럼 완전 무속성 리다이렉트가
-    // 나갔던 것으로 추정(로컬 상시가동 환경에서는 재현이 안 돼 실측 100% 확정은 아님 — Cloudflare
-    // Workers는 fetch 대기 시간이 CPU 시간에 포함되지 않고 수신 요청의 wall time도 무제한이라
-    // 늘려도 플랫폼 제약에 걸리지 않음, Context7 공식문서로 확인). 콜드스타트를 버틸 수 있게 여유있게 늘림.
+    // 생 URL만 잡힘) — timeout이 2000ms로 너무 짧아, 이 내부 조회 응답이 2초를 넘기면 타임아웃 →
+    // catch로 떨어져 아래처럼 완전 무속성 리다이렉트가 나갔다. Cloudflare Workers는 fetch 대기
+    // 시간이 CPU 시간에 포함되지 않고 수신 요청의 wall time도 무제한이라(Context7 공식문서 확인)
+    // 넉넉히 늘려도 플랫폼 제약에 걸리지 않는다.
     const link = await $fetch<{ utmSource: string, utmMedium: string, utmCampaign: string, locale: string }>(
       `/api/internal/influencer-links/${encodeURIComponent(code)}`,
       {

@@ -1462,11 +1462,13 @@ var statusCode = executed.Exception is not null ? 500 : context.HttpContext.Resp
 ```ts
 // server/plugins 또는 랜딩 SSR 경로 — fire-and-forget + 실패 무시
 // ⚠️ await 없음. 이 요청이 실패해도 랜딩은 정상 렌더되어야 한다(지표 < 접수).
-// 🔴 timeout은 10000 — Render 콜드스타트(수 초)가 2초를 넘겨 방문이 통째로 유실됐다(2026-08-28,
-//    인플루언서 링크 방문 미집계 재조사). Cloudflare Workers는 fetch 대기가 CPU·wall time 제약에
-//    안 걸린다(Context7 확인).
-// 🔴 await 없는 fetch는 Workers가 SSR 응답 반환 시 강제 종료할 수 있으므로 event.waitUntil로
-//    이 fetch 완료까지 워커 종료를 미룬다(응답은 블로킹 안 함 → F6 위반 아님).
+// 🔴 근본 원인(2026-08-28, 인플루언서 링크 방문 미집계 재조사): Cloudflare Workers는 SSR 응답을
+//    반환하면 waitUntil로 등록하지 않은 백그라운드 fetch를 그 시점에 종료할 수 있다(원점 응답
+//    속도와 무관, Workers 규정 동작). 로컬(Nitro dev=Node)은 응답 후에도 프로세스가 살아 재현 안 됨.
+//  ① timeout 10000 (Workers는 fetch 대기가 CPU·wall time 제약에 안 걸림 — Context7 확인)
+//  ② ssrContext.event.waitUntil 로 이 fetch 완료까지 워커 종료를 미룬다(응답은 블로킹 안 함 →
+//     F6 위반 아님). useRequestEvent()를 if 블록 안에서 늦게 부르면 NUXT_E1001 경고가 뜨므로
+//     setup 최상단에서 const nuxtApp = useNuxtApp() 로 잡아 nuxtApp.ssrContext?.event 를 쓴다.
 const visitTask = $fetch('/api/internal/landing-visit', {
   baseURL: config.apiBaseInternal,
   method: 'POST',
@@ -1474,7 +1476,7 @@ const visitTask = $fetch('/api/internal/landing-visit', {
   body: { referralCode, utmSource, utmMedium, utmCampaign },
   timeout: 10000,
 }).catch(() => {})
-useRequestEvent()?.waitUntil?.(visitTask)
+nuxtApp.ssrContext?.event?.waitUntil?.(visitTask)
 ```
 
 ```sql
