@@ -1,0 +1,134 @@
+- generic [ref=f114e3]:
+  - banner [ref=f114e4]:
+    - generic [ref=f114e5]:
+      - link [ref=f114e6] [cursor=pointer]:
+        - /url: /
+        - img "WonJin" [ref=f114e7]
+      - navigation [ref=f114e8]:
+        - link "首页" [ref=f114e9] [cursor=pointer]:
+          - /url: /
+        - button "项目介绍" [ref=f114e10]
+        - link "咨询预约" [ref=f114e13] [cursor=pointer]:
+          - /url: /inquiry
+      - button "简体中文" [ref=f114e14]
+  - main [ref=f114e21]:
+    - generic [ref=f114e22]:
+      - generic [ref=f114e24]:
+        - heading "胸部" [level=1] [ref=f114e27]
+        - paragraph [ref=f114e28]: 您有变美的权利，也可以变美丽。WJ原辰愿意和您共享关于胸部的小秘密，理解女人的心情。20多年来WJ原辰一直引领着韩国胸部整形的发展，我们相约在WJ原辰高端胸部整形中心邂逅。
+      - generic [ref=f114e30]:
+        - generic [ref=f114e32]:
+          - heading "以系统化的体系提升手术满意度" [level=2] [ref=f114e33]
+          - paragraph [ref=f114e34]: 术前通过3D虚拟整形，科学分析个人体型特征与左右对称等，可选择最适合本人的假体。
+        - blockquote [ref=f114e36]:
+          - paragraph [ref=f114e37]: 从术前、术后到后续管理，WJ原辰系统化的胸部整形体系
+        - generic [ref=f114e39]:
+          - generic [ref=f114e40]:
+            - img "HD内窥镜下精细操作" [ref=f114e41]
+            - heading "HD内窥镜下精细操作" [level=3] [ref=f114e42]
+            - paragraph [ref=f114e43]: 通过HD内窥镜直接确认胸部组织的神经与血管进行手术，几乎无痛且恢复快。
+          - generic [ref=f114e44]:
+            - img "安全植入假体 · 凯乐漏斗" [ref=f114e45]
+            - heading "安全植入假体 · 凯乐漏斗" [level=3] [ref=f114e46]
+            - paragraph [ref=f114e47]: 凯乐漏斗以最小切口植入假体，几乎不留疤痕，且不用手接触假体，预防组织与神经损伤及炎症、副作用。
+          - generic [ref=f114e48]:
+            - img "将疼痛降至最低的肋间神经麻醉" [ref=f114e49]
+            - heading "将疼痛降至最低的肋间神经麻醉" [level=3] [ref=f114e50]
+            - paragraph [ref=f114e51]: 以麻醉将胸部疼痛传至大脑的肋间神经的高难度技法，阻断术中及术后胸部疼痛。
+        - generic [ref=f114e53]:
+          - generic [ref=f114e54]:
+            - img "术后管理体系" [ref=f114e55]
+            - heading "术后管理体系" [level=3] [ref=f114e56]
+            - paragraph [ref=f114e57]: 从术后包膜挛缩、HealLite等管理到定期超声波检查，系统化运营，帮助快速恢复。
+          - generic [ref=f114e58]:
+            - img "安全体系" [ref=f114e59]
+            - heading "安全体系" [level=3] [ref=f114e60]
+            - paragraph [ref=f114e61]: 配备1:1专属麻醉系统、紧急情况应对系统、精密温度控制系统、丹曲林储备、不间断电源装置等以安全为最优先的系统。
+      - generic [ref=f114e62]:
+        - heading "胸部有什么困扰吗？" [level=2] [ref=f114e63]
+        - list [ref=f114e64]:
+          - listitem [ref=f114e65]:
+            - link [ref=f114e66] [cursor=pointer]:
+              - /url: /procedures/breast/augmentation
+              - img "隆胸手术" [ref=f114e67]
+              - generic [ref=f114e68]:
+                - list [ref=f114e69]:
+                  - listitem [ref=f114e70]: 快速回归日常生活
+                  - listitem [ref=f114e71]: 包膜挛缩需修复
+                  - listitem [ref=f114e72]: 胸部再建
+                  - listitem [ref=f114e73]: 自然律动手感
+                - heading "隆胸手术" [level=3] [ref=f114e74]
+          - listitem [ref=f114e75]:
+            - link [ref=f114e76] [cursor=pointer]:
+              - /url: /procedures/breast/hybrid-augmentation
+              - img "混合式隆胸" [ref=f114e77]
+              - generic [ref=f114e78]:
+                - list [ref=f114e79]:
+                  - listitem [ref=f114e80]: 自然触感
+                  - listitem [ref=f114e81]: 特别瘦小体型
+                  - listitem [ref=f114e82]: 假体透光现象
+                - heading "混合式隆胸" [level=3] [ref=f114e83]
+          - listitem [ref=f114e84]:
+            - link [ref=f114e85] [cursor=pointer]:
+              - /url: /procedures/breast/reduction
+              - img "缩胸手术" [ref=f114e86]
+              - generic [ref=f114e87]:
+                - list [ref=f114e88]:
+                  - listitem [ref=f114e89]: 精神压力
+                  - listitem [ref=f114e90]: 颈腰疼痛
+                  - listitem [ref=f114e91]: 湿疹等皮肤疾病
+                - heading "缩胸手术" [level=3] [ref=f114e92]
+          - listitem [ref=f114e93]:
+            - link [ref=f114e94] [cursor=pointer]:
+              - /url: /procedures/breast/lift
+              - img "乳房下垂矫正" [ref=f114e95]
+              - generic [ref=f114e96]:
+                - list [ref=f114e97]:
+                  - listitem [ref=f114e98]: 扁平下垂
+                  - listitem [ref=f114e99]: 大且下垂
+                  - listitem [ref=f114e100]: 产后下垂
+                  - listitem [ref=f114e101]: 减肥后弹力减少
+                - heading "乳房下垂矫正" [level=3] [ref=f114e102]
+          - listitem [ref=f114e103]:
+            - link [ref=f114e104] [cursor=pointer]:
+              - /url: /procedures/breast/revision
+              - img "胸部修复手术" [ref=f114e105]
+              - generic [ref=f114e106]:
+                - list [ref=f114e107]:
+                  - listitem [ref=f114e108]: 手感特别硬
+                  - listitem [ref=f114e109]: 大小模样不满意
+                  - listitem [ref=f114e110]: 想更换假体
+                - heading "胸部修复手术" [level=3] [ref=f114e111]
+          - listitem [ref=f114e112]:
+            - link [ref=f114e113] [cursor=pointer]:
+              - /url: /procedures/breast/gynecomastia
+              - img "男性女乳症（男性乳房发育）" [ref=f114e114]
+              - generic [ref=f114e115]:
+                - list [ref=f114e116]:
+                  - listitem [ref=f114e117]: 瘦弱但胸部突出
+                  - listitem [ref=f114e118]: 减肥后脂肪未减少
+                  - listitem [ref=f114e119]: 摸到硬结
+                  - listitem [ref=f114e120]: 女性化胸部突出
+                - heading "男性女乳症（男性乳房发育）" [level=3] [ref=f114e121]
+        - generic [ref=f114e122]:
+          - heading "其他项目" [level=3] [ref=f114e123]
+          - generic [ref=f114e124]:
+            - link "胸部脂肪填充" [ref=f114e125] [cursor=pointer]:
+              - /url: /procedures/breast/fat-grafting
+            - link "产后胸部整形" [ref=f114e126] [cursor=pointer]:
+              - /url: /procedures/breast/postpartum-breast
+            - link "干细胞隆胸" [ref=f114e127] [cursor=pointer]:
+              - /url: /procedures/breast/stemcell-breast-augmentation
+            - link "乳头整形" [ref=f114e128] [cursor=pointer]:
+              - /url: /procedures/breast/nipple-surgery
+  - contentinfo [ref=f114e129]:
+    - generic [ref=f114e130]:
+      - paragraph [ref=f114e131]: "商户名称: 원진성형외과의원 · 营业执照号: 824-67-00414"
+      - paragraph [ref=f114e132]: "地址: 首尔市 瑞草区 江南大路419 PAGODA 12-18楼"
+      - generic [ref=f114e133]:
+        - link "隐私政策" [ref=f114e134] [cursor=pointer]:
+          - /url: /privacy
+        - link "© 2026 WonJin 版权所有" [ref=f114e135] [cursor=pointer]:
+          - /url: /admin/login
+  - link "咨询" [ref=f114e136] [cursor=pointer]:
+    - /url: /inquiry

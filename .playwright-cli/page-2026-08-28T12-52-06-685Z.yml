@@ -1,0 +1,97 @@
+- generic [ref=f110e3]:
+  - banner [ref=f110e4]:
+    - generic [ref=f110e5]:
+      - link [ref=f110e6] [cursor=pointer]:
+        - /url: /
+        - img "WonJin" [ref=f110e7]
+      - navigation [ref=f110e8]:
+        - link "首页" [ref=f110e9] [cursor=pointer]:
+          - /url: /
+        - button "项目介绍" [ref=f110e10]
+        - link "咨询预约" [ref=f110e13] [cursor=pointer]:
+          - /url: /inquiry
+      - button "简体中文" [ref=f110e14]
+  - main [ref=f110e21]:
+    - generic [ref=f110e22]:
+      - generic [ref=f110e24]:
+        - heading "皮肤科" [level=1] [ref=f110e28]
+        - paragraph [ref=f110e29]: 皮肤问题不仅是简单的美容需求，更需要根据个人状况进行系统性管理。WJ原辰通过最新医疗设备和资深医疗团队，有效改善色素、毛孔、痘痘、泛红等多种皮肤问题，并通过提升紧致疗程增强皮肤弹性，打造健康肌肤。从激光治疗、营养针剂套餐到定制化肌肤再生方案，我们以安全精细的治疗提供根本性的肌肤改善。
+      - generic [ref=f110e31]:
+        - generic [ref=f110e33]:
+          - heading "WJ原辰医疗系统" [level=2] [ref=f110e34]
+          - paragraph [ref=f110e35]: 从精准诊断到个人定制处方，这是原辰精细改善肌肤状态的独有系统。
+        - generic [ref=f110e37]:
+          - generic [ref=f110e38]:
+            - img "1:1安心责任专属制" [ref=f110e39]
+            - generic [ref=f110e40]: "01"
+            - heading "1:1安心责任专属制" [level=3] [ref=f110e41]
+            - paragraph [ref=f110e42]: 采用仅使用认证正品、正量的1:1责任专属制运营，从弹力到色素、毛孔精准诊断并精细改善。
+          - generic [ref=f110e43]:
+            - img "积极运用交叉治疗" [ref=f110e44]
+            - generic [ref=f110e45]: "02"
+            - heading "积极运用交叉治疗" [level=3] [ref=f110e46]
+            - paragraph [ref=f110e47]: 运用知识广博、经验丰富的医疗团队的专业技巧，提供最优化的交叉治疗。
+          - generic [ref=f110e48]:
+            - img "拥有多样化设备" [ref=f110e49]
+            - generic [ref=f110e50]: "03"
+            - heading "拥有多样化设备" [level=3] [ref=f110e51]
+            - paragraph [ref=f110e52]: 以80余种设备为效果显著的治疗提供个人定制化处方。
+          - generic [ref=f110e53]:
+            - img "提供个人定制皮肤方案" [ref=f110e54]
+            - generic [ref=f110e55]: "04"
+            - heading "提供个人定制皮肤方案" [level=3] [ref=f110e56]
+            - paragraph [ref=f110e57]: 通过最新医疗技术和定制化项目，提供针对各自皮肤状态的最优化治疗。
+          - generic [ref=f110e58]:
+            - img "运营高级抗衰老中心" [ref=f110e59]
+            - generic [ref=f110e60]: "05"
+            - heading "运营高级抗衰老中心" [level=3] [ref=f110e61]
+            - paragraph [ref=f110e62]: 在私密的环境中体验的高级干细胞治疗及抗衰老医疗服务。
+      - generic [ref=f110e63]:
+        - heading "有什么困扰吗？" [level=2] [ref=f110e64]
+        - list [ref=f110e65]:
+          - listitem [ref=f110e66]:
+            - link [ref=f110e67] [cursor=pointer]:
+              - /url: /procedures/dermatology/ulthera-prime
+              - img "Ulthera Prime" [ref=f110e68]
+              - heading "Ulthera Prime" [level=3] [ref=f110e70]
+          - listitem [ref=f110e71]:
+            - link [ref=f110e72] [cursor=pointer]:
+              - /url: /procedures/dermatology/thermage-flx
+              - img "Thermage FLX" [ref=f110e73]
+              - heading "Thermage FLX" [level=3] [ref=f110e75]
+          - listitem [ref=f110e76]:
+            - link [ref=f110e77] [cursor=pointer]:
+              - /url: /procedures/dermatology/volnewmer
+              - img "Volnewmer" [ref=f110e78]
+              - heading "Volnewmer" [level=3] [ref=f110e80]
+          - listitem [ref=f110e81]:
+            - link [ref=f110e82] [cursor=pointer]:
+              - /url: /procedures/dermatology/laser-anti-aging
+              - img "激光抗衰老" [ref=f110e83]
+              - heading "激光抗衰老" [level=3] [ref=f110e85]
+          - listitem [ref=f110e86]:
+            - link [ref=f110e87] [cursor=pointer]:
+              - /url: /procedures/dermatology/skin-booster
+              - img "水光针／Skin Booster" [ref=f110e88]
+              - heading "水光针／Skin Booster" [level=3] [ref=f110e90]
+          - listitem [ref=f110e91]:
+            - link [ref=f110e92] [cursor=pointer]:
+              - /url: /procedures/dermatology/pigmentation-pores
+              - img "色素・毛孔" [ref=f110e93]
+              - heading "色素・毛孔" [level=3] [ref=f110e95]
+          - listitem [ref=f110e96]:
+            - link [ref=f110e97] [cursor=pointer]:
+              - /url: /procedures/dermatology/acne-redness
+              - img "痘痘・泛红" [ref=f110e98]
+              - heading "痘痘・泛红" [level=3] [ref=f110e100]
+  - contentinfo [ref=f110e101]:
+    - generic [ref=f110e102]:
+      - paragraph [ref=f110e103]: "商户名称: 원진성형외과의원 · 营业执照号: 824-67-00414"
+      - paragraph [ref=f110e104]: "地址: 首尔市 瑞草区 江南大路419 PAGODA 12-18楼"
+      - generic [ref=f110e105]:
+        - link "隐私政策" [ref=f110e106] [cursor=pointer]:
+          - /url: /privacy
+        - link "© 2026 WonJin 版权所有" [ref=f110e107] [cursor=pointer]:
+          - /url: /admin/login
+  - link "咨询" [ref=f110e108] [cursor=pointer]:
+    - /url: /inquiry

@@ -1,0 +1,70 @@
+- generic [ref=f118e3]:
+  - banner [ref=f118e4]:
+    - generic [ref=f118e5]:
+      - link [ref=f118e6] [cursor=pointer]:
+        - /url: /
+        - img "WonJin" [ref=f118e7]
+      - navigation [ref=f118e8]:
+        - link "首页" [ref=f118e9] [cursor=pointer]:
+          - /url: /
+        - button "项目介绍" [ref=f118e10]
+        - link "咨询预约" [ref=f118e13] [cursor=pointer]:
+          - /url: /inquiry
+      - button "简体中文" [ref=f118e14]
+  - main [ref=f118e21]:
+    - generic [ref=f118e22]:
+      - generic [ref=f118e24]:
+        - heading "耳鼻喉科（鼻部）" [level=1] [ref=f118e29]
+        - paragraph [ref=f118e30]: WJ原辰整形外科为了改善个人的功能性鼻部问题，由熟悉鼻子解剖学构造的熟练医疗团队亲自主刀，保证安全，为给出满意的效果而全力以赴。
+      - generic [ref=f118e32]:
+        - generic [ref=f118e34]:
+          - heading "WJ原辰独有的鼻中隔双重强化术式" [level=2] [ref=f118e35]
+          - paragraph [ref=f118e36]: 矫正弯曲的鼻中隔，并选择适合患者的材料来加固支撑结构——这是原辰独有的高难度技术，只有经验丰富、技术娴熟的专业医生才能完成。
+        - generic [ref=f118e38]:
+          - generic [ref=f118e39]:
+            - img "① 矫正弯曲的鼻中隔" [ref=f118e40]
+            - heading "① 矫正弯曲的鼻中隔" [level=3] [ref=f118e41]
+            - paragraph [ref=f118e42]: 将弯曲的鼻中隔软骨拉直，去除多余软骨并端正地置于中央。
+          - generic [ref=f118e43]:
+            - img "② 支撑结构双重强化" [ref=f118e44]
+            - heading "② 支撑结构双重强化" [level=3] [ref=f118e45]
+            - paragraph [ref=f118e46]: 牢固地固定中央后，再次加固软骨支撑结构。
+      - generic [ref=f118e47]:
+        - heading "鼻部有什么困扰吗？" [level=2] [ref=f118e48]
+        - list [ref=f118e49]:
+          - listitem [ref=f118e50]:
+            - link [ref=f118e51] [cursor=pointer]:
+              - /url: /procedures/ent/deviated-septum
+              - img "鼻中隔偏曲" [ref=f118e52]
+              - heading "鼻中隔偏曲" [level=3] [ref=f118e54]
+          - listitem [ref=f118e55]:
+            - link [ref=f118e56] [cursor=pointer]:
+              - /url: /procedures/ent/nasal-valve-stenosis
+              - img "鼻瓣区狭窄" [ref=f118e57]
+              - heading "鼻瓣区狭窄" [level=3] [ref=f118e59]
+          - listitem [ref=f118e60]:
+            - link [ref=f118e61] [cursor=pointer]:
+              - /url: /procedures/ent/tonsillectomy
+              - img "扁桃体手术" [ref=f118e62]
+              - heading "扁桃体手术" [level=3] [ref=f118e64]
+          - listitem [ref=f118e65]:
+            - link [ref=f118e66] [cursor=pointer]:
+              - /url: /procedures/ent/rhinitis
+              - img "鼻炎" [ref=f118e67]
+              - heading "鼻炎" [level=3] [ref=f118e69]
+          - listitem [ref=f118e70]:
+            - link [ref=f118e71] [cursor=pointer]:
+              - /url: /procedures/ent/sinusitis
+              - img "鼻窦炎（副鼻窦炎）" [ref=f118e72]
+              - heading "鼻窦炎（副鼻窦炎）" [level=3] [ref=f118e74]
+  - contentinfo [ref=f118e75]:
+    - generic [ref=f118e76]:
+      - paragraph [ref=f118e77]: "商户名称: 원진성형외과의원 · 营业执照号: 824-67-00414"
+      - paragraph [ref=f118e78]: "地址: 首尔市 瑞草区 江南大路419 PAGODA 12-18楼"
+      - generic [ref=f118e79]:
+        - link "隐私政策" [ref=f118e80] [cursor=pointer]:
+          - /url: /privacy
+        - link "© 2026 WonJin 版权所有" [ref=f118e81] [cursor=pointer]:
+          - /url: /admin/login
+  - link "咨询" [ref=f118e82] [cursor=pointer]:
+    - /url: /inquiry

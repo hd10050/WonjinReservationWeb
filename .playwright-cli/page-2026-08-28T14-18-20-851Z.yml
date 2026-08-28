@@ -1,0 +1,97 @@
+- generic [ref=f1e3]:
+  - banner [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - link [ref=f1e6] [cursor=pointer]:
+        - /url: /
+        - img "WonJin" [ref=f1e7]
+      - navigation [ref=f1e8]:
+        - link "首页" [ref=f1e9] [cursor=pointer]:
+          - /url: /
+        - button "项目介绍" [ref=f1e10]
+        - link "咨询预约" [ref=f1e13] [cursor=pointer]:
+          - /url: /inquiry
+      - button "简体中文" [ref=f1e14]
+  - main [ref=f1e21]:
+    - generic [ref=f1e22]:
+      - generic [ref=f1e24]:
+        - heading "皮肤科" [level=1] [ref=f1e28]
+        - paragraph [ref=f1e29]: 皮肤问题不仅是简单的美容需求，更需要根据个人状况进行系统性管理。WJ原辰通过最新医疗设备和资深医疗团队，有效改善色素、毛孔、痘痘、泛红等多种皮肤问题，并通过提升紧致疗程增强皮肤弹性，打造健康肌肤。从激光治疗、营养针剂套餐到定制化肌肤再生方案，我们以安全精细的治疗提供根本性的肌肤改善。
+      - generic [ref=f1e31]:
+        - generic [ref=f1e33]:
+          - heading "WJ原辰医疗系统" [level=2] [ref=f1e34]
+          - paragraph [ref=f1e35]: 从精准诊断到个人定制处方，这是原辰精细改善肌肤状态的独有系统。
+        - generic [ref=f1e37]:
+          - generic [ref=f1e38]:
+            - img "1:1安心责任专属制" [ref=f1e39]
+            - generic [ref=f1e40]: "01"
+            - heading "1:1安心责任专属制" [level=3] [ref=f1e41]
+            - paragraph [ref=f1e42]: 采用仅使用认证正品、正量的1:1责任专属制运营，从弹力到色素、毛孔精准诊断并精细改善。
+          - generic [ref=f1e43]:
+            - img "积极运用交叉治疗" [ref=f1e44]
+            - generic [ref=f1e45]: "02"
+            - heading "积极运用交叉治疗" [level=3] [ref=f1e46]
+            - paragraph [ref=f1e47]: 运用知识广博、经验丰富的医疗团队的专业技巧，提供最优化的交叉治疗。
+          - generic [ref=f1e48]:
+            - img "拥有多样化设备" [ref=f1e49]
+            - generic [ref=f1e50]: "03"
+            - heading "拥有多样化设备" [level=3] [ref=f1e51]
+            - paragraph [ref=f1e52]: 以80余种设备为效果显著的治疗提供个人定制化处方。
+          - generic [ref=f1e53]:
+            - img "提供个人定制皮肤方案" [ref=f1e54]
+            - generic [ref=f1e55]: "04"
+            - heading "提供个人定制皮肤方案" [level=3] [ref=f1e56]
+            - paragraph [ref=f1e57]: 通过最新医疗技术和定制化项目，提供针对各自皮肤状态的最优化治疗。
+          - generic [ref=f1e58]:
+            - img "运营高级抗衰老中心" [ref=f1e59]
+            - generic [ref=f1e60]: "05"
+            - heading "运营高级抗衰老中心" [level=3] [ref=f1e61]
+            - paragraph [ref=f1e62]: 在私密的环境中体验的高级干细胞治疗及抗衰老医疗服务。
+      - generic [ref=f1e63]:
+        - heading "有什么困扰吗？" [level=2] [ref=f1e64]
+        - list [ref=f1e65]:
+          - listitem [ref=f1e66]:
+            - link [ref=f1e67] [cursor=pointer]:
+              - /url: /procedures/dermatology/ulthera-prime
+              - img "Ulthera Prime" [ref=f1e68]
+              - heading "Ulthera Prime" [level=3] [ref=f1e70]
+          - listitem [ref=f1e71]:
+            - link [ref=f1e72] [cursor=pointer]:
+              - /url: /procedures/dermatology/thermage-flx
+              - img "Thermage FLX" [ref=f1e73]
+              - heading "Thermage FLX" [level=3] [ref=f1e75]
+          - listitem [ref=f1e76]:
+            - link [ref=f1e77] [cursor=pointer]:
+              - /url: /procedures/dermatology/volnewmer
+              - img "Volnewmer" [ref=f1e78]
+              - heading "Volnewmer" [level=3] [ref=f1e80]
+          - listitem [ref=f1e81]:
+            - link [ref=f1e82] [cursor=pointer]:
+              - /url: /procedures/dermatology/laser-anti-aging
+              - img "激光抗衰老" [ref=f1e83]
+              - heading "激光抗衰老" [level=3] [ref=f1e85]
+          - listitem [ref=f1e86]:
+            - link [ref=f1e87] [cursor=pointer]:
+              - /url: /procedures/dermatology/skin-booster
+              - img "水光针／Skin Booster" [ref=f1e88]
+              - heading "水光针／Skin Booster" [level=3] [ref=f1e90]
+          - listitem [ref=f1e91]:
+            - link [ref=f1e92] [cursor=pointer]:
+              - /url: /procedures/dermatology/pigmentation-pores
+              - img "色素・毛孔" [ref=f1e93]
+              - heading "色素・毛孔" [level=3] [ref=f1e95]
+          - listitem [ref=f1e96]:
+            - link [ref=f1e97] [cursor=pointer]:
+              - /url: /procedures/dermatology/acne-redness
+              - img "痘痘・泛红" [ref=f1e98]
+              - heading "痘痘・泛红" [level=3] [ref=f1e100]
+  - contentinfo [ref=f1e101]:
+    - generic [ref=f1e102]:
+      - paragraph [ref=f1e103]: "商户名称: 원진성형외과의원 · 营业执照号: 824-67-00414"
+      - paragraph [ref=f1e104]: "地址: 首尔市 瑞草区 江南大路419 PAGODA 12-18楼"
+      - generic [ref=f1e105]:
+        - link "隐私政策" [ref=f1e106] [cursor=pointer]:
+          - /url: /privacy
+        - link "© 2026 WonJin 版权所有" [ref=f1e107] [cursor=pointer]:
+          - /url: /admin/login
+  - link "咨询" [ref=f1e108] [cursor=pointer]:
+    - /url: /inquiry

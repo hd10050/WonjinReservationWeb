@@ -1,0 +1,950 @@
+- generic [active] [ref=f22e1]:
+  - generic [ref=f22e2]:
+    - banner [ref=f22e3]:
+      - generic [ref=f22e4]:
+        - link [ref=f22e6] [cursor=pointer]:
+          - /url: /
+          - img "아이디병원" [ref=f22e7]
+        - navigation [ref=f22e8]:
+          - list [ref=f22e9]:
+            - listitem [ref=f22e10] [cursor=pointer]:
+              - link "병원소개" [ref=f22e11]:
+                - /url: /intro/greeting
+            - listitem [ref=f22e12] [cursor=pointer]:
+              - link "리프팅" [ref=f22e13]:
+                - /url: /lifting/center
+            - listitem [ref=f22e14] [cursor=pointer]:
+              - link "눈성형" [ref=f22e15]:
+                - /url: /eye/center
+            - listitem [ref=f22e16] [cursor=pointer]:
+              - link "중년눈성형" [ref=f22e17]:
+                - /url: /middleageeye/center
+            - listitem [ref=f22e18] [cursor=pointer]:
+              - link "코성형" [ref=f22e19]:
+                - /url: /nose/center
+            - listitem [ref=f22e20] [cursor=pointer]:
+              - link "이비인후과 코센터" [ref=f22e21]:
+                - /url: /nose/functional
+            - listitem [ref=f22e22] [cursor=pointer]:
+              - link "안면윤곽" [ref=f22e23]:
+                - /url: /contour/center
+            - listitem [ref=f22e24] [cursor=pointer]:
+              - link "가슴" [ref=f22e25]:
+                - /url: /breast/center
+            - listitem [ref=f22e26] [cursor=pointer]:
+              - link "남자성형" [ref=f22e27]:
+                - /url: /man/center
+            - listitem [ref=f22e28] [cursor=pointer]:
+              - link "양악수술" [ref=f22e29]:
+                - /url: /twojaw/center
+            - listitem [ref=f22e30] [cursor=pointer]:
+              - link "리얼셀피/전후사진" [ref=f22e31]:
+                - /url: /contents/todayps
+            - listitem [ref=f22e32] [cursor=pointer]:
+              - link "이벤트.소식" [ref=f22e33]:
+                - /url: /promotion/onsale
+            - listitem [ref=f22e34] [cursor=pointer]:
+              - link "빠른상담예약" [ref=f22e35]:
+                - /url: https://www.idhospital.com/rsv/online_reserve.php
+        - generic [ref=f22e36]:
+          - button [ref=f22e37] [cursor=pointer]:
+            - link "로그인" [ref=f22e38]:
+              - /url: /auth/login
+          - button "language" [ref=f22e39] [cursor=pointer]
+          - button [ref=f22e40] [cursor=pointer]
+      - text: "- - - - - - - - - - 추천 검색어"
+      - generic:
+        - generic:
+          - generic:
+            - generic: 병원소개
+            - list:
+              - listitem:
+                - link "병원장 인사말":
+                  - /url: /intro/greeting
+              - listitem:
+                - link "Mission & Vision":
+                  - /url: /intro/vision
+              - listitem:
+                - link "의료진소개":
+                  - /url: /intro/doctor
+              - listitem:
+                - link "진료안내 및 오시는 길":
+                  - /url: /intro/time
+              - listitem:
+                - link "시설안내":
+                  - /url: /intro/information
+          - generic:
+            - generic: 리프팅
+            - list:
+              - listitem:
+                - link "리프팅수술 집중센터":
+                  - /url: /lifting/center
+              - listitem:
+                - link "미니 수직 리프팅":
+                  - /url: /lifting/power
+              - listitem:
+                - link "미니 심부거상술":
+                  - /url: /lifting/privlifting
+              - listitem:
+                - link "안면 스마스 거상":
+                  - /url: /lifting/oc_facelift
+              - listitem:
+                - link "이마리프팅":
+                  - /url: /lifting/frons_lift
+              - listitem:
+                - link "이마거상":
+                  - /url: /lifting/oc_endotine
+              - listitem:
+                - link "처진눈성형":
+                  - /url: /middleageeye/triangle
+              - listitem:
+                - link "이중턱 리프팅":
+                  - /url: /lifting/toad_chin
+              - listitem:
+                - link "중안부리프팅":
+                  - /url: /lifting/mouth_solution
+              - listitem:
+                - link "실 리프팅":
+                  - /url: /lifting/elastikum
+          - generic:
+            - generic: 눈성형
+            - list:
+              - listitem:
+                - link "눈성형센터":
+                  - /url: /eye/center
+              - listitem:
+                - link "id 세미아웃":
+                  - /url: /eye/semiout
+              - listitem:
+                - link "10대눈성형":
+                  - /url: /eye/teenager
+              - listitem:
+                - link "쌍꺼풀수술":
+                  - /url: /eye/double_eyelid
+              - listitem:
+                - link "더블 눈매교정":
+                  - /url: /eye/eye_shape
+              - listitem:
+                - link "트임 성형":
+                  - /url: /eye/canthoplasty
+              - listitem:
+                - link "눈밑지방재배치":
+                  - /url: /eye/undereye
+              - listitem:
+                - link "눈 재수술":
+                  - /url: /eye/reoperation
+          - generic:
+            - generic: 중년눈성형
+            - list:
+              - listitem:
+                - link "중년 눈성형 센터":
+                  - /url: /middleageeye/center
+              - listitem:
+                - link "탄력상안검":
+                  - /url: /middleageeye/oc_upper
+              - listitem:
+                - link "눈매교정":
+                  - /url: /middleageeye/eye_line
+              - listitem:
+                - link "이마 리프팅":
+                  - /url: /middleageeye/oc_forehead
+              - listitem:
+                - link "눈썹올림술":
+                  - /url: /middleageeye/oc_browlift
+              - listitem:
+                - link "중년눈재수술":
+                  - /url: /middleageeye/reoperation
+              - listitem:
+                - link "하안검":
+                  - /url: /middleageeye/lower
+          - generic:
+            - generic: 코성형
+            - list:
+              - listitem:
+                - link "코성형센터":
+                  - /url: /nose/center
+              - listitem:
+                - link "자려한코 성형":
+                  - /url: /nose/natural_fancy
+              - listitem:
+                - link "무보형물 코수술":
+                  - /url: /nose/noimplant
+              - listitem:
+                - link "코봉이 콧볼축소":
+                  - /url: /nose/narrowing
+              - listitem:
+                - link "코 재수술":
+                  - /url: /nose/reoperation
+                - paragraph:
+                  - link "-늑연골 코재수술":
+                    - /url: /nose/reoperation/section/section06
+                - paragraph:
+                  - link "-화려한 코 재수술":
+                    - /url: /nose/reoperation/section/section02
+                - paragraph:
+                  - link "-구축코 재건":
+                    - /url: /nose/reoperation/section/section05
+                - paragraph:
+                  - link "-부분 코 재수술":
+                    - /url: /nose/reoperation/section/section07
+              - listitem:
+                - link "전문의칼럼":
+                  - /url: /promotion/medical-column
+          - generic:
+            - generic: 이비인후과 코센터
+            - list:
+              - listitem:
+                - link "기능코성형":
+                  - /url: /nose/functional
+              - listitem:
+                - link "코뼈골절 복원":
+                  - /url: /nose/fracture
+          - generic:
+            - generic: 안면윤곽
+            - list:
+              - listitem:
+                - link "안면윤곽센터":
+                  - /url: /contour/center
+              - listitem:
+                - link "하이엘 광대축소술":
+                  - /url: /contour/cheekbone
+              - listitem:
+                - link "MVP 사각턱축소술":
+                  - /url: /contour/square
+              - listitem:
+                - link "안면윤곽 3종":
+                  - /url: /contour/facial
+              - listitem:
+                - link "턱끝수술":
+                  - /url: /contour/mentum
+              - listitem:
+                - link "윤곽 재수술":
+                  - /url: /contour/revision
+              - listitem:
+                - link "이마수술":
+                  - /url: /contour/brow
+          - generic:
+            - generic: 가슴
+            - list:
+              - listitem:
+                - link "뷰티핏 가슴센터":
+                  - /url: /breast/center
+              - listitem:
+                - link "가슴확대성형":
+                  - /url: /breast/all_inclusive
+                - paragraph:
+                  - link "-3중타이트닝 가슴성형":
+                    - /url: /breast/all_inclusive
+                - paragraph:
+                  - link "-멘토가슴성형":
+                    - /url: /breast/mentor
+                - paragraph:
+                  - link "-모티바 가슴성형":
+                    - /url: /breast/motiva
+              - listitem:
+                - link "가슴재수술":
+                  - /url: /breast/revision
+              - listitem:
+                - link "가슴 교정수술":
+                  - /url: /breast/flaccid
+                - paragraph:
+                  - link "-처진가슴성형":
+                    - /url: /breast/flaccid
+                - paragraph:
+                  - link "-가슴 축소술":
+                    - /url: /breast/reduction
+                - paragraph:
+                  - link "-유두성형":
+                    - /url: /breast/nipple
+              - listitem:
+                - link "유방 검진센터":
+                  - /url: /breast/care
+          - generic:
+            - generic: 남자성형
+            - list:
+              - listitem:
+                - link "남자성형센터":
+                  - /url: /man/center
+              - listitem:
+                - link "직선각 남자코성형":
+                  - /url: /man/mannose
+              - listitem:
+                - link "올인원 기능코성형":
+                  - /url: /man/billing_man
+              - listitem:
+                - link "남자 눈성형":
+                  - /url: /man/singleline
+              - listitem:
+                - link "중년 남자 눈성형":
+                  - /url: /man/bright_eye
+              - listitem:
+                - link "남자 여유증":
+                  - /url: /man/man_breast
+              - listitem:
+                - link "남자 안면윤곽":
+                  - /url: /man/manface
+              - listitem:
+                - link "남자 양악수술":
+                  - /url: /man/mantwojaw
+              - listitem:
+                - link "남자 미니리프팅":
+                  - /url: /man/man_double_chin
+          - generic:
+            - generic: 양악수술
+            - list:
+              - listitem:
+                - link "양악센터":
+                  - /url: /twojaw/center
+              - listitem:
+                - link "노타이 양악수술":
+                  - /url: /twojaw/bimaxillary
+              - listitem:
+                - link "돌출입수술":
+                  - /url: /twojaw/protruding
+              - listitem:
+                - link "삼악수술":
+                  - /url: /twojaw/triple
+              - listitem:
+                - link "양악재수술":
+                  - /url: /twojaw/revision
+              - listitem:
+                - link "보험양악수술":
+                  - /url: /twojaw/insure
+          - generic:
+            - generic: 리얼셀피/전후사진
+            - list:
+              - listitem:
+                - link "오늘의 성형":
+                  - /url: /contents/todayps
+              - listitem:
+                - link "id Selfiegram":
+                  - /url: /selfiegram/main
+              - listitem:
+                - link "Before & After id":
+                  - /url: /bfaf/view
+              - listitem:
+                - link "수술후기":
+                  - /url: /review/main
+          - generic:
+            - generic: 이벤트.소식
+            - list:
+              - listitem:
+                - link "이달의이벤트":
+                  - /url: /promotion/onsale
+              - listitem:
+                - link "아이디유튜브":
+                  - /url: /idtube/view
+              - listitem:
+                - link "언론보도":
+                  - /url: /idnews/list
+              - listitem:
+                - link "병원소식/공지사항":
+                  - /url: /notice/list
+          - generic:
+            - generic: 빠른상담예약
+            - list:
+              - listitem:
+                - link "빠른예약":
+                  - /url: https://www.idhospital.com/rsv/online_reserve.php
+              - listitem:
+                - link "온라인상담":
+                  - /url: /counsel/main
+              - listitem:
+                - link "실시간 비용상담":
+                  - /url: /tools/realpay
+              - listitem:
+                - link "카카오톡 상담":
+                  - /url: /promotion/kakaoCounsel
+              - listitem:
+                - link "아이디 지식 in":
+                  - /url: /kin/list
+          - generic:
+            - link "이달의 이벤트":
+              - /url: /promotion/onsale
+              - img "이달의 이벤트"
+          - generic:
+            - text: 전화상담
+            - link "02.547.0050":
+              - /url: tel:025470050
+    - generic [ref=f22e44]:
+      - generic [ref=f22e45]:
+        - button "상담 예약" [ref=f22e46] [cursor=pointer]:
+          - generic [ref=f22e47]: 상담
+          - generic [ref=f22e48]: 예약
+        - generic:
+          - generic:
+            - link "02 547 0050":
+              - /url: tel:02-547-0050
+              - text: "025470050"
+          - list:
+            - listitem:
+              - link "카톡 상담":
+                - /url: /promotion/kakaoCounsel
+            - listitem:
+              - link "비용 상담":
+                - /url: /tools/realpay
+            - listitem:
+              - link "온라인 상담":
+                - /url: /counsel/main
+            - listitem:
+              - link "빠른 예약":
+                - /url: https://www.idhospital.com/rsv/online_reserve.php
+      - link "EVENT" [ref=f22e50] [cursor=pointer]:
+        - /url: /promotion/onsale
+    - generic [ref=f22e52]:
+      - heading "성형외과 진료로 아름다움의 가치를 더하는 아이디병원" [level=1] [ref=f22e53]
+      - list [ref=f22e55]:
+        - group "4 / 4":
+          - generic:
+            - img "Face, Smile, Skin Perfect"
+        - group "1 / 4" [ref=f22e56]
+        - group "2 / 4":
+          - generic:
+            - img "Face, Smile, Skin Perfect"
+        - group "3 / 4"
+      - generic [ref=f22e62]:
+        - textbox
+        - textbox "이름" [ref=f22e64]
+        - textbox "연락처" [ref=f22e66]
+        - combobox [ref=f22e68]:
+          - option "상담분야 선택" [selected]
+          - option "눈성형"
+          - option "코성형"
+          - option "안면윤곽"
+          - option "리프팅"
+          - option "가슴"
+          - option "남자성형"
+          - option "양악수술"
+        - generic [ref=f22e69]:
+          - generic [ref=f22e70]:
+            - generic [ref=f22e71] [cursor=pointer]: SMS 수신 동의
+            - link "상세보기" [ref=f22e73] [cursor=pointer]:
+              - /url: "#"
+          - generic [ref=f22e74]:
+            - generic [ref=f22e75] [cursor=pointer]: 개인정보 수집 및 이용 동의
+            - link "상세보기" [ref=f22e77] [cursor=pointer]:
+              - /url: "#"
+          - button "빠른상담 신청" [ref=f22e78] [cursor=pointer]
+    - generic [ref=f22e80]:
+      - generic [ref=f22e81]:
+        - generic [ref=f22e82]: id Selfiegram
+        - generic [ref=f22e83]: 자랑하고 싶은 내 '예쁨'
+        - generic [ref=f22e84]:
+          - list [ref=f22e85]:
+            - group "14 / 15" [ref=f22e86]:
+              - 'link "양은비 24세 #비절개눈매교정 #쌍커풀재수술 #앞트임 #광대 #사각턱 #턱끝"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e89] [cursor=pointer]:
+                  - generic [ref=f22e90]: 양은비 24세
+                  - generic [ref=f22e91]: "#비절개눈매교정 #쌍커풀재수술 #앞트임 #광대 #사각턱 #턱끝"
+            - group "15 / 15" [ref=f22e92]:
+              - 'link "한율 22세 #광대 #사각턱 #턱끝"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e95] [cursor=pointer]:
+                  - generic [ref=f22e96]: 한율 22세
+                  - generic [ref=f22e97]: "#광대 #사각턱 #턱끝"
+            - group "1 / 15" [ref=f22e98]:
+              - 'link "이은궁 30세 #이마거상 #눈성형"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e101] [cursor=pointer]:
+                  - generic [ref=f22e102]: 이은궁 30세
+                  - generic [ref=f22e103]: "#이마거상 #눈성형"
+            - group "2 / 15" [ref=f22e104]:
+              - 'link "신수연 33세 #안면거상 #얼굴지방흡입"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e107] [cursor=pointer]:
+                  - generic [ref=f22e108]: 신수연 33세
+                  - generic [ref=f22e109]: "#안면거상 #얼굴지방흡입"
+            - group "3 / 15" [ref=f22e110]:
+              - 'link "최연지 29세 #미니리프팅 #턱리프팅"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e113] [cursor=pointer]:
+                  - generic [ref=f22e114]: 최연지 29세
+                  - generic [ref=f22e115]: "#미니리프팅 #턱리프팅"
+            - group "4 / 15" [ref=f22e116]:
+              - 'link "심정인 46세 #비절개쌍꺼풀 #앞트임 #눈밑지방재배치 #최소절개리프팅"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e119] [cursor=pointer]:
+                  - generic [ref=f22e120]: 심정인 46세
+                  - generic [ref=f22e121]: "#비절개쌍꺼풀 #앞트임 #눈밑지방재배치 #최소절개리프팅"
+            - group "5 / 15" [ref=f22e122]:
+              - 'link "김희정 56세 #리프팅 #하안검 #눈썹거상 #쌍커풀"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e125] [cursor=pointer]:
+                  - generic [ref=f22e126]: 김희정 56세
+                  - generic [ref=f22e127]: "#리프팅 #하안검 #눈썹거상 #쌍커풀"
+            - group "6 / 15" [ref=f22e128]:
+              - 'link "강서연 29세 #윤곽3종 #절개눈매교정 #뒷트임 #앞트임 #코성형"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e131] [cursor=pointer]:
+                  - generic [ref=f22e132]: 강서연 29세
+                  - generic [ref=f22e133]: "#윤곽3종 #절개눈매교정 #뒷트임 #앞트임 #코성형"
+            - group "7 / 15" [ref=f22e134]:
+              - 'link "배인영 31세 #가슴성형 #모티바"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e137] [cursor=pointer]:
+                  - generic [ref=f22e138]: 배인영 31세
+                  - generic [ref=f22e139]: "#가슴성형 #모티바"
+            - group "8 / 15" [ref=f22e140]:
+              - 'link "김시연 27세 #가슴수술 #모티바 #밑선절개"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e143] [cursor=pointer]:
+                  - generic [ref=f22e144]: 김시연 27세
+                  - generic [ref=f22e145]: "#가슴수술 #모티바 #밑선절개"
+            - group "9 / 15" [ref=f22e146]:
+              - 'link "황서연 27세 #가슴성형 #모티바"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e149] [cursor=pointer]:
+                  - generic [ref=f22e150]: 황서연 27세
+                  - generic [ref=f22e151]: "#가슴성형 #모티바"
+            - group "10 / 15" [ref=f22e152]:
+              - 'link "유시은 23세 #광대 #사각턱 #턱끝 #코성형"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e155] [cursor=pointer]:
+                  - generic [ref=f22e156]: 유시은 23세
+                  - generic [ref=f22e157]: "#광대 #사각턱 #턱끝 #코성형"
+            - group "11 / 15" [ref=f22e158]:
+              - 'link "서나윤 26세 #눈재수술 #코성형"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e161] [cursor=pointer]:
+                  - generic [ref=f22e162]: 서나윤 26세
+                  - generic [ref=f22e163]: "#눈재수술 #코성형"
+            - group "12 / 15" [ref=f22e164]:
+              - 'link "권재현 25세 #광대 #사각턱 #턱끝 #남자코성형"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e167] [cursor=pointer]:
+                  - generic [ref=f22e168]: 권재현 25세
+                  - generic [ref=f22e169]: "#광대 #사각턱 #턱끝 #남자코성형"
+            - group "13 / 15" [ref=f22e170]:
+              - 'link "설윤아 26세 #눈재수술 #밑트임"':
+                - /url: javascript:void(0)
+                - generic [ref=f22e173] [cursor=pointer]:
+                  - generic [ref=f22e174]: 설윤아 26세
+                  - generic [ref=f22e175]: "#눈재수술 #밑트임"
+          - button "Previous slide" [ref=f22e176] [cursor=pointer]
+          - button "Next slide" [ref=f22e177] [cursor=pointer]
+      - generic [ref=f22e178]:
+        - generic [ref=f22e179]: Before & After id
+        - generic [ref=f22e180]:
+          - link "전체보기" [ref=f22e181] [cursor=pointer]:
+            - /url: javascript:void(0)
+          - link "동안/리프팅" [ref=f22e182] [cursor=pointer]:
+            - /url: javascript:void(0)
+          - link "눈성형" [ref=f22e183] [cursor=pointer]:
+            - /url: javascript:void(0)
+          - link "코성형" [ref=f22e184] [cursor=pointer]:
+            - /url: javascript:void(0)
+          - link "안면윤곽" [ref=f22e185] [cursor=pointer]:
+            - /url: javascript:void(0)
+          - link "가슴성형" [ref=f22e186] [cursor=pointer]:
+            - /url: javascript:void(0)
+          - link "남자성형" [ref=f22e187] [cursor=pointer]:
+            - /url: javascript:void(0)
+          - link "양악/돌출입" [ref=f22e188] [cursor=pointer]:
+            - /url: javascript:void(0)
+        - generic [ref=f22e189]:
+          - list [ref=f22e190]:
+            - group "9 / 10" [ref=f22e191]:
+              - generic [ref=f22e192]:
+                - generic [ref=f22e193]:
+                  - generic [ref=f22e194]:
+                    - link [ref=f22e195] [cursor=pointer]:
+                      - /url: /bfaf/view/cno/14/dno/41
+                    - generic [ref=f22e197]:
+                      - paragraph [ref=f22e198]:
+                        - text: 로그인을 하시면
+                        - strong [ref=f22e199]: 다양한 전후사진
+                        - text: 을 확인하실 수 있습니다.
+                      - button "로그인" [ref=f22e200] [cursor=pointer]
+                  - link [ref=f22e202] [cursor=pointer]:
+                    - /url: /bfaf/view/cno/14/dno/41
+                - generic [ref=f22e203]:
+                  - generic:
+                    - strong
+                  - generic [ref=f22e204]: "#노타이 양악수술"
+            - group "10 / 10" [ref=f22e205]:
+              - generic [ref=f22e206]:
+                - generic [ref=f22e207]:
+                  - generic [ref=f22e208]:
+                    - link [ref=f22e209] [cursor=pointer]:
+                      - /url: /bfaf/view/cno/14/dno/27
+                    - generic [ref=f22e211]:
+                      - paragraph [ref=f22e212]:
+                        - text: 로그인을 하시면
+                        - strong [ref=f22e213]: 다양한 전후사진
+                        - text: 을 확인하실 수 있습니다.
+                      - button "로그인" [ref=f22e214] [cursor=pointer]
+                  - link [ref=f22e216] [cursor=pointer]:
+                    - /url: /bfaf/view/cno/14/dno/27
+                - generic [ref=f22e217]:
+                  - generic:
+                    - strong
+                  - generic [ref=f22e218]: "#노타이 양악수술"
+            - group "1 / 10" [ref=f22e219]:
+              - generic [ref=f22e220]:
+                - generic [ref=f22e221]:
+                  - generic [ref=f22e222]:
+                    - link [ref=f22e223] [cursor=pointer]:
+                      - /url: /bfaf/view/cno/14/dno/1536
+                    - generic [ref=f22e225]:
+                      - paragraph [ref=f22e226]:
+                        - text: 로그인을 하시면
+                        - strong [ref=f22e227]: 다양한 전후사진
+                        - text: 을 확인하실 수 있습니다.
+                      - button "로그인" [ref=f22e228] [cursor=pointer]
+                  - link [ref=f22e230] [cursor=pointer]:
+                    - /url: /bfaf/view/cno/14/dno/1536
+                - generic [ref=f22e231]:
+                  - generic:
+                    - strong
+                  - generic [ref=f22e232]: "#미니리프팅+턱살리프팅"
+            - group "2 / 10" [ref=f22e233]:
+              - generic [ref=f22e234]:
+                - generic [ref=f22e235]:
+                  - generic [ref=f22e236]:
+                    - link [ref=f22e237] [cursor=pointer]:
+                      - /url: /bfaf/view/cno/14/dno/346
+                    - generic [ref=f22e239]:
+                      - paragraph [ref=f22e240]:
+                        - text: 로그인을 하시면
+                        - strong [ref=f22e241]: 다양한 전후사진
+                        - text: 을 확인하실 수 있습니다.
+                      - button "로그인" [ref=f22e242] [cursor=pointer]
+                  - link [ref=f22e244] [cursor=pointer]:
+                    - /url: /bfaf/view/cno/14/dno/346
+                - generic [ref=f22e245]:
+                  - generic:
+                    - strong
+                  - generic [ref=f22e246]: "#노타이양악수술/ V로직사각턱수술"
+            - group "3 / 10" [ref=f22e247]:
+              - generic [ref=f22e248]:
+                - generic [ref=f22e249]:
+                  - generic [ref=f22e250]:
+                    - link [ref=f22e251] [cursor=pointer]:
+                      - /url: /bfaf/view/cno/14/dno/1214
+                    - generic [ref=f22e253]:
+                      - paragraph [ref=f22e254]:
+                        - text: 로그인을 하시면
+                        - strong [ref=f22e255]: 다양한 전후사진
+                        - text: 을 확인하실 수 있습니다.
+                      - button "로그인" [ref=f22e256] [cursor=pointer]
+                  - link [ref=f22e258] [cursor=pointer]:
+                    - /url: /bfaf/view/cno/14/dno/1214
+                - generic [ref=f22e259]:
+                  - generic:
+                    - strong
+                  - generic [ref=f22e260]: "#직반라인 코성형(코재수술)"
+            - group "4 / 10" [ref=f22e261]:
+              - generic [ref=f22e262]:
+                - generic [ref=f22e263]:
+                  - generic [ref=f22e264]:
+                    - link [ref=f22e265] [cursor=pointer]:
+                      - /url: /bfaf/view/cno/14/dno/64
+                    - generic [ref=f22e267]:
+                      - paragraph [ref=f22e268]:
+                        - text: 로그인을 하시면
+                        - strong [ref=f22e269]: 다양한 전후사진
+                        - text: 을 확인하실 수 있습니다.
+                      - button "로그인" [ref=f22e270] [cursor=pointer]
+                  - link [ref=f22e272] [cursor=pointer]:
+                    - /url: /bfaf/view/cno/14/dno/64
+                - generic [ref=f22e273]:
+                  - generic:
+                    - strong
+                  - generic [ref=f22e274]: "#V로직 사각턱 수술"
+            - group "5 / 10" [ref=f22e275]:
+              - generic [ref=f22e276]:
+                - generic [ref=f22e277]:
+                  - generic [ref=f22e278]:
+                    - link [ref=f22e279] [cursor=pointer]:
+                      - /url: /bfaf/view/cno/14/dno/1217
+                    - generic [ref=f22e281]:
+                      - paragraph [ref=f22e282]:
+                        - text: 로그인을 하시면
+                        - strong [ref=f22e283]: 다양한 전후사진
+                        - text: 을 확인하실 수 있습니다.
+                      - button "로그인" [ref=f22e284] [cursor=pointer]
+                  - link [ref=f22e286] [cursor=pointer]:
+                    - /url: /bfaf/view/cno/14/dno/1217
+                - generic [ref=f22e287]:
+                  - generic:
+                    - strong
+                  - generic [ref=f22e288]: "#절개 눈매교정, 앞트임"
+            - group "6 / 10" [ref=f22e289]:
+              - generic [ref=f22e290]:
+                - generic [ref=f22e291]:
+                  - generic [ref=f22e292]:
+                    - link [ref=f22e293] [cursor=pointer]:
+                      - /url: /bfaf/view/cno/14/dno/354
+                    - generic [ref=f22e295]:
+                      - paragraph [ref=f22e296]:
+                        - text: 로그인을 하시면
+                        - strong [ref=f22e297]: 다양한 전후사진
+                        - text: 을 확인하실 수 있습니다.
+                      - button "로그인" [ref=f22e298] [cursor=pointer]
+                  - link [ref=f22e300] [cursor=pointer]:
+                    - /url: /bfaf/view/cno/14/dno/354
+                - generic [ref=f22e301]:
+                  - generic:
+                    - strong
+                  - generic [ref=f22e302]: "#V로직사각턱수술, High-L 광대축소"
+            - group "7 / 10" [ref=f22e303]:
+              - generic [ref=f22e304]:
+                - generic [ref=f22e305]:
+                  - generic [ref=f22e306]:
+                    - link [ref=f22e307] [cursor=pointer]:
+                      - /url: /bfaf/view/cno/14/dno/53
+                    - generic [ref=f22e309]:
+                      - paragraph [ref=f22e310]:
+                        - text: 로그인을 하시면
+                        - strong [ref=f22e311]: 다양한 전후사진
+                        - text: 을 확인하실 수 있습니다.
+                      - button "로그인" [ref=f22e312] [cursor=pointer]
+                  - link [ref=f22e314] [cursor=pointer]:
+                    - /url: /bfaf/view/cno/14/dno/53
+                - generic [ref=f22e315]:
+                  - generic:
+                    - strong
+                  - generic [ref=f22e316]: "#V로직 사각턱수술"
+            - group "8 / 10" [ref=f22e317]:
+              - generic [ref=f22e318]:
+                - generic [ref=f22e319]:
+                  - generic [ref=f22e320]:
+                    - link [ref=f22e321] [cursor=pointer]:
+                      - /url: /bfaf/view/cno/14/dno/40
+                    - generic [ref=f22e323]:
+                      - paragraph [ref=f22e324]:
+                        - text: 로그인을 하시면
+                        - strong [ref=f22e325]: 다양한 전후사진
+                        - text: 을 확인하실 수 있습니다.
+                      - button "로그인" [ref=f22e326] [cursor=pointer]
+                  - link [ref=f22e328] [cursor=pointer]:
+                    - /url: /bfaf/view/cno/14/dno/40
+                - generic [ref=f22e329]:
+                  - generic:
+                    - strong
+                  - generic [ref=f22e330]: "#돌출입수술"
+          - generic [ref=f22e331]:
+            - button "Previous slide" [ref=f22e332] [cursor=pointer]
+            - generic [ref=f22e333]:
+              - button "Go to slide 1" [ref=f22e334] [cursor=pointer]
+              - button "Go to slide 2" [ref=f22e335] [cursor=pointer]
+              - button "Go to slide 3" [ref=f22e336] [cursor=pointer]
+              - button "Go to slide 4" [ref=f22e337] [cursor=pointer]
+              - button "Go to slide 5" [ref=f22e338] [cursor=pointer]
+              - button "Go to slide 6" [ref=f22e339] [cursor=pointer]
+              - button "Go to slide 7" [ref=f22e340] [cursor=pointer]
+              - button "Go to slide 8" [ref=f22e341] [cursor=pointer]
+              - button "Go to slide 9" [ref=f22e342] [cursor=pointer]
+              - button "Go to slide 10" [ref=f22e343] [cursor=pointer]
+            - button "Next slide" [ref=f22e344] [cursor=pointer]
+      - link "09월 EVENT id Beauty Jackpot" [ref=f22e347] [cursor=pointer]:
+        - /url: /promotion/onsale
+        - strong [ref=f22e348]: 09월 EVENT
+        - generic [ref=f22e349]: id Beauty Jackpot
+      - generic [ref=f22e350]:
+        - generic [ref=f22e351]: id Clip
+        - generic [ref=f22e352]: 빛나는 예쁨의 순간들
+        - generic [ref=f22e353]:
+          - list [ref=f22e354]:
+            - group "7 / 10" [ref=f22e355]:
+              - generic [ref=f22e356] [cursor=pointer]
+            - group "8 / 10" [ref=f22e357]:
+              - generic [ref=f22e358] [cursor=pointer]
+            - group "9 / 10" [ref=f22e359]:
+              - generic [ref=f22e360] [cursor=pointer]
+            - group "10 / 10" [ref=f22e361]:
+              - generic [ref=f22e362] [cursor=pointer]
+            - group "1 / 10" [ref=f22e363]:
+              - generic [ref=f22e364] [cursor=pointer]
+            - group "2 / 10" [ref=f22e365]:
+              - generic [ref=f22e366] [cursor=pointer]
+            - group "3 / 10" [ref=f22e367]:
+              - generic [ref=f22e368] [cursor=pointer]
+            - group "4 / 10" [ref=f22e369]:
+              - generic [ref=f22e370] [cursor=pointer]
+            - group "5 / 10" [ref=f22e371]:
+              - generic [ref=f22e372] [cursor=pointer]
+            - group "6 / 10" [ref=f22e373]:
+              - generic [ref=f22e374] [cursor=pointer]
+          - button "Previous slide" [ref=f22e375] [cursor=pointer]
+          - button "Next slide" [ref=f22e376] [cursor=pointer]
+      - generic [ref=f22e377]:
+        - generic [ref=f22e378]: id Play
+        - generic [ref=f22e379]: 예쁨 재생중
+        - generic [ref=f22e380]:
+          - list [ref=f22e381]:
+            - group "19 / 20" [ref=f22e382]:
+              - link [ref=f22e383] [cursor=pointer]:
+                - /url: javascript:changeVideo('bhjP4C3gkgk',0,'Y')
+            - group "20 / 20" [ref=f22e384]:
+              - link [ref=f22e385] [cursor=pointer]:
+                - /url: javascript:changeVideo('YST45vYOqQw',0,'N')
+            - group "1 / 20" [ref=f22e386]:
+              - link [ref=f22e387] [cursor=pointer]:
+                - /url: javascript:changeVideo('9Wn0FYaoIyk',0,'Y')
+            - group "2 / 20" [ref=f22e388]:
+              - link [ref=f22e389] [cursor=pointer]:
+                - /url: javascript:changeVideo('NVTd9kQuJO8',0,'Y')
+            - group "3 / 20" [ref=f22e390]:
+              - link [ref=f22e391] [cursor=pointer]:
+                - /url: javascript:changeVideo('9kcuHi6v6e4',0,'Y')
+            - group "4 / 20" [ref=f22e392]:
+              - link [ref=f22e393] [cursor=pointer]:
+                - /url: javascript:changeVideo('N4ZQ2H-uogo',0,'Y')
+            - group "5 / 20" [ref=f22e394]:
+              - link [ref=f22e395] [cursor=pointer]:
+                - /url: javascript:changeVideo('SLYPv5Ijc9g',1,'Y')
+            - group "6 / 20" [ref=f22e396]:
+              - link [ref=f22e397] [cursor=pointer]:
+                - /url: javascript:changeVideo('cfv5-cEI_i0',1,'Y')
+            - group "7 / 20" [ref=f22e398]:
+              - link [ref=f22e399] [cursor=pointer]:
+                - /url: javascript:changeVideo('lcmS_ZyRjj4',1,'Y')
+            - group "8 / 20" [ref=f22e400]:
+              - link [ref=f22e401] [cursor=pointer]:
+                - /url: javascript:changeVideo('BebwYMeVc6w',1,'Y')
+            - group "9 / 20" [ref=f22e402]:
+              - link [ref=f22e403] [cursor=pointer]:
+                - /url: javascript:changeVideo('EtoNmOA-1oU',1,'Y')
+            - group "10 / 20" [ref=f22e404]:
+              - link [ref=f22e405] [cursor=pointer]:
+                - /url: javascript:changeVideo('WF4oxn5s1Uc',1,'Y')
+            - group "11 / 20" [ref=f22e406]:
+              - link [ref=f22e407] [cursor=pointer]:
+                - /url: javascript:changeVideo('TLivC3wdNjE',0,'Y')
+            - group "12 / 20" [ref=f22e408]:
+              - link [ref=f22e409] [cursor=pointer]:
+                - /url: javascript:changeVideo('RyWsnLwnN8w',0,'Y')
+            - group "13 / 20" [ref=f22e410]:
+              - link [ref=f22e411] [cursor=pointer]:
+                - /url: javascript:changeVideo('wWPXP01kATU',0,'Y')
+            - group "14 / 20" [ref=f22e412]:
+              - link [ref=f22e413] [cursor=pointer]:
+                - /url: javascript:changeVideo('ITtAxPOKv-c',0,'N')
+            - group "15 / 20" [ref=f22e414]:
+              - link [ref=f22e415] [cursor=pointer]:
+                - /url: javascript:changeVideo('F4qBoAvyfiQ',0,'Y')
+            - group "16 / 20" [ref=f22e416]:
+              - link [ref=f22e417] [cursor=pointer]:
+                - /url: javascript:changeVideo('lmySr6hDkB8',0,'Y')
+            - group "17 / 20" [ref=f22e418]:
+              - link [ref=f22e419] [cursor=pointer]:
+                - /url: javascript:changeVideo('5nxQcLVYZw8',0,'Y')
+            - group "18 / 20" [ref=f22e420]:
+              - link [ref=f22e421] [cursor=pointer]:
+                - /url: javascript:changeVideo('87-Y7xS7KV0',0,'Y')
+          - button "Previous slide" [ref=f22e422] [cursor=pointer]
+          - button "Next slide" [ref=f22e423] [cursor=pointer]
+        - link "영상 보러 가기" [ref=f22e424] [cursor=pointer]:
+          - /url: /idtube/view
+      - generic [ref=f22e425]:
+        - generic [ref=f22e426]: id After-ing
+        - generic [ref=f22e427]: 회복부터가 진짜 시작! 프로의 애프터 케어
+        - list [ref=f22e428]:
+          - listitem [ref=f22e429]:
+            - img "아이디병원 - 집중 회복 프로그램 - 수술 후 회복까지 4일간의 집중 케어 프로그램" [ref=f22e430]
+            - generic [ref=f22e431]:
+              - strong [ref=f22e432]: 집중 회복 프로그램
+              - paragraph [ref=f22e433]: 수술 후 회복까지 4일 간의 집중 케어 프로그램
+          - listitem [ref=f22e434]:
+            - img "아이디병원 - 집중 케어 프로그램 - 빠른 일상생활 복귀를 돕는 수술별 맞춤형 집중 케어 프로그램" [ref=f22e435]
+            - generic [ref=f22e436]:
+              - strong [ref=f22e437]: 집중 케어 프로그램
+              - paragraph [ref=f22e438]: 빠른 일상생활 복귀를 돕는 수술 별 맞춤형 집중 케어 프로그램
+          - listitem [ref=f22e439]:
+            - img "아이디병원 - 부스트 업 프로그램 - 회복 상태 및 피부 타입별 맞춤 케어 프로그램" [ref=f22e440]
+            - generic [ref=f22e441]:
+              - strong [ref=f22e442]: 부스트 업 프로그램
+              - paragraph [ref=f22e443]: 회복상태 및 피부타입에 맞추어 맞춤케어 프로그램
+      - generic [ref=f22e444]:
+        - generic [ref=f22e445]: Team id
+        - generic [ref=f22e446]: 아름다움을 완성하는 이름 id
+        - generic [ref=f22e447]:
+          - list [ref=f22e448]:
+            - group "5 / 6" [ref=f22e449] [cursor=pointer]
+            - group "6 / 6" [ref=f22e450] [cursor=pointer]
+            - group "1 / 6" [ref=f22e451] [cursor=pointer]
+            - group "2 / 6" [ref=f22e452] [cursor=pointer]
+            - group "3 / 6" [ref=f22e453] [cursor=pointer]
+            - group "4 / 6" [ref=f22e454] [cursor=pointer]
+          - generic:
+            - button "Previous slide" [ref=f22e455] [cursor=pointer]
+            - button "Next slide" [ref=f22e456] [cursor=pointer]
+    - contentinfo [ref=f22e465]:
+      - generic [ref=f22e466]:
+        - generic [ref=f22e467]:
+          - generic [ref=f22e468]:
+            - link [ref=f22e469] [cursor=pointer]:
+              - /url: https://www.youtube.com/user/IDhospital/featured
+              - img "Youtube" [ref=f22e470]
+            - link [ref=f22e471] [cursor=pointer]:
+              - /url: https://www.instagram.com/idhospital
+              - img "Instagram" [ref=f22e472]
+            - link [ref=f22e473] [cursor=pointer]:
+              - /url: https://www.facebook.com/idhospital0050
+              - img "Facebook" [ref=f22e474]
+            - link [ref=f22e475] [cursor=pointer]:
+              - /url: /promotion/kakaoCounsel
+              - img "Kakao" [ref=f22e476]
+          - list [ref=f22e478]:
+            - listitem [ref=f22e479]:
+              - link [ref=f22e480] [cursor=pointer]:
+                - /url: https://www.idxbalance.com/
+                - img "id 엑소밸런스센터" [ref=f22e481]
+            - listitem [ref=f22e482]:
+              - link [ref=f22e483] [cursor=pointer]:
+                - /url: https://www.idclinic.co.kr/
+                - img "id 아이디의원" [ref=f22e484]
+            - listitem [ref=f22e485]:
+              - link [ref=f22e486] [cursor=pointer]:
+                - /url: https://www.iddental.co.kr/
+                - img "id 치과" [ref=f22e487]
+            - listitem [ref=f22e488]:
+              - link [ref=f22e489] [cursor=pointer]:
+                - /url: https://www.idskin.co.kr/
+                - img "id 피부과" [ref=f22e490]
+            - listitem [ref=f22e491]:
+              - link [ref=f22e492] [cursor=pointer]:
+                - /url: https://brand.naver.com/idpla
+                - img "id 플라스틱코스메틱" [ref=f22e493]
+        - generic [ref=f22e494]:
+          - generic [ref=f22e495]:
+            - paragraph [ref=f22e496]:
+              - text: TEL
+              - link "02.547.0050" [ref=f22e497] [cursor=pointer]:
+                - /url: tel:02-547-0050
+            - paragraph [ref=f22e498]:
+              - text: FAX
+              - strong [ref=f22e499]: 02.547.0223
+            - paragraph [ref=f22e500]:
+              - text: Mail
+              - strong [ref=f22e501]: id@idhospital.com
+          - generic [ref=f22e502]:
+            - list [ref=f22e504]:
+              - listitem [ref=f22e505]:
+                - link "개인정보처리방침" [ref=f22e506] [cursor=pointer]:
+                  - /url: /auth/policy
+              - listitem [ref=f22e507]:
+                - link "병원소개" [ref=f22e508] [cursor=pointer]:
+                  - /url: /intro/greeting
+              - listitem [ref=f22e509]:
+                - link "비급여진료비용" [ref=f22e510] [cursor=pointer]:
+                  - /url: /notice/view/wid/43/bid/11036/page/24
+            - generic [ref=f22e511]: "주소 : 서울시 강남구 도산대로 142, 아이디병원 빌딩"
+            - generic [ref=f22e512]:
+              - paragraph [ref=f22e513]: "사업자등록번호 : 211-09-45158‍"
+              - paragraph [ref=f22e514]: "대표자 : 박상훈"
+        - generic [ref=f22e515]: "@ID HOSPITAL website is copyrighted with all rights reserved"
+  - generic:
+    - generic:
+      - iframe [ref=f22e516]:
+        - generic [ref=f24e1]:
+          - generic "YouTube 동영상 플레이어" [ref=f24e3]
+          - generic [ref=f24e5]:
+            - generic:
+              - generic:
+                - generic [ref=f24e6] [cursor=pointer]
+                - button "동영상 재생" [ref=f24e10] [cursor=pointer]
+                - button "재생 컨트롤 숨기기" [ref=f24e14] [cursor=pointer]
+      - button "닫기"

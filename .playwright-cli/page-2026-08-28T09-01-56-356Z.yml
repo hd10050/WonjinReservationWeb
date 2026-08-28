@@ -1,0 +1,55 @@
+- generic [ref=f27e3]:
+  - banner [ref=f27e4]:
+    - generic [ref=f27e5]:
+      - link [ref=f27e6] [cursor=pointer]:
+        - /url: /ko
+        - img "WonJin" [ref=f27e7]
+      - navigation [ref=f27e8]:
+        - link "홈" [ref=f27e9] [cursor=pointer]:
+          - /url: /ko
+        - button "시술안내" [ref=f27e10]
+        - link "문의하기" [ref=f27e13] [cursor=pointer]:
+          - /url: /ko/inquiry
+      - button "한국어" [ref=f27e14]
+  - main [ref=f27e21]:
+    - generic [ref=f27e22]:
+      - heading "WJ 원진성형외과" [level=1] [ref=f27e24]
+      - generic [ref=f27e26]:
+        - heading "시술 카테고리" [level=2] [ref=f27e27]
+        - generic [ref=f27e28]:
+          - link "눈" [ref=f27e29] [cursor=pointer]:
+            - /url: /ko/procedures/eye
+          - link "코" [ref=f27e34] [cursor=pointer]:
+            - /url: /ko/procedures/nose
+          - link "이비인후과(코)" [ref=f27e42] [cursor=pointer]:
+            - /url: /ko/procedures/ent
+          - link "리프팅" [ref=f27e48] [cursor=pointer]:
+            - /url: /ko/procedures/lifting
+          - link "피부과" [ref=f27e53] [cursor=pointer]:
+            - /url: /ko/procedures/dermatology
+          - link "줄기세포" [ref=f27e58] [cursor=pointer]:
+            - /url: /ko/procedures/stemcell
+          - link "가슴" [ref=f27e72] [cursor=pointer]:
+            - /url: /ko/procedures/breast
+          - link "윤곽·양악" [ref=f27e76] [cursor=pointer]:
+            - /url: /ko/procedures/contour
+          - link "체형" [ref=f27e83] [cursor=pointer]:
+            - /url: /ko/procedures/bodyline
+          - link "남자" [ref=f27e89] [cursor=pointer]:
+            - /url: /ko/procedures/men
+          - link "재건" [ref=f27e94] [cursor=pointer]:
+            - /url: /ko/procedures/reconstruction
+      - generic [ref=f27e98]:
+        - heading "WJ 원진 소개" [level=2] [ref=f27e99]
+        - paragraph [ref=f27e100]: 병원 소개 내용을 준비 중입니다.
+  - contentinfo [ref=f27e101]:
+    - generic [ref=f27e102]:
+      - paragraph [ref=f27e103]: "상호: 원진성형외과의원 · 사업자등록번호: 824-67-00414"
+      - paragraph [ref=f27e104]: "주소: 서울시 서초구 강남대로 419 파고다타워 12-18층"
+      - generic [ref=f27e105]:
+        - link "개인정보 처리방침" [ref=f27e106] [cursor=pointer]:
+          - /url: /ko/privacy
+        - link "© 2026 WonJin. All rights reserved." [ref=f27e107] [cursor=pointer]:
+          - /url: /admin/login
+  - link "상담하기" [ref=f27e108] [cursor=pointer]:
+    - /url: /ko/inquiry

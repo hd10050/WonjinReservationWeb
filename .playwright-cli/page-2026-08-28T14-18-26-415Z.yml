@@ -1,0 +1,124 @@
+- generic [ref=f2e3]:
+  - banner [ref=f2e4]:
+    - generic [ref=f2e5]:
+      - link [ref=f2e6] [cursor=pointer]:
+        - /url: /
+        - img "WonJin" [ref=f2e7]
+      - navigation [ref=f2e8]:
+        - link "首页" [ref=f2e9] [cursor=pointer]:
+          - /url: /
+        - button "项目介绍" [ref=f2e10]
+        - link "咨询预约" [ref=f2e13] [cursor=pointer]:
+          - /url: /inquiry
+      - button "简体中文" [ref=f2e14]
+  - main [ref=f2e21]:
+    - generic [ref=f2e22]:
+      - generic [ref=f2e24]:
+        - heading "干细胞" [level=1] [ref=f2e37]
+        - paragraph [ref=f2e38]: 干细胞是重新供应流失细胞的根源能量，修复受损脆弱的细胞，解决老化的根本原因，再生新生细胞的抗老治疗。逆转细胞生命力，重现年轻肌肤的高端手术。
+      - generic [ref=f2e40]:
+        - generic [ref=f2e42]:
+          - heading "干细胞的功效范围" [level=2] [ref=f2e43]
+          - paragraph [ref=f2e44]: 脱发、眼科、牙科、老化、美容·整形、再次手术（挛缩等）、腰椎间盘、颈椎间盘、疼痛、关节、软骨再生、性功能、慢性疲劳、特应性皮炎等皮肤疾病、更年期。
+        - generic [ref=f2e46]:
+          - generic [ref=f2e47]:
+            - heading "抗衰老 (Antiaging)" [level=3] [ref=f2e48]
+            - paragraph [ref=f2e49]: 诱导减少氧化应激物质，降低线粒体基因组损伤，增加抗衰老激素与蛋白质的含量。
+          - generic [ref=f2e50]:
+            - heading "归巢效应 (Homing Effect)" [level=3] [ref=f2e51]
+            - paragraph [ref=f2e52]: 自行侦测并修复受损组织，更新全身细胞与组织，显著改善身体的整体问题。
+          - generic [ref=f2e53]:
+            - heading "胶原蛋白·弹力蛋白细胞再生" [level=3] [ref=f2e54]
+            - paragraph [ref=f2e55]: 再生因老化而减少的组织，促进恢复，改善弹力与气色、提拉等，将肌肤状态修复至最佳。
+          - generic [ref=f2e56]:
+            - heading "改善免疫·代谢·状态" [level=3] [ref=f2e57]
+            - paragraph [ref=f2e58]: 激活低下的细胞功能，将代谢提升至末梢细胞，恢复身体所有器官与功能。
+        - generic [ref=f2e60]:
+          - heading "以科学而非感性打造" [level=2] [ref=f2e61]
+          - paragraph [ref=f2e62]: WJ原辰不仅运营自有干细胞研究所，还以与专业研究机构的技术合作为基础，提供安全的高效能干细胞治疗。
+        - generic [ref=f2e64]:
+          - generic [ref=f2e65]:
+            - heading "安全且经过验证的治疗" [level=3] [ref=f2e66]
+            - paragraph [ref=f2e67]: 凭借研发专属部门认证及先进的干细胞系统与设备，无需担心免疫排斥反应与副作用，治疗见效快、满意度高。
+          - generic [ref=f2e68]:
+            - heading "高品质脂肪细胞采集技术" [level=3] [ref=f2e69]
+            - paragraph [ref=f2e70]: 以20余年的脂肪抽吸经验为基础，精选最优质的干细胞，与Active因子一同充分注入，可期待卓越的改善效果。
+          - generic [ref=f2e71]:
+            - heading "大学医院级检查与研究所" [level=3] [ref=f2e72]
+            - paragraph [ref=f2e73]: 运营检查健康状态的大学医院级检查系统与内部干细胞研究所，无需复杂流程或住院，可私密地接受治疗。
+          - generic [ref=f2e74]:
+            - heading "干细胞细胞库" [level=3] [ref=f2e75]
+            - paragraph [ref=f2e76]: 安全保存健康状态的免疫细胞与干细胞，需要时无需另行采集，随时可进行高级干细胞治疗。
+        - generic [ref=f2e78]:
+          - heading "未来医学的核心功效" [level=2] [ref=f2e79]
+          - paragraph [ref=f2e80]: 韩国保健福祉部也在加强对干细胞领域的支持，近来在COVID-19中亦确认了其效果，被视为新的医学突破。
+        - blockquote [ref=f2e82]:
+          - paragraph [ref=f2e83]: 多方面的间充质干细胞（MSC）应用对COVID-19重症患者证实了积极效果，该效果在治疗及降低死亡率方面起到重要作用。
+          - generic [ref=f2e84]: "SOURCE: The Systematic Effect of Mesenchymal Stem Cell Therapy in Critical COVID-19 Patients: A Prospective Double Controlled Trial · 本内容为运用研究资料、以帮助患者理解为目的的非商业性信息传达。"
+        - generic [ref=f2e86]:
+          - heading "WJ原辰独有的干细胞治疗流程" [level=2] [ref=f2e87]
+          - paragraph [ref=f2e88]: 以汇集世界级技术的干细胞提取·治疗流程，提升效果与满意度。流程会因治疗种类与患者状态而有所不同。
+        - generic [ref=f2e90]:
+          - generic [ref=f2e91]:
+            - text: "01"
+            - paragraph [ref=f2e92]: 采集脂肪及细胞
+          - generic [ref=f2e93]:
+            - text: "02"
+            - paragraph [ref=f2e94]: 离心分离及去除杂质
+          - generic [ref=f2e95]:
+            - text: "03"
+            - paragraph [ref=f2e96]: 分离脂肪层
+          - generic [ref=f2e97]:
+            - text: "04"
+            - paragraph [ref=f2e98]: 提取干细胞
+          - generic [ref=f2e99]:
+            - text: "05"
+            - paragraph [ref=f2e100]: 浓缩Active因子
+          - generic [ref=f2e101]:
+            - text: "06"
+            - paragraph [ref=f2e102]: 注入干细胞
+      - generic [ref=f2e103]:
+        - heading "肌肤弹力有什么困扰吗？" [level=2] [ref=f2e104]
+        - list [ref=f2e105]:
+          - listitem [ref=f2e106]:
+            - link [ref=f2e107] [cursor=pointer]:
+              - /url: /procedures/stemcell/injection
+              - img "干细胞注射" [ref=f2e108]
+              - heading "干细胞注射" [level=3] [ref=f2e110]
+          - listitem [ref=f2e111]:
+            - link [ref=f2e112] [cursor=pointer]:
+              - /url: /procedures/stemcell/fat-grafting
+              - img "干细胞脂肪填充" [ref=f2e113]
+              - heading "干细胞脂肪填充" [level=3] [ref=f2e115]
+          - listitem [ref=f2e116]:
+            - link [ref=f2e117] [cursor=pointer]:
+              - /url: /procedures/stemcell/lifting
+              - img "干细胞提拉" [ref=f2e118]
+              - generic [ref=f2e119]:
+                - list [ref=f2e120]:
+                  - listitem [ref=f2e121]: 想要恢复无疤痕或疼痛受损的皮肤。
+                - heading "干细胞提拉" [level=3] [ref=f2e122]
+          - listitem [ref=f2e123]:
+            - link [ref=f2e124] [cursor=pointer]:
+              - /url: /procedures/stemcell/hair-loss
+              - img "干细胞脱发改善" [ref=f2e125]
+              - heading "干细胞脱发改善" [level=3] [ref=f2e127]
+          - listitem [ref=f2e128]:
+            - link [ref=f2e129] [cursor=pointer]:
+              - /url: /procedures/stemcell/mens-wellness
+              - img "干细胞男性活力" [ref=f2e130]
+              - generic [ref=f2e131]:
+                - list [ref=f2e132]:
+                  - listitem [ref=f2e133]: 因压力和老化带来的疲惫缺少活力。
+                - heading "干细胞男性活力" [level=3] [ref=f2e134]
+  - contentinfo [ref=f2e135]:
+    - generic [ref=f2e136]:
+      - paragraph [ref=f2e137]: "商户名称: 원진성형외과의원 · 营业执照号: 824-67-00414"
+      - paragraph [ref=f2e138]: "地址: 首尔市 瑞草区 江南大路419 PAGODA 12-18楼"
+      - generic [ref=f2e139]:
+        - link "隐私政策" [ref=f2e140] [cursor=pointer]:
+          - /url: /privacy
+        - link "© 2026 WonJin 版权所有" [ref=f2e141] [cursor=pointer]:
+          - /url: /admin/login
+  - link "咨询" [ref=f2e142] [cursor=pointer]:
+    - /url: /inquiry

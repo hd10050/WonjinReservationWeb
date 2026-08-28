@@ -33,14 +33,8 @@ export interface MSFeatures {
   type: 'features'
   items: { no?: string; title: L; body: L; image?: string; imageFit?: 'contain' }[]
 }
-/** 이미지 갤러리(인증서·논문·수상 등) + 선택 캡션. images는 '/img/' 아래 상대경로 */
-export interface MSGallery {
-  type: 'gallery'
-  images: string[]
-  caption?: L
-}
 
-export type MedicalBlock = MSIntro | MSSteps | MSQuote | MSFeatures | MSGallery
+export type MedicalBlock = MSIntro | MSSteps | MSQuote | MSFeatures
 
 export const PROCEDURE_MEDICAL: Record<string, MedicalBlock[]> = {
   // ─────────────────────────────── nose ───────────────────────────────
@@ -813,27 +807,6 @@ export const PROCEDURE_MEDICAL: Record<string, MedicalBlock[]> = {
         en: 'WJ WonJin Plastic Surgery has been recognized for its liposuction expertise by numerous academic societies at home and abroad, and continues to work steadily toward advancing plastic surgery worldwide.',
       },
     },
-    {
-      type: 'gallery',
-      images: [
-        'bodyline/img_license_01.png',
-        'bodyline/img_license_02.png',
-        'bodyline/img_license_03.png',
-        'bodyline/img_license_04.png',
-        'bodyline/img_license_05.png',
-        'bodyline/img_license_06.png',
-        'bodyline/img_license_07.png',
-        'bodyline/img_license_08.png',
-        'bodyline/img_license_09.png',
-        'bodyline/img_license_10.png',
-      ],
-      caption: {
-        ko: '국내외 학회 인정 및 관련 인증',
-        'zh-CN': '国内外学会认可及相关认证',
-        'zh-TW': '國內外學會認可及相關認證',
-        en: 'Recognition and certifications from academic societies at home and abroad',
-      },
-    },
   ],
 
   // ─────────────────────────────── men ───────────────────────────────
@@ -862,25 +835,6 @@ export const PROCEDURE_MEDICAL: Record<string, MedicalBlock[]> = {
         en: 'With extensive surgical experience and long-term research in male plastic surgery, WJ WonJin produces safe, satisfying results. Its surgical skill and safety are recognized through numerous published papers and ongoing research.',
       },
     },
-    {
-      type: 'gallery',
-      images: [
-        'men/img_cfs_book_01.jpg',
-        'men/img_cfs_book_02.jpg',
-        'men/img_cfs_book_03.jpg',
-        'men/img_cfs_book_04.jpg',
-        'men/img_cfs_book_05.jpg',
-        'men/img_cfs_book_06.jpg',
-        'men/img_cfs_book_07.jpg',
-        'men/img_cfs_book_08.jpg',
-      ],
-      caption: {
-        ko: 'WJ 원진 의료진의 논문·저서',
-        'zh-CN': 'WJ原辰医疗团队的论文·著作',
-        'zh-TW': 'WJ原辰醫療團隊的論文·著作',
-        en: 'Papers and books by the WJ WonJin medical team',
-      },
-    },
   ],
 
   // ─────────────────────────── reconstruction ───────────────────────────
@@ -896,14 +850,20 @@ export const PROCEDURE_MEDICAL: Record<string, MedicalBlock[]> = {
     },
     {
       type: 'intro',
+      headline: {
+        ko: '풍부한 경험과 학술적 전문성',
+        'zh-CN': '丰富的经验与学术专业性',
+        'zh-TW': '豐富的經驗與學術專業性',
+        en: 'Deep Experience, Academic Expertise',
+      },
       body: {
-        ko: 'WJ 원진은 재건 성형에 대한 풍부한 수술 경험과 오랜 연구로 안전하고 만족스러운 결과를 만듭니다. 그동안의 노하우를 담은 논문들이 수많은 학회지에 게재되며, 재건 성형에 대한 전문성을 국내외에서 인정받고 있습니다.',
-        'zh-CN': 'WJ原辰凭借在重建整形方面丰富的手术经验与长期研究，打造安全且令人满意的结果。凝聚多年经验的论文刊载于众多学术期刊，重建整形的专业性在国内外获得认可。',
-        'zh-TW': 'WJ原辰憑藉在重建整形方面豐富的手術經驗與長期研究，打造安全且令人滿意的結果。凝聚多年經驗的論文刊載於眾多學術期刊，重建整形的專業性在國內外獲得認可。',
-        en: 'With extensive surgical experience and long-term research in reconstructive surgery, WJ WonJin produces safe, satisfying results. Papers distilling this expertise have appeared in many academic journals, earning recognition for its reconstructive expertise at home and abroad.',
+        ko: 'WJ 원진은 재건 성형 분야의 오랜 수술 경험과 꾸준한 연구를 바탕으로 안전하고 만족스러운 결과를 만들어 왔습니다.\n그 노하우를 담은 논문들이 국내외 여러 학회지에 게재되며, 재건 성형에 대한 전문성을 인정받고 있습니다.',
+        'zh-CN': 'WJ原辰以在重建整形领域多年的手术经验与持续研究为基础，打造安全且令人满意的结果。\n凝聚这些经验的论文刊载于国内外多本学术期刊，重建整形的专业性获得认可。',
+        'zh-TW': 'WJ原辰以在重建整形領域多年的手術經驗與持續研究為基礎，打造安全且令人滿意的結果。\n凝聚這些經驗的論文刊載於國內外多本學術期刊，重建整形的專業性獲得認可。',
+        en: 'WJ WonJin has built safe, satisfying outcomes on years of surgical experience and steady research in reconstructive surgery.\nPapers distilling that expertise appear in academic journals at home and abroad, earning recognition for its reconstructive work.',
       },
     },
-    // award_01~04.png는 4000px 투명 캔버스 안에 저널 표지 하나만 구석에 있는 형태라 균일 갤러리로
-    // 못 씀(사용자가 "필요 시"로 표시한 선택 이미지) — 인용문+본문으로 마무리.
+    // award_01~04.png는 4000px 투명 캔버스에 저널 표지 하나만 구석에 있어 균일 갤러리로 못 씀
+    // (사용자가 "필요 시"로 표시한 선택 이미지) — 인용문 + 헤딩·본문으로 마무리.
   ],
 }

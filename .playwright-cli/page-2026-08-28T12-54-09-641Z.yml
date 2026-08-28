@@ -1,0 +1,124 @@
+- generic [ref=f113e3]:
+  - banner [ref=f113e4]:
+    - generic [ref=f113e5]:
+      - link [ref=f113e6] [cursor=pointer]:
+        - /url: /
+        - img "WonJin" [ref=f113e7]
+      - navigation [ref=f113e8]:
+        - link "首页" [ref=f113e9] [cursor=pointer]:
+          - /url: /
+        - button "项目介绍" [ref=f113e10]
+        - link "咨询预约" [ref=f113e13] [cursor=pointer]:
+          - /url: /inquiry
+      - button "简体中文" [ref=f113e14]
+  - main [ref=f113e21]:
+    - generic [ref=f113e22]:
+      - generic [ref=f113e24]:
+        - heading "干细胞" [level=1] [ref=f113e37]
+        - paragraph [ref=f113e38]: 干细胞是重新供应流失细胞的根源能量，修复受损脆弱的细胞，解决老化的根本原因，再生新生细胞的抗老治疗。逆转细胞生命力，重现年轻肌肤的高端手术。
+      - generic [ref=f113e40]:
+        - generic [ref=f113e42]:
+          - heading "干细胞的功效范围" [level=2] [ref=f113e43]
+          - paragraph [ref=f113e44]: 脱发、眼科、牙科、老化、美容·整形、再次手术（挛缩等）、腰椎间盘、颈椎间盘、疼痛、关节、软骨再生、性功能、慢性疲劳、特应性皮炎等皮肤疾病、更年期。
+        - generic [ref=f113e46]:
+          - generic [ref=f113e47]:
+            - heading "抗衰老 (Antiaging)" [level=3] [ref=f113e48]
+            - paragraph [ref=f113e49]: 诱导减少氧化应激物质，降低线粒体基因组损伤，增加抗衰老激素与蛋白质的含量。
+          - generic [ref=f113e50]:
+            - heading "归巢效应 (Homing Effect)" [level=3] [ref=f113e51]
+            - paragraph [ref=f113e52]: 自行侦测并修复受损组织，更新全身细胞与组织，显著改善身体的整体问题。
+          - generic [ref=f113e53]:
+            - heading "胶原蛋白·弹力蛋白细胞再生" [level=3] [ref=f113e54]
+            - paragraph [ref=f113e55]: 再生因老化而减少的组织，促进恢复，改善弹力与气色、提拉等，将肌肤状态修复至最佳。
+          - generic [ref=f113e56]:
+            - heading "改善免疫·代谢·状态" [level=3] [ref=f113e57]
+            - paragraph [ref=f113e58]: 激活低下的细胞功能，将代谢提升至末梢细胞，恢复身体所有器官与功能。
+        - generic [ref=f113e60]:
+          - heading "以科学而非感性打造" [level=2] [ref=f113e61]
+          - paragraph [ref=f113e62]: WJ原辰不仅运营自有干细胞研究所，还以与专业研究机构的技术合作为基础，提供安全的高效能干细胞治疗。
+        - generic [ref=f113e64]:
+          - generic [ref=f113e65]:
+            - heading "安全且经过验证的治疗" [level=3] [ref=f113e66]
+            - paragraph [ref=f113e67]: 凭借研发专属部门认证及先进的干细胞系统与设备，无需担心免疫排斥反应与副作用，治疗见效快、满意度高。
+          - generic [ref=f113e68]:
+            - heading "高品质脂肪细胞采集技术" [level=3] [ref=f113e69]
+            - paragraph [ref=f113e70]: 以20余年的脂肪抽吸经验为基础，精选最优质的干细胞，与Active因子一同充分注入，可期待卓越的改善效果。
+          - generic [ref=f113e71]:
+            - heading "大学医院级检查与研究所" [level=3] [ref=f113e72]
+            - paragraph [ref=f113e73]: 运营检查健康状态的大学医院级检查系统与内部干细胞研究所，无需复杂流程或住院，可私密地接受治疗。
+          - generic [ref=f113e74]:
+            - heading "干细胞细胞库" [level=3] [ref=f113e75]
+            - paragraph [ref=f113e76]: 安全保存健康状态的免疫细胞与干细胞，需要时无需另行采集，随时可进行高级干细胞治疗。
+        - generic [ref=f113e78]:
+          - heading "未来医学的核心功效" [level=2] [ref=f113e79]
+          - paragraph [ref=f113e80]: 韩国保健福祉部也在加强对干细胞领域的支持，近来在COVID-19中亦确认了其效果，被视为新的医学突破。
+        - blockquote [ref=f113e82]:
+          - paragraph [ref=f113e83]: 多方面的间充质干细胞（MSC）应用对COVID-19重症患者证实了积极效果，该效果在治疗及降低死亡率方面起到重要作用。
+          - generic [ref=f113e84]: "SOURCE: The Systematic Effect of Mesenchymal Stem Cell Therapy in Critical COVID-19 Patients: A Prospective Double Controlled Trial · 本内容为运用研究资料、以帮助患者理解为目的的非商业性信息传达。"
+        - generic [ref=f113e86]:
+          - heading "WJ原辰独有的干细胞治疗流程" [level=2] [ref=f113e87]
+          - paragraph [ref=f113e88]: 以汇集世界级技术的干细胞提取·治疗流程，提升效果与满意度。流程会因治疗种类与患者状态而有所不同。
+        - generic [ref=f113e90]:
+          - generic [ref=f113e91]:
+            - text: "01"
+            - paragraph [ref=f113e92]: 采集脂肪及细胞
+          - generic [ref=f113e93]:
+            - text: "02"
+            - paragraph [ref=f113e94]: 离心分离及去除杂质
+          - generic [ref=f113e95]:
+            - text: "03"
+            - paragraph [ref=f113e96]: 分离脂肪层
+          - generic [ref=f113e97]:
+            - text: "04"
+            - paragraph [ref=f113e98]: 提取干细胞
+          - generic [ref=f113e99]:
+            - text: "05"
+            - paragraph [ref=f113e100]: 浓缩Active因子
+          - generic [ref=f113e101]:
+            - text: "06"
+            - paragraph [ref=f113e102]: 注入干细胞
+      - generic [ref=f113e103]:
+        - heading "肌肤弹力有什么困扰吗？" [level=2] [ref=f113e104]
+        - list [ref=f113e105]:
+          - listitem [ref=f113e106]:
+            - link [ref=f113e107] [cursor=pointer]:
+              - /url: /procedures/stemcell/injection
+              - img "干细胞注射" [ref=f113e108]
+              - heading "干细胞注射" [level=3] [ref=f113e110]
+          - listitem [ref=f113e111]:
+            - link [ref=f113e112] [cursor=pointer]:
+              - /url: /procedures/stemcell/fat-grafting
+              - img "干细胞脂肪填充" [ref=f113e113]
+              - heading "干细胞脂肪填充" [level=3] [ref=f113e115]
+          - listitem [ref=f113e116]:
+            - link [ref=f113e117] [cursor=pointer]:
+              - /url: /procedures/stemcell/lifting
+              - img "干细胞提拉" [ref=f113e118]
+              - generic [ref=f113e119]:
+                - list [ref=f113e120]:
+                  - listitem [ref=f113e121]: 想要恢复无疤痕或疼痛受损的皮肤。
+                - heading "干细胞提拉" [level=3] [ref=f113e122]
+          - listitem [ref=f113e123]:
+            - link [ref=f113e124] [cursor=pointer]:
+              - /url: /procedures/stemcell/hair-loss
+              - img "干细胞脱发改善" [ref=f113e125]
+              - heading "干细胞脱发改善" [level=3] [ref=f113e127]
+          - listitem [ref=f113e128]:
+            - link [ref=f113e129] [cursor=pointer]:
+              - /url: /procedures/stemcell/mens-wellness
+              - img "干细胞男性活力" [ref=f113e130]
+              - generic [ref=f113e131]:
+                - list [ref=f113e132]:
+                  - listitem [ref=f113e133]: 因压力和老化带来的疲惫缺少活力。
+                - heading "干细胞男性活力" [level=3] [ref=f113e134]
+  - contentinfo [ref=f113e135]:
+    - generic [ref=f113e136]:
+      - paragraph [ref=f113e137]: "商户名称: 원진성형외과의원 · 营业执照号: 824-67-00414"
+      - paragraph [ref=f113e138]: "地址: 首尔市 瑞草区 江南大路419 PAGODA 12-18楼"
+      - generic [ref=f113e139]:
+        - link "隐私政策" [ref=f113e140] [cursor=pointer]:
+          - /url: /privacy
+        - link "© 2026 WonJin 版权所有" [ref=f113e141] [cursor=pointer]:
+          - /url: /admin/login
+  - link "咨询" [ref=f113e142] [cursor=pointer]:
+    - /url: /inquiry

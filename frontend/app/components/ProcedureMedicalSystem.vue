@@ -1,9 +1,11 @@
 <!-- frontend/app/components/ProcedureMedicalSystem.vue -->
 <!-- 시술 카테고리 목록 페이지의 "고민이 있으신가요?" 영역 위에 붙는 병원 시스템·특장점 섹션
      (2026-08-28, 사용자 지시로 k-wonjin.co.kr 각 카테고리 마케팅 섹션 이관). 데이터는
-     data/procedureMedical.ts. 블록 타입(intro/steps/quote/features/gallery)별로 렌더링.
+     data/procedureMedical.ts. 블록 타입(intro/steps/quote/features)별로 렌더링.
      블록마다 스크롤 진입 시 순차(스타거) 페이드업 — 형제 섹션과 동일한 useScrollReveal 패턴,
-     revealed 상태값에 직접 클래스/딜레이 바인딩(트랜지션 중단돼도 상태와 항상 일치). -->
+     revealed 상태값에 직접 클래스/딜레이 바인딩(트랜지션 중단돼도 상태와 항상 일치).
+     카드 행은 grid가 아니라 flex-wrap+justify-center — 마지막 줄이 꽉 안 차도 가운데 정렬돼
+     왼쪽에 붙은 고아 카드가 안 생긴다(3+2, 4+2 등에서 정렬이 깨지던 문제 해결). -->
 <template>
   <section ref="target" class="border-b bg-muted/30 px-4 py-16 sm:px-6 sm:py-24">
     <div class="mx-auto max-w-6xl">
@@ -25,14 +27,19 @@
           <h2 v-if="block.headline" class="font-display text-2xl font-bold text-foreground sm:text-4xl">
             {{ block.headline[locale as Locale] }}
           </h2>
-          <p class="text-muted-foreground sm:text-lg" :class="{ 'mt-4': block.headline || block.subhead }">
+          <p class="whitespace-pre-line text-muted-foreground sm:text-lg" :class="{ 'mt-4': block.headline || block.subhead }">
             {{ block.body[locale as Locale] }}
           </p>
         </div>
 
         <!-- 01·02·03 번호 카드 -->
-        <div v-else-if="block.type === 'steps'" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div v-for="s in block.items" :key="s.no" class="rounded-xl border bg-card p-5">
+        <div v-else-if="block.type === 'steps'" class="flex flex-wrap justify-center gap-4">
+          <div
+            v-for="s in block.items"
+            :key="s.no"
+            class="rounded-xl border bg-card p-5"
+            :class="stepWidth(block.items.length)"
+          >
             <span class="font-display text-2xl font-bold text-primary/60">{{ s.no }}</span>
             <p class="mt-2 text-sm font-medium text-foreground">{{ s.text[locale as Locale] }}</p>
           </div>
@@ -47,15 +54,12 @@
         </blockquote>
 
         <!-- 제목+본문(+번호·이미지) 카드 -->
-        <div
-          v-else-if="block.type === 'features'"
-          class="grid gap-6 sm:grid-cols-2"
-          :class="{ 'lg:grid-cols-3': block.items.length >= 5 }"
-        >
+        <div v-else-if="block.type === 'features'" class="flex flex-wrap justify-center gap-6">
           <div
             v-for="(f, fi) in block.items"
             :key="fi"
             class="flex flex-col items-center rounded-xl border bg-card p-6 text-center"
+            :class="featureWidth(block.items.length)"
           >
             <img
               v-if="f.image"
@@ -72,23 +76,6 @@
             <p class="mt-2 text-sm text-muted-foreground">{{ f.body[locale as Locale] }}</p>
           </div>
         </div>
-
-        <!-- 이미지 갤러리 (+ 선택 캡션) — 인증서·논문·수상 등 -->
-        <div v-else-if="block.type === 'gallery'">
-          <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-            <img
-              v-for="img in block.images"
-              :key="img"
-              :src="`/img/${img}`"
-              :alt="block.caption ? block.caption[locale as Locale] : ''"
-              loading="lazy"
-              class="aspect-[3/4] w-full rounded-lg border bg-card object-contain p-1"
-            >
-          </div>
-          <p v-if="block.caption" class="mt-3 text-center text-sm text-muted-foreground">
-            {{ block.caption[locale as Locale] }}
-          </p>
-        </div>
       </div>
     </div>
   </section>
@@ -102,4 +89,16 @@ defineProps<{ blocks: MedicalBlock[] }>()
 
 const { locale } = useI18n()
 const { target, revealed } = useScrollReveal()
+
+// flex-basis를 gap(gap-6=1.5rem)에 맞춰 계산 — 마지막 줄은 justify-center로 가운데 정렬된다.
+// 4개짜리 블록은 2+2가 자연스러우므로 2단까지만, 그 외(3·5·6…)는 3단까지 허용.
+function featureWidth(n: number): string {
+  const twoUp = 'w-full sm:w-[calc(50%-0.75rem)]'
+  return n === 2 || n === 4 ? twoUp : `${twoUp} lg:w-[calc(33.333%-1rem)]`
+}
+// steps는 gap-4(1rem). 5개 이상이면 3단(6→3+3), 그 이하는 4단(4→한 줄).
+function stepWidth(n: number): string {
+  const twoUp = 'w-full sm:w-[calc(50%-0.5rem)]'
+  return n > 4 ? `${twoUp} lg:w-[calc(33.333%-0.667rem)]` : `${twoUp} lg:w-[calc(25%-0.75rem)]`
+}
 </script>

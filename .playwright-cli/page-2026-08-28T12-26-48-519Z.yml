@@ -1,0 +1,107 @@
+- generic [ref=f24e3]:
+  - banner [ref=f24e4]:
+    - generic [ref=f24e5]:
+      - link [ref=f24e6] [cursor=pointer]:
+        - /url: /
+        - img "WonJin" [ref=f24e7]
+      - navigation [ref=f24e8]:
+        - link "首页" [ref=f24e9] [cursor=pointer]:
+          - /url: /
+        - button "项目介绍" [ref=f24e10]
+        - link "咨询预约" [ref=f24e13] [cursor=pointer]:
+          - /url: /inquiry
+      - button "简体中文" [ref=f24e14]
+  - main [ref=f24e21]:
+    - generic [ref=f24e22]:
+      - generic [ref=f24e24]:
+        - heading "鼻部" [level=1] [ref=f24e31]
+        - paragraph [ref=f24e32]: 在WJ原辰整形外科，鼻整形不是单纯地提高鼻梁而是根据面部整体帮您打造最理想的比例和角度，在考虑鼻部审美与功能的双重基础上，为您献上满意的手术结果。
+      - generic [ref=f24e34]:
+        - generic [ref=f24e35]:
+          - paragraph [ref=f24e36]: 只为你打造的1:1定制假体
+          - heading "WJ原辰 3D FIT 鼻整形" [level=2] [ref=f24e37]
+          - paragraph [ref=f24e38]: 通过应用3D打印技术的模拟程序，制作符合个人解剖结构的最优化定制假体，减少副作用，实现完成度更高的鼻整形。
+        - generic [ref=f24e39]:
+          - generic [ref=f24e40]:
+            - text: "01"
+            - paragraph [ref=f24e41]: 根据鼻部曲线定制假体
+          - generic [ref=f24e42]:
+            - text: "02"
+            - paragraph [ref=f24e43]: 稳定的贴合力，将副作用降至最低
+          - generic [ref=f24e44]:
+            - text: "03"
+            - paragraph [ref=f24e45]: 可预测术后效果
+          - generic [ref=f24e46]:
+            - text: "04"
+            - paragraph [ref=f24e47]: 可针对驼峰鼻、歪鼻等各类鼻型手术
+        - blockquote [ref=f24e48]: WJ原辰以精密诊断为基础，为每个人提供量身定制的最优化鼻整形方案。
+        - generic [ref=f24e49]:
+          - generic [ref=f24e50]:
+            - img "无假体鼻整形" [ref=f24e51]
+            - heading "无假体鼻整形" [level=3] [ref=f24e52]
+            - paragraph [ref=f24e53]: 不使用人工假体，而是使用自体组织或捐赠软骨与真皮，打造安全自然的鼻部线条。
+          - generic [ref=f24e54]:
+            - img "定制设计鼻整形" [ref=f24e55]
+            - heading "定制设计鼻整形" [level=3] [ref=f24e56]
+            - paragraph [ref=f24e57]: 以数据为基础，通过3D打印技术，制作贴合个人鼻部（鼻骨、软骨、鼻腔）的1:1定制假体与夹板。
+      - generic [ref=f24e58]:
+        - heading "鼻部有什么困扰吗？" [level=2] [ref=f24e59]
+        - list [ref=f24e60]:
+          - listitem [ref=f24e61]:
+            - link [ref=f24e62] [cursor=pointer]:
+              - /url: /procedures/nose/upturned-short-nose
+              - img "朝天鼻・短鼻整形" [ref=f24e63]
+              - heading "朝天鼻・短鼻整形" [level=3] [ref=f24e65]
+          - listitem [ref=f24e66]:
+            - link [ref=f24e67] [cursor=pointer]:
+              - /url: /procedures/nose/alar-reduction
+              - img "鼻翼缩小" [ref=f24e68]
+              - heading "鼻翼缩小" [level=3] [ref=f24e70]
+          - listitem [ref=f24e71]:
+            - link [ref=f24e72] [cursor=pointer]:
+              - /url: /procedures/nose/hump-nose
+              - img "驼峰鼻整形" [ref=f24e73]
+              - heading "驼峰鼻整形" [level=3] [ref=f24e75]
+          - listitem [ref=f24e76]:
+            - link [ref=f24e77] [cursor=pointer]:
+              - /url: /procedures/nose/deviated-nose
+              - img "歪鼻整形" [ref=f24e78]
+              - heading "歪鼻整形" [level=3] [ref=f24e80]
+          - listitem [ref=f24e81]:
+            - link [ref=f24e82] [cursor=pointer]:
+              - /url: /procedures/nose/nose-revision
+              - img "鼻部修复手术" [ref=f24e83]
+              - heading "鼻部修复手术" [level=3] [ref=f24e85]
+          - listitem [ref=f24e86]:
+            - link [ref=f24e87] [cursor=pointer]:
+              - /url: /procedures/nose/non-implant-rhinoplasty
+              - img "无假体鼻整形" [ref=f24e88]
+              - heading "无假体鼻整形" [level=3] [ref=f24e90]
+          - listitem [ref=f24e91]:
+            - link [ref=f24e92] [cursor=pointer]:
+              - /url: /procedures/nose/male-rhinoplasty
+              - img "男性鼻整形" [ref=f24e93]
+              - generic [ref=f24e94]:
+                - list [ref=f24e95]:
+                  - listitem [ref=f24e96]: 因鹰钩鼻、歪鼻而烦恼。
+                  - listitem [ref=f24e97]: 希望改善为更有男人味的形象。
+                  - listitem [ref=f24e98]: 鼻塞和鼻炎症状严重。
+                - heading "男性鼻整形" [level=3] [ref=f24e99]
+        - generic [ref=f24e100]:
+          - heading "其他项目" [level=3] [ref=f24e101]
+          - generic [ref=f24e102]:
+            - link "宽大鼻整形" [ref=f24e103] [cursor=pointer]:
+              - /url: /procedures/nose/bulbous-nose
+            - link "鼻尖整形" [ref=f24e104] [cursor=pointer]:
+              - /url: /procedures/nose/tip-plasty
+  - contentinfo [ref=f24e105]:
+    - generic [ref=f24e106]:
+      - paragraph [ref=f24e107]: "商户名称: 원진성형외과의원 · 营业执照号: 824-67-00414"
+      - paragraph [ref=f24e108]: "地址: 首尔市 瑞草区 江南大路419 PAGODA 12-18楼"
+      - generic [ref=f24e109]:
+        - link "隐私政策" [ref=f24e110] [cursor=pointer]:
+          - /url: /privacy
+        - link "© 2026 WonJin 版权所有" [ref=f24e111] [cursor=pointer]:
+          - /url: /admin/login
+  - link "咨询" [ref=f24e112] [cursor=pointer]:
+    - /url: /inquiry

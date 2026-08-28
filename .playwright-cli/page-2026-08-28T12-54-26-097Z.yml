@@ -1,0 +1,58 @@
+- generic [ref=f116e3]:
+  - banner [ref=f116e4]:
+    - generic [ref=f116e5]:
+      - link [ref=f116e6] [cursor=pointer]:
+        - /url: /
+        - img "WonJin" [ref=f116e7]
+      - navigation [ref=f116e8]:
+        - link "首页" [ref=f116e9] [cursor=pointer]:
+          - /url: /
+        - button "项目介绍" [ref=f116e10]
+        - link "咨询预约" [ref=f116e13] [cursor=pointer]:
+          - /url: /inquiry
+      - button "简体中文" [ref=f116e14]
+  - main [ref=f116e21]:
+    - generic [ref=f116e22]:
+      - generic [ref=f116e24]:
+        - heading "修复重建" [level=1] [ref=f116e27]
+        - paragraph [ref=f116e28]: 重建整形——梦想着平凡的外貌和平凡生活的您，WJ原辰与您同行。WJ原辰经过多年的经验和不断的研究不仅具有美容整形的经验，还具有重建整形的丰富经验，WJ原辰通过独有的技术诀窍尽最大的努力治疗您受伤的心灵。
+      - generic [ref=f116e30]:
+        - blockquote [ref=f116e32]:
+          - paragraph [ref=f116e33]: 连受伤的心也一并治愈。
+        - paragraph [ref=f116e36]: WJ原辰凭借在重建整形方面丰富的手术经验与长期研究，打造安全且令人满意的结果。凝聚多年经验的论文刊载于众多学术期刊，重建整形的专业性在国内外获得认可。
+        - generic [ref=f116e38]:
+          - generic [ref=f116e39]:
+            - img "国内外获奖及学术活动" [ref=f116e40]
+            - img "国内外获奖及学术活动" [ref=f116e41]
+            - img "国内外获奖及学术活动" [ref=f116e42]
+            - img "国内外获奖及学术活动" [ref=f116e43]
+          - paragraph [ref=f116e44]: 国内外获奖及学术活动
+      - generic [ref=f116e45]:
+        - heading "有什么困扰吗？" [level=2] [ref=f116e46]
+        - list [ref=f116e47]:
+          - listitem [ref=f116e48]:
+            - link [ref=f116e49] [cursor=pointer]:
+              - /url: /procedures/reconstruction/cleft-lip-palate
+              - img "唇腭裂" [ref=f116e50]
+              - heading "唇腭裂" [level=3] [ref=f116e52]
+          - listitem [ref=f116e53]:
+            - link [ref=f116e54] [cursor=pointer]:
+              - /url: /procedures/reconstruction/cleft-lip-rhinoplasty
+              - img "唇裂鼻整形" [ref=f116e55]
+              - heading "唇裂鼻整形" [level=3] [ref=f116e57]
+          - listitem [ref=f116e58]:
+            - link [ref=f116e59] [cursor=pointer]:
+              - /url: /procedures/reconstruction/ear-reconstruction
+              - img "耳部整形" [ref=f116e60]
+              - heading "耳部整形" [level=3] [ref=f116e62]
+  - contentinfo [ref=f116e63]:
+    - generic [ref=f116e64]:
+      - paragraph [ref=f116e65]: "商户名称: 원진성형외과의원 · 营业执照号: 824-67-00414"
+      - paragraph [ref=f116e66]: "地址: 首尔市 瑞草区 江南大路419 PAGODA 12-18楼"
+      - generic [ref=f116e67]:
+        - link "隐私政策" [ref=f116e68] [cursor=pointer]:
+          - /url: /privacy
+        - link "© 2026 WonJin 版权所有" [ref=f116e69] [cursor=pointer]:
+          - /url: /admin/login
+  - link "咨询" [ref=f116e70] [cursor=pointer]:
+    - /url: /inquiry
