@@ -23,30 +23,37 @@
       <CardHeader>
         <CardTitle>{{ t('admin.users.formTitleCreate') }}</CardTitle>
       </CardHeader>
-      <CardContent class="flex flex-wrap items-end gap-4">
-        <div class="flex flex-col gap-1.5">
-          <Label for="f-email">{{ t('admin.users.formEmailLabel') }}</Label>
-          <Input id="f-email" v-model="createEmail" type="email" maxlength="254" class="w-64" />
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <Label for="f-password">{{ t('admin.users.formPasswordLabel') }}</Label>
-          <Input id="f-password" v-model="createPassword" type="password" minlength="8" maxlength="64" class="w-48" />
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <Label for="f-name">{{ t('admin.users.formNameLabel') }}</Label>
-          <Input id="f-name" v-model="createName" maxlength="30" class="w-40" />
-        </div>
-        <div class="flex flex-col gap-1.5">
-          <Label for="f-create-role">{{ t('admin.users.formRoleLabel') }}</Label>
-          <NativeSelect id="f-create-role" v-model="createRole" class="w-44">
-            <NativeSelectOption value="Admin">{{ t('admin.users.roleAdmin') }}</NativeSelectOption>
-            <NativeSelectOption value="HospitalManager">{{ t('admin.users.roleHospitalManager') }}</NativeSelectOption>
-            <NativeSelectOption value="Consultant">{{ t('admin.users.roleConsultant') }}</NativeSelectOption>
-          </NativeSelect>
-        </div>
-        <Button :disabled="!canSubmitCreate" @click="submitCreate">{{ t('common.save') }}</Button>
-        <Button variant="outline" @click="showCreateForm = false">{{ t('common.cancel') }}</Button>
-        <span v-if="createError" class="text-sm text-destructive">{{ createError }}</span>
+      <CardContent>
+        <!-- 비밀번호 입력은 반드시 <form> 안에 둔다 — 브라우저(Chrome)가 form 밖 password 필드에
+             "Password field is not contained in a form" 경고를 낸다. novalidate는 로그인 폼(D23)과
+             동일하게 브라우저 기본 검증 팝업(OS 언어를 따름)을 끄기 위함 — 검증은 canSubmitCreate로 한다. -->
+        <form class="flex flex-wrap items-end gap-4" novalidate @submit.prevent="submitCreate">
+          <div class="flex flex-col gap-1.5">
+            <Label for="f-email">{{ t('admin.users.formEmailLabel') }}</Label>
+            <Input id="f-email" v-model="createEmail" type="email" maxlength="254" autocomplete="username" class="w-64" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <Label for="f-password">{{ t('admin.users.formPasswordLabel') }}</Label>
+            <!-- autocomplete="new-password" — form으로 감싸면 브라우저가 관리자 본인의 저장된
+                 비밀번호를 이 신규 계정 칸에 자동완성하려 든다. 신규 발급용임을 명시해 차단한다. -->
+            <Input id="f-password" v-model="createPassword" type="password" minlength="8" maxlength="64" autocomplete="new-password" class="w-48" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <Label for="f-name">{{ t('admin.users.formNameLabel') }}</Label>
+            <Input id="f-name" v-model="createName" maxlength="30" class="w-40" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <Label for="f-create-role">{{ t('admin.users.formRoleLabel') }}</Label>
+            <NativeSelect id="f-create-role" v-model="createRole" class="w-44">
+              <NativeSelectOption value="Admin">{{ t('admin.users.roleAdmin') }}</NativeSelectOption>
+              <NativeSelectOption value="HospitalManager">{{ t('admin.users.roleHospitalManager') }}</NativeSelectOption>
+              <NativeSelectOption value="Consultant">{{ t('admin.users.roleConsultant') }}</NativeSelectOption>
+            </NativeSelect>
+          </div>
+          <Button type="submit" :disabled="!canSubmitCreate">{{ t('common.save') }}</Button>
+          <Button type="button" variant="outline" @click="showCreateForm = false">{{ t('common.cancel') }}</Button>
+          <span v-if="createError" class="text-sm text-destructive">{{ createError }}</span>
+        </form>
       </CardContent>
     </Card>
 
@@ -178,6 +185,7 @@ function startCreate() {
 }
 
 async function submitCreate() {
+  if (!canSubmitCreate.value) return
   createError.value = ''
   try {
     await authFetch('/api/admin/users', {
