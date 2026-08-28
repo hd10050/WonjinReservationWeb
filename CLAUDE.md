@@ -118,6 +118,7 @@
 
 ## TODO
 ### 다음 세션 최우선
+- [ ] 🔴🔴 **`reservation-create` IP 레이트리밋이 "전체 방문자 공동 버킷"으로 뭉개짐 — 감사 확정(2026-08-28)**: 프론트 프록시(`frontend/server/api/[...].ts`)가 `X-Forwarded-For`로 보내는데 백엔드 `GetClientIp()`(`api/Program.cs`)는 `CF-Connecting-IP`만 읽어, "IP당 5분 5회"가 실제론 "사이트 전체 5분 5회"로 동작(curl 실측: 서로 다른 IP 6종 시뮬레이션 중 6번째 신규 방문자가 429). 동일 함수를 `AuditLogFilter`도 재사용해 감사로그 IP도 부정확. 수정 미착수 — 사용자 승인 대기 중(memory: [[rate-limit-trusted-ip-only]])
 - [ ] **프론트 Content-Security-Policy 미적용 — 의도적 보류**(보안감사 재감사 2026-08-27) — X-Content-Type-Options 등 4개 헤더는 적용 완료했으나 CSP만 보류. `landing.vue`의 JSON-LD 인라인 스크립트가 예약마다 내용이 달라 정적 해시 지정이 안 통하고, nonce 방식은 Nuxt 통합이 더 큰 작업이라 섣불리 걸면 스크립트가 깨질 위험 — nonce 도입 여부 결정 필요
 - [ ] 🔴 **실브라우저 최종 확인 필요 2건**(자동화 도구 환경 제약으로 자동검증 불가 — 19-2절 자동화 도구 특이사항과 동일 범주): ①**관리자 웹 푸시**(2026-08-27) — Service Worker 등록·`Notification.permission`이 원천 차단돼 파이프라인만 간접 확인(공개키·SSRF화이트리스트·구독저장·발송시도·활성계정필터), 테스트 계정 `verify-push@wonjin.local`로 `/admin`→종 아이콘→알림허용→새 예약 접수 재확인 권장 ②**Popover(DatePicker) 닫힘 애니메이션**(2026-08-27) — `document.hidden=true`에서 `opacity`/`pointer-events` 미해제 관측(`data-state`는 정상 전환), 코드는 순정 shadcn 생성 그대로라 실사용자 환경 재현 여부만 확인하면 됨
 - [ ] **상담기록 "수정 이력"을 진짜 모달(오버레이)로 바꿀지 확인 필요**(세션요약 (40)) — 사용자가 "모달"로 요청했으나 코드베이스에 모달 컴포넌트가 없어 기존 토글형 Card 패턴 재사용한 인라인 패널로 구현. 기능은 동일(과거 내용 열람), 위치만 다름 — 그대로 둘지 진짜 오버레이로 바꿀지 확인 필요
