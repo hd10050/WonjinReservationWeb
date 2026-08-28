@@ -114,3 +114,14 @@
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.08); }
 }
+
+/*
+ * 히어로 텍스트 등장(2026-08-28, 랜딩 폴리스) — 1회성 장식 애니메이션, 데이터 로딩과 무관해
+ * 화면 깜빡임 금지 원칙에 해당하지 않음(콘텐츠는 SSR로 이미 렌더된 상태, 등장 연출만 CSS로 지연).
+ * fill-mode both라 애니메이션 종료 후에도 최종 상태(보임) 유지, motion-safe:로 reduced-motion 시
+ * 애니메이션 자체가 안 걸려 처음부터 바로 보인다.
+ */
+@keyframes heroFadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}

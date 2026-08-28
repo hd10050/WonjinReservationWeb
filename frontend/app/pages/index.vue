@@ -14,28 +14,34 @@
       />
       <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
 
-      <div class="relative z-10 mx-auto flex h-full max-w-6xl flex-col justify-end gap-4 px-4 pb-16 sm:px-6 sm:pb-24">
-        <p class="font-display text-6xl font-black leading-none tracking-tight text-white sm:text-8xl">{{ t('common.appName') }}</p>
-        <h1 class="max-w-xl text-2xl font-bold text-white sm:text-4xl">{{ t('landing.home.heroTitle') }}</h1>
-        <Button as-child size="lg" class="mt-4 w-fit">
-          <NuxtLink :to="localePath('inquiry')">{{ t('procedures.inquireCta') }}</NuxtLink>
-        </Button>
+      <!-- 2026-08-28 폴리스(사용자 지시) — 텍스트+CTA를 하단좌측→중앙우측으로 이동, 3단 순차 등장
+           애니메이션 추가(heroFadeUp, 0/150/300ms 지연). above-the-fold지만 데이터가 아니라 이미
+           SSR로 렌더된 정적 텍스트의 1회성 장식 연출이라 화면 깜빡임 금지 원칙과 무관. -->
+      <div class="relative z-10 mx-auto flex h-full max-w-6xl items-center justify-end px-4 sm:px-6">
+        <div class="flex max-w-xl flex-col items-end gap-4 text-right">
+          <p class="motion-safe:animate-[heroFadeUp_0.7s_ease-out_both] font-display text-6xl font-black leading-none tracking-tight text-white sm:text-8xl">{{ t('common.appName') }}</p>
+          <h1 class="motion-safe:animate-[heroFadeUp_0.7s_ease-out_both] motion-safe:[animation-delay:150ms] text-2xl font-bold text-white sm:text-4xl">{{ t('landing.home.heroTitle') }}</h1>
+          <Button as-child size="lg" class="motion-safe:animate-[heroFadeUp_0.7s_ease-out_both] motion-safe:[animation-delay:300ms] mt-4 w-fit">
+            <NuxtLink :to="localePath('inquiry')">{{ t('procedures.inquireCta') }}</NuxtLink>
+          </Button>
+        </div>
       </div>
     </section>
 
-    <section
-      ref="categoriesTarget"
-      class="border-y bg-muted/30 py-16 transition-all duration-700 sm:py-24"
-      :class="categoriesRevealed ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
-    >
+    <section ref="categoriesTarget" class="border-y bg-muted/30 py-16 sm:py-24">
       <div class="mx-auto max-w-6xl px-4 sm:px-6">
         <h2 class="mb-10 text-center text-2xl font-bold text-foreground sm:text-4xl">{{ t('landing.home.categoriesHeading') }}</h2>
+        <!-- 2026-08-28 폴리스(사용자 지시) — 카드 순차 등장(스타거). 하나의 IntersectionObserver
+             결과(categoriesRevealed)를 전 카드가 공유하되, 인덱스별 transition-delay만 다르게 줘서
+             왼쪽부터 순서대로 나타나는 것처럼 보이게 한다(카드마다 별도 옵저버 불필요, 최소 구현). -->
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           <NuxtLink
-            v-for="category in PROCEDURE_CATEGORIES"
+            v-for="(category, i) in PROCEDURE_CATEGORIES"
             :key="category.slug"
             :to="localePath({ name: 'procedures-category', params: { category: category.slug } })"
-            class="group relative aspect-[4/5] overflow-hidden rounded-xl"
+            class="group relative aspect-[4/5] overflow-hidden rounded-xl transition-all duration-500"
+            :class="categoriesRevealed ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
+            :style="{ transitionDelay: categoriesRevealed ? `${i * 60}ms` : '0ms' }"
           >
             <img
               :src="`/img/hero/${category.heroImages[0]}`"
