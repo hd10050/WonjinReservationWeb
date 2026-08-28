@@ -84,8 +84,14 @@ function clear() {
         </Button>
       </PopoverTrigger>
       <PopoverContent class="w-auto p-0" align="start">
+        <!-- 🔴 버그(2026-08-28 사용자 지적) — PopoverContent는 닫힐 때 Calendar를 언마운트한다.
+             default-placeholder 없이는 Calendar.vue의 내부 placeholder(표시 월)가 매번 today()로
+             새로 초기화돼, 이미 값을 골라둔 상태에서 다시 열어도 항상 이번 달 달력부터 보였다(실측
+             확인 — 선택된 날짜 자체(calendarValue)는 유지되지만 그 달로 스크롤은 안 됐음). 재오픈
+             시점의 현재 값을 넘겨 그 달부터 열리게 한다 — 값이 없으면 Calendar.vue가 today()로 폴백. -->
         <Calendar
           v-model="calendarValue"
+          :default-placeholder="calendarValue"
           :locale="locale"
           :min-value="minValue"
           :max-value="maxValue"

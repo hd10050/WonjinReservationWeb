@@ -39,18 +39,23 @@ public class ReservationsController(AppDbContext db, IServiceScopeFactory scopeF
         if (req.BirthDate == default)
             return BadRequest(new { code = "INVALID_BIRTH_DATE" });
 
+        var nowKst = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Kst);
+        var kstDate = DateOnly.FromDateTime(nowKst.DateTime);
+
         // 연락 희망 날짜·시각(D10) — D26(2026-08-28): "상관없음" 체크 시 둘 다 필수 검증을 건너뛰고
         // null로 저장한다. 체크 안 했으면 이전과 동일하게 둘 다 필수.
         if (!req.ContactTimeIndifferent)
         {
             if (req.PreferredContactDate is null || req.PreferredContactDate == default)
                 return BadRequest(new { code = "INVALID_CONTACT_DATE" });
+            // 🔴 과거 날짜 선택 차단(2026-08-28 사용자 지시) — 프론트 DatePicker min-value는 UX일
+            // 뿐, API 직접 호출 우회를 막는 실제 방어선은 서버다(D17 등 기존 패턴과 동일 원칙).
+            // KST 기준 오늘(kstDate)과 비교 — 위 예약코드 발급에 쓰는 것과 동일한 값을 재사용한다.
+            if (req.PreferredContactDate.Value < kstDate)
+                return BadRequest(new { code = "PAST_CONTACT_DATE" });
             if (req.PreferredContactTime is null)
                 return BadRequest(new { code = "INVALID_CONTACT_TIME" });
         }
-
-        var nowKst = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Kst);
-        var kstDate = DateOnly.FromDateTime(nowKst.DateTime);
 
         // 예약 코드 원자적 증가 발급(8-11절) — "그날 MAX(code)+1"은 동시 제출 시 UNIQUE 위반 500이 난다(F4).
         // INSERT ... ON CONFLICT ... DO UPDATE ... RETURNING 한 문장이 행 잠금 안에서 증가+반환을 함께 한다.

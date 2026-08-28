@@ -62,7 +62,7 @@
 
           <div class="flex flex-col gap-2">
             <Label for="contactDate">{{ t('landing.form.contactDate') }}</Label>
-            <DatePicker id="contactDate" v-model="contactDate" :locale="inputLang" :disabled="contactIndifferent" :invalid="errors.contactDate" />
+            <DatePicker id="contactDate" v-model="contactDate" :locale="inputLang" :disabled="contactIndifferent" :invalid="errors.contactDate" :min-value="minContactDate" />
             <p v-if="errors.contactDate" class="text-sm text-destructive">{{ t('common.fieldRequired') }}</p>
           </div>
 
@@ -123,7 +123,9 @@
 </template>
 
 <script setup lang="ts">
+import { parseDate } from '@internationalized/date'
 import { X } from '@lucide/vue'
+import { todayKst } from '~/utils/datetime'
 
 definePageMeta({ layout: 'landing' })
 
@@ -141,6 +143,10 @@ const birthDate = ref('')
 const gender = ref('')
 const wechatId = ref('')
 const contactDate = ref('')
+// 과거 날짜 선택 차단(2026-08-28 사용자 지시) — KST 기준 오늘 이전 날짜는 캘린더에서 비활성화한다
+// (브라우저 로컬 타임존 today()가 아니라 프로젝트 절대원칙대로 KST 고정, todayKst() 재사용).
+// 실제 방어선은 서버(ReservationsController.Create의 PAST_CONTACT_DATE)이고 이건 UX 차원의 1차 방어.
+const minContactDate = computed(() => parseDate(todayKst()))
 const contactTime = ref('')
 const contactIndifferent = ref(false)
 // reka-ui Checkbox는 v-model 대신 :model-value+@update:model-value로 직접 반영한다(다른 커스텀

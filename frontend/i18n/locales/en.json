@@ -459,6 +459,7 @@
     "UNSUPPORTED_LOCALE": "Unsupported language.",
     "INVALID_BIRTH_DATE": "Please enter a valid date of birth.",
     "INVALID_CONTACT_DATE": "Please select a preferred contact date.",
+    "PAST_CONTACT_DATE": "Please choose a preferred contact date from today onward.",
     "INVALID_CONTACT_TIME": "Please select a preferred contact time.",
     "SUBMIT_FAILED": "Submission failed. Please try again later.",
     "RATE_LIMITED": "Too many requests. Please try again later.",

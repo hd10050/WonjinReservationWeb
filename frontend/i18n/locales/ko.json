@@ -469,6 +469,7 @@
     "UNSUPPORTED_LOCALE": "지원하지 않는 언어입니다.",
     "INVALID_BIRTH_DATE": "생년월일을 정확히 입력해주세요.",
     "INVALID_CONTACT_DATE": "연락 희망 날짜를 선택해주세요.",
+    "PAST_CONTACT_DATE": "연락 희망 날짜는 오늘 이후로 선택해주세요.",
     "INVALID_CONTACT_TIME": "연락 희망 시각을 선택해주세요.",
     "SUBMIT_FAILED": "제출에 실패했습니다. 잠시 후 다시 시도해주세요.",
     "RATE_LIMITED": "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",

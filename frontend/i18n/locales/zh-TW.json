@@ -459,6 +459,7 @@
     "UNSUPPORTED_LOCALE": "不支援的語言。",
     "INVALID_BIRTH_DATE": "請填寫正確的出生日期。",
     "INVALID_CONTACT_DATE": "請選擇希望聯絡日期。",
+    "PAST_CONTACT_DATE": "希望聯絡日期請選擇今天以後的日期。",
     "INVALID_CONTACT_TIME": "請選擇希望聯絡的時間。",
     "SUBMIT_FAILED": "提交失敗，請稍後再試。",
     "RATE_LIMITED": "請求過於頻繁，請稍後再試。",
