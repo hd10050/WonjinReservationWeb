@@ -16,6 +16,20 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   vite: {
     plugins: [tailwindcss()],
+    // 🔴 성능("로그인이 느림" 4차 재조사, 2026-08-28) — 로그인 페이지는 이 의존성들을 안 쓰다가
+    // 로그인 직후 처음 /admin으로 넘어가는 순간 Vite dev 서버가 이제야 이들을 발견해 재번들링을
+    // 시작한다. Vite는 dev 서버 시작 후 새 의존성을 만나면 재번들링 뒤 페이지를 강제 새로고침한다
+    // (공식 문서: "Vite will re-run the dep bundling process and reload the page if needed") —
+    // 실측 확인: PerformanceNavigationTiming.type이 'reload'로 찍히고 dev 서버 로그에
+    // "[optimizer] bundling dependencies..."가 로그인 클릭 직후 여러 차례 연속 발생, 첫 로그인은
+    // 여기서 수 초가 소요되고 화면이 로그인 폼째로 다시 로드된다(사용자 체감 "몇 초 후 로딩 레이아웃").
+    // 이 목록을 명시해 dev 서버 콜드 스타트 시점에 한 번에 미리 번들링해두면 재번들링·리로드 자체가
+    // 발생하지 않는다. 프로덕션 빌드(nitro cloudflare_module)는 애초에 전량 사전 번들링이라 영향 없음.
+    optimizeDeps: {
+      // @vue/devtools-core·kit는 devtools:{enabled:true}(개발 편의 기능)의 자체 지연 의존성 —
+      // 로그인 직후 첫 /admin 진입에서 이것도 별도로 재번들링을 유발해 위와 같은 리로드를 한 번 더 일으킴(실측 확인).
+      include: ['reka-ui', 'reka-ui/date', 'class-variance-authority', 'clsx', 'tailwind-merge', '@internationalized/date', '@vueuse/core', '@lucide/vue', 'chart.js', '@vue/devtools-core', '@vue/devtools-kit'],
+    },
   },
 
   app: {

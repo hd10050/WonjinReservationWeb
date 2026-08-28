@@ -109,6 +109,7 @@
 - 🔴 **전역 로딩/전환 상태를 직접 만들 땐 `page:start`/`page:finish`(Suspense pending/resolve) 대신 `useLoadingIndicator()`(`page:loading:*`)를 쓸 것**(2026-08-27) — 전자는 전환이 다른 전환에 가로채이면 카운터가 불균형해져 영영 안 걷힘(`RouteOverlay` 실제 재현). 후자는 `router.afterEach`의 취소·중복 실패도 별도로 커버해 프레임워크가 이 문제를 이미 해결해둠
 - 🔴 **Tailwind Preflight가 전 요소 margin을 0으로 리셋해 네이티브 `<dialog>`의 중앙 정렬이 깨진다**(2026-08-27) — `showModal()`로 띄우는 `<dialog>`의 중앙 배치는 브라우저 기본 스타일시트의 `margin:auto`가 담당하는데, author 스타일시트(Preflight)가 항상 UA 기본값을 이겨 좌측 상단에 붙어버린다. `<dialog>`를 새로 쓸 때마다 `m-auto`를 함께 넣을 것.
 - **`AdminUsersController.Update`의 자기자신 예외**(2026-08-28) — 본인 계정은 이름만 허용, `Role`·`IsSuspended`는 **값이 기존과 같아도 요청에 필드가 존재하기만 하면** `CANNOT_MODIFY_SELF`로 차단(프론트는 본인 저장 시 두 필드를 아예 빼고 보냄). 이름만 바뀐 저장은 RT를 폐기하지 않음(역할·정지 변경 시에만 세션 전량 폐기) — 이 컨트롤러에 필드 추가 시 이 패턴 유지할 것
+- 🔴 **"로그인이 느림" 4번째 원인, 진짜 근본원인(2026-08-28)** — 로그인 후 최초 `/admin` 진입 시 그때 처음 쓰이는 의존성(reka-ui·chart.js·devtools 등)을 Vite dev 서버가 그제서야 발견해 재번들링 후 **강제 새로고침**한다(`PerformanceNavigationTiming.type==='reload'`로 실측, 공식 Vite 문서에 명시된 동작). `nuxt.config.ts`의 `vite.optimizeDeps.include`에 미리 나열해 콜드 스타트 시 한 번에 사전 번들링하도록 수정 완료(로그인 재실측: `type:'navigate'`로 정상 전환 확인). **프로덕션 빌드는 무관**(사전 전량 번들링). 이전 3차례 수정(fetchMe 게이팅·대시보드 Promise.all·RT정리 인라인 제거)은 전부 유효했으나 이 원인은 놓치고 있었음 — dev 환경에서 "로그인 느림" 재보고 시 이 항목부터 배제 확인할 것
 ## 절대 원칙 이행 (루트 CLAUDE.md)
 - **화면 깜빡임 금지** — 데이터 페이지는 `<script setup>` 최상위 `await useApi(...)` SSR 프리로드. `onMounted`+client fetch 금지. 전환 오버레이는 `<Transition>` 금지, 항상 마운트 + `pointer-events`를 상태값에 직접 클래스 바인딩
 - **입력 길이 3곳 일치** — DB `varchar(N)` / 백엔드 `[MaxLength(N)]` / 프론트 `maxlength` 항상 세트로 수정. 전체 표는 `docs/design.md` 9장
@@ -144,3 +145,4 @@ Phase 0~8(스캐폴딩·인증·랜딩+예약폼·예약대시보드/상세/상�
 ## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (55)까지 이동 완료)
 - **2026-08-28 (56)** — 관리자 화면 UX 개선 5건(시술탭 엑셀버튼·카테고리 필터·검색영역 Card 통일·비활성체크박스 위치·유입경로 검색), main 직접 작업. 상세는 `docs/session-log.md` (56)
 - **2026-08-28 (57)** — 유입경로 페이징·감사로그 검색UX·계정 본인이름수정·상담폼 rate limit 피드백(1분→5분+429 code화)·연락희망시각 상관없음 체크박스(D26) 5건 + 같은 세션 재점검(체크박스 이벤트바인딩 결함 1건 발견·수정), main 직접 작업. 상세는 `docs/session-log.md` (57)
+- **2026-08-28 (58)** — 웹푸시+IP레이트리밋 감사(레이트리밋 헤더불일치 결함 발견, 수정 대기) · "로그인 느림" 4차 재조사로 Vite dev optimizeDeps 근본원인 발견·수정 완료(위 주의사항 참고), main 직접 작업
