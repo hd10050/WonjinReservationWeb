@@ -460,7 +460,7 @@ public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionE
 **정책을 새로 만들 때 지킬 것**
 - **429 응답도 다른 실패 응답과 동일하게 `{code:"RATE_LIMITED"}` 구조로 나간다**(`RateLimiterOptions.OnRejected`, 2026-08-28 추가) — 기본값(빈 바디)이면 프론트가 사유를 표시할 방법이 없다. 프론트 각 화면의 기존 `e.data.code` 읽는 패턴을 그대로 재사용하므로 화면별 추가 분기가 필요 없다.
 - **기존 정책을 습관적으로 재사용하지 말 것.** 호출 빈도·트리거가 다른 엔드포인트가 같은 정책을 공유하면, 한쪽의 정상 호출이 다른 쪽 한도를 소진시켜 세션이 통째로 튕긴다(`refresh`가 `auth`를 재사용하면 안 되는 이유와 같다).
-- 파티션 키로 쓰는 IP는 Cloudflare가 설정하는 위조 불가 헤더(`CF-Connecting-IP`)에서 얻는다. 브라우저가 보낸 `X-Forwarded-For`를 그대로 신뢰하지 않는다. 🔴 **프론트 프록시(`server/api/[...].ts`)가 백엔드로 relay할 때 이 헤더 이름 그대로 `cf-connecting-ip`로 실어야 한다**(2026-08-28 정정 — `x-forwarded-for`로 보내고 있어 백엔드 `GetClientIp()`가 값을 못 찾고 전 방문자가 한 버킷으로 뭉개져 있었음. 프론트가 보내는 헤더 이름 == 백엔드가 읽는 헤더 이름을 항상 코드로 대조할 것).
+- 파티션 키로 쓰는 IP는 프론트 프록시(`server/api/[...].ts`)가 백엔드로 relay하는 커스텀 헤더 `X-Wj-Client-Ip`에서 얻는다(내부시크릿 유효할 때만 신뢰). 브라우저가 보낸 `X-Forwarded-For`를 그대로 신뢰하지 않는다. 🔴 **`CF-Connecting-IP`라는 이름은 절대 쓰지 말 것**(2026-08-28 재정정) — Render(onrender.com)도 Cloudflare 엣지 뒤에 있어서, 이 예약된 이름의 헤더는 Render 앞단 엣지가 위조 방지 목적으로 항상 실제 TCP 접속값(Workers 아웃바운드 IP, 요청마다 PoP별로 달라짐)으로 재작성해버린다 — `/api/internal/debug-ip` 임시 진단으로 실측 확인, 매 요청이 별도 버킷으로 흩어져 IP당 제한이 사실상 무제한이었다. 프론트가 보내는 헤더 이름 == 백엔드가 읽는 헤더 이름을 항상 코드로 대조하는 원칙은 유지하되, 그 이름 자체가 Cloudflare 예약 헤더와 같으면 안 된다.
 - `UseAuthentication()` → `UseRateLimiter()` 순서를 반드시 지킨다. 반대면 사용자 ID 파티션이 전부 IP로 폴백된다.
 
 > 🔴 **인증 초기화(`fetchMe()`)를 전 페이지에서 실행하지 말 것**(F5). 표준 Nuxt 인증 플러그인은 모든 라우트에서 `fetchMe()`를 호출하지만, **이 프로젝트는 공개 랜딩에 광고 트래픽이 몰리는 구조**라 그대로 두면 방문자 수만큼 `/api/auth/me` 401 요청이 백엔드로 간다(부하 + 로그 오염 + 랜딩 응답 지연). 인증 상태가 필요한 곳은 관리자 화면뿐이므로 경로로 게이팅한다.
@@ -1418,7 +1418,7 @@ var statusCode = executed.Exception is not null ? 500 : context.HttpContext.Resp
 - `RouteMap`은 단일 prefix 문자열이 아니라 **`string[] Segments` AND 매칭 + 세그먼트 개수 내림차순 정렬**로 구현한다. "먼저 등록된 것이 이긴다"를 기본 동작으로 두면 중첩 경로가 부모 경로 규칙으로 오분류된다.
 - **새 관리자 API를 추가할 때마다 `RouteMap` 등록 여부를 별도로 확인한다.** 컨트롤러가 `HttpContext.Items["AuditSummary"]`로 요약문을 직접 채우면 로그 텍스트는 정상으로 보이지만, `RouteMap` 미등록이면 `entity_type`이 `unknown`으로 저장돼 분류·필터링에서 빠진다. 로그 텍스트 정상 출력과 분류 정확성은 **서로 다른 체크포인트**다.
 - 감사 로그 저장 실패가 본 작업을 실패시키지 않도록 try/catch로 격리한다.
-- 클라이언트 IP는 Cloudflare가 직접 설정하는 위조 불가 헤더(`CF-Connecting-IP`)를 우선 읽고, 없을 때만 폴백한다. 브라우저가 보낸 `X-Forwarded-For`를 그대로 신뢰하지 않는다.
+- 클라이언트 IP는 프론트(Workers)가 릴레이하는 `X-Wj-Client-Ip`(내부시크릿 유효할 때만 신뢰)를 우선 읽고, 없을 때만 폴백한다. 브라우저가 보낸 `X-Forwarded-For`를 그대로 신뢰하지 않는다. 🔴 2026-08-28 — 헤더 이름을 `CF-Connecting-IP`에서 바꿈: Render(onrender.com)도 Cloudflare 엣지 뒤라, 이 예약된 이름의 헤더는 Render 앞단 엣지가 항상 실제 TCP 접속값(요청마다 달라짐)으로 재작성해버려 IP별 rate limit이 사실상 무제한이 되는 걸 실측으로 발견(7-5절 참고).
 
 ### 14-1. RouteMap 초기 매핑표 (U10)
 

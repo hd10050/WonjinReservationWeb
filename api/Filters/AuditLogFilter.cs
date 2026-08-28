@@ -105,16 +105,18 @@ public class AuditLogFilter(AppDbContext db, ILogger<AuditLogFilter> logger, ICo
             var summary = context.HttpContext.Items["AuditSummary"] as string
                 ?? $"{entityType} {action}" + (entityId is not null ? $" #{entityId}" : "");
 
-            // 🔴 보안감사(2026-08-26) 발견 — CF-Connecting-IP는 프론트(Workers)를 거친 요청에서만
-            // 위조 불가능하다. 백엔드(Render) 직접호출 경로에선 조작 가능하므로 내부시크릿이 유효할
-            // 때만 신뢰한다(Program.cs GetClientIp와 동일 원칙 — 이 필터는 별도 클래스라 DI로 재검증).
+            // X-Wj-Client-Ip는 프론트(Workers)를 거친 요청에서만 위조 불가능하다. 백엔드(Render)
+            // 직접호출 경로에선 조작 가능하므로 내부시크릿이 유효할 때만 신뢰한다(Program.cs
+            // GetClientIp와 동일 원칙 — 이 필터는 별도 클래스라 DI로 재검증).
+            // 🔴 2026-08-28 재수정 — 헤더 이름을 CF-Connecting-IP에서 X-Wj-Client-Ip로 변경
+            // (Program.cs GetClientIp 주석 참고 — Render도 Cloudflare 엣지 뒤라 그 이름은 재작성됨).
             var providedSecret = context.HttpContext.Request.Headers["X-Internal-Secret"].FirstOrDefault();
             var expectedSecret = config["InternalSecret"];
             var trustProxyIp = !string.IsNullOrEmpty(expectedSecret) && !string.IsNullOrEmpty(providedSecret)
                 && CryptographicOperations.FixedTimeEquals(
                     Encoding.UTF8.GetBytes(providedSecret), Encoding.UTF8.GetBytes(expectedSecret));
             var ip = trustProxyIp
-                ? context.HttpContext.Request.Headers["CF-Connecting-IP"].FirstOrDefault()
+                ? context.HttpContext.Request.Headers["X-Wj-Client-Ip"].FirstOrDefault()
                     ?? context.HttpContext.Connection.RemoteIpAddress?.ToString()
                 : context.HttpContext.Connection.RemoteIpAddress?.ToString();
 

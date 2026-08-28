@@ -61,23 +61,6 @@ public class InternalController(AppDbContext db, IConfiguration config) : Contro
         return Ok(new InfluencerLinkResolveDto(link.UtmSource, link.UtmMedium, link.UtmCampaign, link.Locale));
     }
 
-    // 🔴 임시 진단용(2026-08-28) — IP 레이트리밋이 실배포에서 안 걸리는 원인 확인 후 반드시 삭제할 것.
-    // Render가 실제로 받는 헤더값을 그대로 노출해 GetClientIp()의 신뢰 판정이 왜 어긋나는지 확인한다.
-    [HttpGet("debug-ip")]
-    public ActionResult DebugIp([FromHeader(Name = "X-Internal-Secret")] string? secret)
-    {
-        var expected = config["InternalSecret"];
-        if (string.IsNullOrEmpty(expected) || string.IsNullOrEmpty(secret) || !FixedTimeEquals(secret, expected))
-            return NotFound();
-
-        return Ok(new
-        {
-            cfConnectingIpHeader = Request.Headers["CF-Connecting-IP"].ToString(),
-            xForwardedForHeader = Request.Headers["X-Forwarded-For"].ToString(),
-            remoteIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-        });
-    }
-
     // 타이밍 사이드채널 방지 — 시크릿 비교는 항상 상수 시간으로.
     private static bool FixedTimeEquals(string a, string b) =>
         CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(a), Encoding.UTF8.GetBytes(b));

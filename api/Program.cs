@@ -337,10 +337,13 @@ app.MapGet("/api/admin/events", (IAdminEventBroadcaster broadcaster, Cancellatio
 
 app.Run();
 
-// Cloudflare가 실제 TCP 접속 정보로 직접 설정하는 CF-Connecting-IP는 "프론트(Workers) 뒤"에서만
-// 위조 불가능하다. 백엔드(Render)를 직접 호출하는 경로에선 공격자가 이 헤더를 마음대로 채울 수
-// 있으므로, 프론트만 아는 내부시크릿이 유효할 때만 신뢰하고 아니면 실제 TCP 연결 IP로 폴백한다
-// (16장 + 보안감사 2026-08-26 H1 수정).
+// 프론트(Workers)가 릴레이하는 X-Wj-Client-Ip는 내부시크릿이 유효할 때만 신뢰하고, 아니면 실제
+// TCP 연결 IP로 폴백한다(16장 + 보안감사 2026-08-26 H1 수정).
+// 🔴 2026-08-28 재수정 — 원래 이름은 CF-Connecting-IP였으나, Render(onrender.com)도 Cloudflare
+// 엣지 뒤에 있어서 이 이름의 헤더는 Render 앞단 엣지가 항상 실제 TCP 접속 값(Workers 아웃바운드
+// IP, PoP마다 달라짐)으로 재작성해버림을 `/api/internal/debug-ip` 임시 진단으로 실측 확인(요청마다
+// 다른 값 → 매 요청이 별도 rate-limit 버킷으로 흩어져 사실상 무제한이 됨). Cloudflare가 예약하지
+// 않은 커스텀 이름(X-Wj-Client-Ip)으로 바꿔 프론트 `server/api/[...].ts`와 함께 수정.
 static string GetClientIp(HttpContext context, string internalSecret)
 {
     var provided = context.Request.Headers["X-Internal-Secret"].FirstOrDefault();
@@ -350,8 +353,8 @@ static string GetClientIp(HttpContext context, string internalSecret)
 
     if (trusted)
     {
-        var cfIp = context.Request.Headers["CF-Connecting-IP"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(cfIp)) return cfIp;
+        var clientIp = context.Request.Headers["X-Wj-Client-Ip"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(clientIp)) return clientIp;
     }
     return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 }
