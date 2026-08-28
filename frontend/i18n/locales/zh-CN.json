@@ -17,6 +17,9 @@
       "pushOn": "新预约提醒已开启",
       "pushOff": "新预约提醒已关闭",
       "pushDenied": "通知已被屏蔽 — 请在浏览器设置中允许",
+      "pushOnDesc": "有新预约时会收到通知，点击可关闭。",
+      "pushOffDesc": "新预约提醒目前关闭，点击可开启。",
+      "pushDeniedDesc": "浏览器已屏蔽通知，请至浏览器设置中手动允许。",
       "filterRangeError": "查询期间最长为1年，请缩短期间后重试。"
     },
     "nav": {

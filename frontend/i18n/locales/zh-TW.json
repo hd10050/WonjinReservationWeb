@@ -17,6 +17,9 @@
       "pushOn": "新預約提醒已開啟",
       "pushOff": "新預約提醒已關閉",
       "pushDenied": "通知已被封鎖 — 請在瀏覽器設定中允許",
+      "pushOnDesc": "有新預約時會收到通知，點擊可關閉。",
+      "pushOffDesc": "新預約提醒目前關閉，點擊可開啟。",
+      "pushDeniedDesc": "瀏覽器已封鎖通知，請至瀏覽器設定中手動允許。",
       "filterRangeError": "查詢期間最長為1年，請縮短期間後重試。"
     },
     "nav": {

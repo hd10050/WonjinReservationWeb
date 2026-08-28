@@ -17,6 +17,9 @@
       "pushOn": "New reservation alerts on",
       "pushOff": "New reservation alerts off",
       "pushDenied": "Notifications blocked — enable them in your browser settings",
+      "pushOnDesc": "You'll be notified when a new reservation comes in. Click to turn off.",
+      "pushOffDesc": "New reservation alerts are off. Click to turn on.",
+      "pushDeniedDesc": "Notifications are blocked in your browser. Please enable them in your browser settings.",
       "filterRangeError": "The search period can be at most 1 year. Please narrow the range and try again."
     },
     "nav": {
