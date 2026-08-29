@@ -34,7 +34,7 @@ public class AdminConsultantsController(AppDbContext db) : ControllerBase
             query = query.Where(c => c.IsActive);
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var keyword = LikeEscape.Escape(search.Trim());
+            var keyword = LikeEscape.EscapeContains(search);
             query = query.Where(c => EF.Functions.ILike(c.Name, $"%{keyword}%", "\\"));
         }
 

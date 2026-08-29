@@ -31,7 +31,7 @@ public class AdminInfluencerLinksController(AppDbContext db) : ControllerBase
             query = query.Where(l => l.IsActive);
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var keyword = LikeEscape.Escape(search.Trim());
+            var keyword = LikeEscape.EscapeContains(search);
             query = query.Where(l =>
                 EF.Functions.ILike(l.Code, $"%{keyword}%", "\\")
                 || EF.Functions.ILike(l.DisplayName, $"%{keyword}%", "\\"));

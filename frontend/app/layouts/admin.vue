@@ -24,10 +24,13 @@
       </nav>
     </aside>
 
-    <!-- 768px 이하 전용 오버레이 — 사이드바 밖을 클릭하면 닫힘 -->
+    <!-- 768px 이하 전용 배경막 — 사이드바 밖을 클릭하면 닫힘.
+         🔴 화면 전체를 덮는 오버레이류는 <Transition>/v-if 마운트·언마운트 대신 항상 마운트해둔 채
+         pointer-events·투명도를 상태값에 직접 클래스 바인딩으로만 토글한다(화면 깜빡임 금지 절대원칙,
+         RouteOverlay·[id].vue busy 오버레이와 동일 패턴, 2026-08-30 감사). -->
     <div
-      v-if="mobileNavOpen"
-      class="fixed inset-0 z-30 bg-black/20 md:hidden"
+      class="fixed inset-0 z-30 bg-black/20 transition-opacity duration-150 md:hidden"
+      :class="mobileNavOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'"
       aria-hidden="true"
       @click="mobileNavOpen = false"
     />

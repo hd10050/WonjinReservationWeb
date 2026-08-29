@@ -50,7 +50,7 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
         }
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var keyword = LikeEscape.Escape(search.Trim());
+            var keyword = LikeEscape.EscapeContains(search);
             query = query.Where(r =>
                 EF.Functions.ILike(r.Name, $"%{keyword}%", "\\")
                 || EF.Functions.ILike(r.WechatId, $"%{keyword}%", "\\")

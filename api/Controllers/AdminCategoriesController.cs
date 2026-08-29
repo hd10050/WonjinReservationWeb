@@ -32,7 +32,7 @@ public class AdminCategoriesController(AppDbContext db) : ControllerBase
             query = query.Where(c => c.IsActive);
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var keyword = LikeEscape.Escape(search.Trim());
+            var keyword = LikeEscape.EscapeContains(search);
             query = query.Where(c =>
                 EF.Functions.ILike(c.Code, $"%{keyword}%", "\\")
                 || EF.Functions.ILike(c.NameZhCn, $"%{keyword}%", "\\")

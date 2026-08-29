@@ -15,9 +15,11 @@
       ← {{ t('admin.reservationDetail.backToList') }}
     </button>
 
-    <div v-if="!detail" class="text-muted-foreground">{{ t('common.loading') }}</div>
-
-    <template v-else>
+    <!-- detail은 상위 await useApi로 SSR 프리로드되고, 실패 시 아래 script의 error.value 체크가
+         createError로 에러 페이지를 띄우므로 렌더 시점엔 항상 채워져 있다. 예전의 v-if="!detail"
+         "로딩 중" 분기는 정상 경로에선 절대 안 뜨는 죽은 코드였고 다른 목록 페이지와도 불일치라
+         제거(2026-08-30 감사) — v-if="detail"로 타입 내로잉만 유지. -->
+    <template v-if="detail">
       <h1 class="text-xl font-semibold text-foreground">
         {{ detail.name }} · {{ detail.code }} · {{ t(`status.${detail.status}`) }}
       </h1>

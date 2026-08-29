@@ -48,7 +48,7 @@ public class AdminAuditLogsController(AppDbContext db) : ControllerBase
         }
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var keyword = LikeEscape.Escape(search.Trim());
+            var keyword = LikeEscape.EscapeContains(search);
             query = query.Where(a =>
                 EF.Functions.ILike(a.Summary, $"%{keyword}%", "\\")
                 || EF.Functions.ILike(a.ActorEmail, $"%{keyword}%", "\\"));

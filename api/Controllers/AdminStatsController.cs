@@ -149,7 +149,7 @@ public class AdminStatsController(AppDbContext db) : ControllerBase
         // OR 필터라 procedures/consultants 검색과 동일한 패턴(전용 인덱스 없이 ILIKE, 관리자 전용 소규모 테이블).
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var keyword = LikeEscape.Escape(search.Trim());
+            var keyword = LikeEscape.EscapeContains(search);
             visitsQuery = visitsQuery.Where(s =>
                 EF.Functions.ILike(s.ReferralCode, $"%{keyword}%", "\\")
                 || EF.Functions.ILike(s.UtmSource, $"%{keyword}%", "\\")

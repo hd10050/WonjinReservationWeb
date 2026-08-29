@@ -70,9 +70,15 @@
         <CardHeader>
           <CardDescription>{{ t('admin.calendar.dayListTitle', { date: selectedDate }) }}</CardDescription>
         </CardHeader>
-        <CardContent class="max-h-[70vh] space-y-2 overflow-y-auto">
-          <p v-if="dayPending" class="text-sm text-muted-foreground">{{ t('common.loading') }}</p>
-          <p v-else-if="!dayItems.length" class="text-sm text-muted-foreground">{{ t('admin.calendar.empty') }}</p>
+        <!-- 🔴 화면 깜빡임 금지(2026-08-30 감사) — 재조회 중에는 이전 목록을 그대로 둔 채 dim + 클릭
+             차단만 한다. "로딩 중" 문구로 목록을 대체하면 [이전 목록]→[로딩 문구]→[새 목록] 깜빡임이
+             된다(이 전환은 selectedDate가 로컬 ref라 RouteOverlay가 못 덮음). pointer-events·투명도를
+             dayPending 상태값에 직접 클래스 바인딩(RouteOverlay·[id].vue busy 오버레이와 동일 원칙). -->
+        <CardContent
+          class="max-h-[70vh] space-y-2 overflow-y-auto transition-opacity duration-150"
+          :class="{ 'pointer-events-none opacity-50': dayPending }"
+        >
+          <p v-if="!dayItems.length" class="text-sm text-muted-foreground">{{ t('admin.calendar.empty') }}</p>
           <button
             v-for="item in dayItems" :key="item.id"
             type="button"
@@ -154,7 +160,11 @@ const selectedDate = ref(
 const dayQuery = computed(() => ({ date: selectedDate.value }))
 const { data: dayItemsData, pending: dayPending, refresh: refreshDay } =
   await useApi<ReservationCalendarItem[]>('/api/admin/reservations/calendar/day', { query: dayQuery })
-const dayItems = computed(() => dayItemsData.value ?? [])
+// 🔴 화면 깜빡임 금지(2026-08-30 감사) — 날짜를 바꾸면 useApi 캐시 키가 바뀌며 dayItemsData가 잠깐
+// 비므로, 마지막으로 성공한 목록을 따로 들고 있다가 재조회가 끝날 때까지 그걸 계속 보여준다.
+// (재조회 동안 목록을 dim + 클릭 차단하는 처리는 위 템플릿 CardContent 클래스 바인딩에서 한다.)
+const dayItems = ref<ReservationCalendarItem[]>(dayItemsData.value ?? [])
+watch(dayItemsData, (v) => { if (v) dayItems.value = v })
 
 // 예약 확정 시 조용히 새로고침(2026-08-27) — admin.vue 레이아웃이 연결한 SSE를 여기서 구독만 한다.
 // 이 페이지가 마운트돼 있는 동안만 watch가 살아있어 "달력을 보고 있는 계정만" 반응하는 게 자동으로 됨.

@@ -60,7 +60,7 @@
         <div class="flex min-w-[200px] flex-1 flex-col gap-1.5">
           <Label for="f-search">{{ t('admin.reservations.filterSearch') }}</Label>
           <Input
-            id="f-search" v-model="formSearch"
+            id="f-search" v-model="formSearch" maxlength="200"
             :placeholder="t('admin.reservations.filterSearchPlaceholder')"
             @keyup.enter="applyFilters"
           />
