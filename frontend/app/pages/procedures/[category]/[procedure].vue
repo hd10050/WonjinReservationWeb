@@ -33,6 +33,7 @@ import { findProcedure, type Locale } from '~/data/procedures'
 definePageMeta({ layout: 'landing' })
 
 const route = useRoute()
+const config = useRuntimeConfig()
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
 
@@ -51,5 +52,17 @@ useSeo({
   description: () => item?.description[locale.value as Locale] ?? '',
   // "그 외"(콘텐츠 없음) 항목은 제목 한 줄뿐이라 검색 색인 대상에서 뺀다(최종 리뷰 발견).
   noIndex: () => !item,
+  // 페이지 단위 구조화 데이터(seo-pattern-reference.md 5-2절) — 콘텐츠가 있는 시술만.
+  // "그 외" 항목은 noIndex라 스키마도 넣지 않는다.
+  schemaOrg: () => item
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'MedicalProcedure',
+        name: item.name[locale.value as Locale],
+        description: item.description[locale.value as Locale] || undefined,
+        url: `${config.public.siteUrl}${route.path}`,
+        provider: { '@type': 'MedicalClinic', name: 'WonJin', url: config.public.siteUrl },
+      }
+    : undefined,
 })
 </script>

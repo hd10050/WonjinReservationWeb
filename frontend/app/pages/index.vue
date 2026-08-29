@@ -177,6 +177,7 @@ const localePath = useLocalePath()
 
 useSeo({
   title: () => t('landing.home.heroTitle'),
+  description: () => t('landing.home.seoDescription'),
 })
 
 // 히어로 크로스페이드(8절) — 순수 CSS(motion-safe:animate-kenburns) + setInterval만 사용, 라이브러리 없음.

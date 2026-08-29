@@ -315,8 +315,23 @@ app.MapControllers();
 
 // 예약 확정 시 [예약 달력] 조용히 새로고침용 SSE(2026-08-27, 스파이크 테스트로 프록시 통과 확인 완료).
 // 한 종류(reservation_confirmed)만 흘려보낸다 — 새 예약 접수는 별도 웹 푸시(PushSender)로 처리.
-app.MapGet("/api/admin/events", (IAdminEventBroadcaster broadcaster, CancellationToken ct) =>
+// 🔴 2026-08-30 감사 반영 — 이건 minimal API라 AccountStateFilter(MVC 액션 필터)가 적용되지 않는다.
+// 정지·강등된 계정이 아직 만료 안 된 AT로 스트림을 유지하지 못하도록, 연결 수립 시점에 필터와
+// 동일한 검사(IsSuspended + 토큰 Role과 DB Role 일치)를 직접 수행한다. EventSource는 연결이 끊기면
+// 자동 재연결하므로 재연결마다 이 검사를 다시 통과해야 한다. 페이로드는 예약 ID뿐이라 이미
+// auth-pattern-reference.md 22장의 "페이로드 최소화" 완화는 충족돼 있고, 여기에 연결시점 재검증을 더한다.
+app.MapGet("/api/admin/events", async (HttpContext http, AppDbContext db, IAdminEventBroadcaster broadcaster, CancellationToken ct) =>
 {
+    var userIdStr = http.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? http.User.FindFirstValue("sub");
+    if (!int.TryParse(userIdStr, out var uid))
+        return Results.Unauthorized();
+    var state = await db.Users.AsNoTracking()
+        .Where(u => u.Id == uid)
+        .Select(u => new { u.IsSuspended, u.Role })
+        .FirstOrDefaultAsync(ct);
+    if (state is null || state.IsSuspended || state.Role != http.User.FindFirstValue(ClaimTypes.Role))
+        return Results.Unauthorized();
+
     var reader = broadcaster.Subscribe(out var subscriptionId);
 
     async IAsyncEnumerable<string> Read([EnumeratorCancellation] CancellationToken cancellationToken)
@@ -332,7 +347,7 @@ app.MapGet("/api/admin/events", (IAdminEventBroadcaster broadcaster, Cancellatio
         }
     }
 
-    return TypedResults.ServerSentEvents(Read(ct), eventType: "reservation_confirmed");
+    return Results.ServerSentEvents(Read(ct), eventType: "reservation_confirmed");
 }).RequireAuthorization();
 
 app.Run();

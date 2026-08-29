@@ -2,9 +2,11 @@
 // 조회해 실제 랜딩으로 302 리다이렉트한다. 인플루언서는 이 짧은 경로 하나만 기억하면 되고
 // UTM 파라미터 이름·값을 몰라도 된다(design.md 15-3절). server/api/[...].ts와 달리 /api/ 하위가
 // 아니므로 그 프록시와 겹치지 않는다.
+// 🔴 프리픽스는 i18n locales[].code 그대로(/zh-TW) — canonical·hreflang(/zh-TW)과 대소문자를
+// 일치시켜 실사용자 착지 URL이 정규 URL과 어긋나지 않게 한다(2026-08-30 SEO 감사 반영).
 const LOCALE_PREFIX: Record<string, string> = {
   'zh-CN': '',
-  'zh-TW': '/zh-tw',
+  'zh-TW': '/zh-TW',
   en: '/en',
   ko: '/ko',
 }

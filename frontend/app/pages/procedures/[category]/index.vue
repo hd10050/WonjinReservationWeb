@@ -84,6 +84,7 @@ definePageMeta({ layout: 'landing', heroOverlayHeader: true })
 const { target: listTarget, revealed: listRevealed } = useScrollReveal()
 
 const route = useRoute()
+const config = useRuntimeConfig()
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
 
@@ -98,5 +99,16 @@ const medical = computed(() => (category.value ? PROCEDURE_MEDICAL[category.valu
 useSeo({
   title: () => category.value?.name[locale.value as Locale] ?? '',
   description: () => category.value?.intro[locale.value as Locale] ?? '',
+  // 페이지 단위 구조화 데이터(seo-pattern-reference.md 5-2절) — 시술 분야 안내 페이지.
+  schemaOrg: () => category.value
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'MedicalWebPage',
+        name: category.value.name[locale.value as Locale],
+        description: category.value.intro[locale.value as Locale] || undefined,
+        url: `${config.public.siteUrl}${route.path}`,
+        about: { '@type': 'MedicalClinic', name: 'WonJin', url: config.public.siteUrl },
+      }
+    : undefined,
 })
 </script>

@@ -68,7 +68,10 @@ export default defineNuxtConfig({
       else t = 'en';
       document.cookie = 'wj_lang=' + t + '; expires=' + new Date(Date.now() + 31536000000).toUTCString() + '; path=/; samesite=lax';
     }
-    if (t !== 'zh-CN') location.replace('/' + (t === 'zh-TW' ? 'zh-tw' : t) + location.search);
+    // 🔴 리다이렉트 목적지는 i18n locales[].code 그대로(zh-TW) — useLocaleHead가 만드는
+    // canonical·hreflang이 /zh-TW라, /zh-tw로 보내면 실사용자 착지 URL이 정규 URL과 대소문자만
+    // 달라지는 불일치가 생긴다(2026-08-30 SEO 감사 반영). 대소문자 URL 둘 다 라우팅되지만 정규형으로 통일.
+    if (t !== 'zh-CN') location.replace('/' + t + location.search);
   } catch (e) {}
 })();`,
         },
