@@ -83,19 +83,27 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
         var nowKst = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Kst);
         var monthStart = new DateTimeOffset(nowKst.Year, nowKst.Month, 1, 0, 0, 0, nowKst.Offset).ToUniversalTime();
 
-        var summary = await db.Reservations
-            .GroupBy(_ => 1)
-            .Select(g => new
-            {
-                New = g.Count(r => r.Status == "New"),
-                Consulting = g.Count(r => r.Status == "Consulting"),
-                Confirmed = g.Count(r => r.Status == "Confirmed"),
-                VisitedThisMonth = g.Count(r => r.Status == "Visited" && r.VisitedAt != null && r.VisitedAt >= monthStart),
-            })
-            .FirstOrDefaultAsync();
+        // 🔴 DB성능(2026-08-30 감사, F1) — 이전엔 GroupBy(_ => 1) + 4개 count FILTER를 한 문장으로 돌려
+        // 매 대시보드 로드마다 reservations 전체 seq scan이 발생했다(WHERE가 전역 소프트삭제 필터뿐이라
+        // 인덱스를 못 탐 / visited_at은 인덱스 자체가 없었음). 카드에 필요한 건 "진행 중 3개 상태 건수 +
+        // 이번 달 방문완료 건수"뿐이므로 그 행만 걸러 GroupBy(status)로 집계한다 — 진행 상태 3개는
+        // ix_reservations_status_created_at(status 선두 컬럼), Visited 분기는 새 부분 인덱스
+        // ix_reservations_visited_at(status='Visited' 필터)로 각각 좁혀져 PG가 BitmapOr로 처리하므로
+        // 전체 스캔이 사라진다. 스캔량이 테이블 크기가 아니라 "미해소 예약 수 + 이번 달 방문 수"에 비례.
+        var rows = await db.Reservations
+            .Where(r => r.Status == "New" || r.Status == "Consulting" || r.Status == "Confirmed"
+                     || (r.Status == "Visited" && r.VisitedAt != null && r.VisitedAt >= monthStart))
+            .GroupBy(r => r.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync();
+        var byStatus = rows.ToDictionary(x => x.Status, x => x.Count);
 
+        // Visited 그룹은 WHERE에서 이미 "이번 달"로 걸러진 행만 담기므로 그 건수가 곧 VisitedThisMonth.
         return Ok(new ReservationSummaryDto(
-            summary?.New ?? 0, summary?.Consulting ?? 0, summary?.Confirmed ?? 0, summary?.VisitedThisMonth ?? 0));
+            byStatus.GetValueOrDefault("New"),
+            byStatus.GetValueOrDefault("Consulting"),
+            byStatus.GetValueOrDefault("Confirmed"),
+            byStatus.GetValueOrDefault("Visited")));
     }
 
     // [예약 달력] year·month는 정확히 한 달만 지정 가능 — from/to 파라미터 자체가 없어 무제한 범위

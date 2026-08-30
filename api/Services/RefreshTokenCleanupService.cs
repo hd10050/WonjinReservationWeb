@@ -32,6 +32,8 @@ public class RefreshTokenCleanupService(
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
+        // 필터 컬럼 (is_revoked, expires_at) 복합 인덱스로 seq scan 없이 실행된다
+        // (2026-08-30 감사 F2 — AppDbContext ix_refresh_tokens_is_revoked_expires_at).
         var now = DateTimeOffset.UtcNow;
         var deleted = await db.RefreshTokens
             .Where(r => r.IsRevoked || r.ExpiresAt <= now)

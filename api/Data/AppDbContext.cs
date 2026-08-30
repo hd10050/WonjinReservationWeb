@@ -57,6 +57,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             // 🔴 모든 세션이 12분마다 조회 — 없으면 갱신마다 풀스캔(8-2절)
             e.HasIndex(r => r.TokenHash).HasDatabaseName("ix_refresh_tokens_token_hash");
             e.HasIndex(r => r.UserId).HasDatabaseName("ix_refresh_tokens_user_id");
+            // 🔴 DB성능(2026-08-30 감사, F2) — RefreshTokenCleanupService의 12시간 주기 DELETE가
+            // `WHERE is_revoked OR expires_at <= now`인데 두 컬럼 다 인덱스가 없어 seq scan이었다
+            // (배치잡이라 체감 지연 없이 조용히 나빠지는 경로). (is_revoked, expires_at) 복합 인덱스로
+            // is_revoked=true 분기는 선두 컬럼 등가 스캔, expires_at 분기는 두 컬럼 다 든 index-only
+            // 스캔으로 PG가 BitmapOr 처리해 전체 스캔이 사라진다.
+            e.HasIndex(r => new { r.IsRevoked, r.ExpiresAt }).HasDatabaseName("ix_refresh_tokens_is_revoked_expires_at");
         });
 
         // ── categories (8-3-1, D25 2026-08-28 신설) ──────────────
@@ -140,6 +146,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(r => r.VisitDate)
                 .HasDatabaseName("ix_reservations_visit_date")
                 .HasFilter("status IN ('Confirmed','Visited')");
+            // 🔴 DB성능(2026-08-30 감사, F1) — [예약 대시보드] 요약 카드의 "이번 달 방문완료" 집계
+            // (GetSummary)가 status='Visited' AND visited_at >= @monthStart를 조회한다. 부분 조건을
+            // status='Visited'로 정확히 맞춰야 GetSummary의 Visited 분기가 이 인덱스를 탄다.
+            e.HasIndex(r => r.VisitedAt)
+                .HasDatabaseName("ix_reservations_visited_at")
+                .HasFilter("status = 'Visited'");
 
             // 🔴 소프트 삭제 전역 쿼리 필터(D15) — 조회마다 손으로 deleted_at 조건을 붙이지 않게 함
             e.HasQueryFilter(r => r.DeletedAt == null);
