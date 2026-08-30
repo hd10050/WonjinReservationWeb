@@ -35,11 +35,14 @@ export function clampDateRangeEnd(from: string, to: string): string {
   return parseDate(to).compare(maxTo) > 0 ? maxTo.toString() : to
 }
 
-// birthDate는 date(타임존 없음) 컬럼이라 KST 변환이 필요 없다 — 달력 나이 계산만 한다.
+// birthDate는 date(타임존 없음) 컬럼이지만, "오늘"은 KST로 고정해야 한다 — 예약 상세는 상위
+// await useApi로 SSR 프리로드되므로 이 함수가 서버(UTC 호스트)에서도 실행된다. new Date()로 오늘을
+// 잡으면 서버(UTC)·클라이언트(KST 브라우저)가 KST 00:00~09:00 구간에 하루 어긋나, 생일 당일엔
+// 나이가 1살 달라져 하이드레이션 불일치가 난다. getKstToday()로 formatKst와 같은 패턴을 쓴다.
 export function calculateAge(birthDate: string): number {
   const [y, m, d] = birthDate.split('-').map(Number)
-  const today = new Date()
-  let age = today.getFullYear() - y
-  if (today.getMonth() + 1 < m || (today.getMonth() + 1 === m && today.getDate() < d)) age--
+  const today = getKstToday()
+  let age = today.year - y
+  if (today.month < m || (today.month === m && today.day < d)) age--
   return age
 }
