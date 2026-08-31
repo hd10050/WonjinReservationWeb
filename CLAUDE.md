@@ -47,6 +47,7 @@
 - **병원 정식 정보 확정**(M8, 2026-08-26) — 상호 `원진성형외과의원`·사업자번호 `824-67-00414`·주소는 화면 푸터에 원문 그대로 표기(고유명사 번역 안 함). 🔴 **대표전화는 화면에 노출하지 않고 JSON-LD에만 포함**(예약 폼 유도 우선, 사용자 결정) — 상세는 design.md 12-1-1절
 - **실장 KPI·예약 통계 = 표+차트 병행**(D21, 2026-08-26) — 차트는 `vue-chartjs`+`chart.js`, 색상은 새로 만들지 않고 D20 팔레트 재사용. Canvas는 SSR 불가라 `<ClientOnly>`로 감싸고(화면 깜빡임 금지 원칙은 데이터 프리로드 대상이라 위반 아님), 레이아웃 시프트 방지로 고정 높이 컨테이너 사용
 - 🔴 **푸터 주소는 로케일별로 다른 문구**(D22, 2026-08-26) — "고유명사 번역 안 함" 원칙의 예외. 상호·사업자번호는 여전히 원문 고정, 주소만 ko=등록원문/zh-CN=제공된 간체/zh-TW·en=영문. JSON-LD도 영문 주소로 동기화(상세: design.md 12-1-1·D22)
+- **시술 상세 페이지 폐지**(D27, 2026-08-31) — `/procedures/[category]/[procedure]` 라우트 삭제, 카테고리 목록 페이지 항목은 클릭 이동 없는 정보 표시로 전환(design.md 12-1절)
 ## 역할 · 메뉴 권한
 | 메뉴 | Admin | HospitalManager | Consultant |
 |---|:---:|:---:|:---:|
@@ -121,8 +122,7 @@
 
 ## TODO
 ### 다음 세션 최우선
-- [ ] **랜딩 시술 이미지 6개 누락**(세션요약 (51), 2026-08-28 (71) 임시조치) — `eye`(asymmetrical-eye-correction, congenital-ptosis-children) · `nose`(bulbous-nose, tip-plasty) · `breast`(nipple-surgery) · `bodyline`(hip-augmentation) 6개는 사용자 지시로 목록 페이지의 [그 외] 칩으로 이동 완료(자연스러운 디자인). 🔴 **사진 확보 시**: `procedures.ts`의 해당 `otherItems` 항목을 `items`로 되돌리고 concerns/description 전문을 복원할 것 — git 이력(커밋 메시지 "그 외 이동" 이전)에 원문 그대로 남아있음, 재입력 불필요
-- [ ] **랜딩 중국어(zh-CN/zh-TW) 고민 불릿 39/96건이 설계문서 부록 원문과 다른 요약형 문구**(세션요약 (51)) — ko/en은 부록과 100% verbatim인데 zh만 완전한 문장이 아니라 키워드형으로 압축돼 들어감(예: `breast/augmentation`). 의료광고 문구라 "원문 그대로" 원칙이 특히 중요한 영역 — 출처 확인 또는 병원 검수 필요
+없음(2026-08-31 — 이미지 누락·중국어 고민불릿 요약형 문구 2건 사용자 지시로 삭제, 시술 상세페이지 폐지로 목록 표시 방식 자체가 바뀌어 재론 불필요)
 ### 확인 완료 (재론 불필요)
 - **실브라우저 확인 2건 종결(2026-08-28 (66), 사용자 직접 확인)** — 관리자 웹 푸시 OS 알림 표시·Popover(DatePicker) 닫힘 애니메이션 둘 다 실브라우저에서 정상 동작 확인
 - 🔴 **IP 레이트리밋, 실배포 라이브 curl로 수정 확인 완료(2026-08-28 (62))** — 진짜 근본원인은 헤더 이름이 `CF-Connecting-IP`였던 것: Render(onrender.com)도 Cloudflare 엣지 뒤라 이 예약된 이름은 Render 앞단 엣지가 위조방지 목적으로 항상 실제 TCP 접속값(요청마다 달라짐)으로 재작성해버림. `X-Wj-Client-Ip`(커스텀, 비예약 이름)로 교체 후 라이브 curl 재검증: 같은 실IP 연속 POST 6회째 정확히 429 확인. 코드: Program.cs `GetClientIp()`·`AuditLogFilter`·프론트 `server/api/[...].ts`
@@ -144,6 +144,6 @@ Phase 0~8(스캐폴딩·인증·랜딩+예약폼·예약대시보드/상세/상�
 ## 참고 문서
 `docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종) · 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md` · `excel-bulk-upload-pattern-reference.md`
 
-## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (77)까지 이동 완료)
+## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (78)까지 이동 완료)
 - **재사용 교훈(과거 세션)**: 🔴 `h-full`은 부모에 명시적 `height` 없이 `min-height`만 있으면 퍼센트 높이 해석 불가(→`absolute inset-0`). 🔴 이 Browser pane 비컴포지팅 → 스크린샷·`IntersectionObserver`·`<img loading=lazy>` 불가, **playwright-cli로 우회**. 🔴 랜딩 위챗 "탑재 금지"는 위젯·QR·공식계정 연동 한정 — 예약 흐름 설명 본문 문구는 허용(2026-08-28 사용자 지시).
-- **2026-08-30 (78) — 프로젝트 전체 감사(4라운드째, (75)~(77) 위에 누적) + 결함 3건 수정**. 앞선 3라운드 미독 파일 전수(`utils/{datetime,categoryIcons}.ts`·`types/reservation.ts`·`lib/utils.ts`·`public/sw.js`·`data/{procedureMedical,hospitalTour}.ts`·`ui/{native-select,label,switch}`·`Migrations/*` 8개·`{api,frontend}/Dockerfile`·`.dockerignore`×2·`docker-compose.yml`·`scripts/phase3-concurrency/*`) + `AdminReservationsController` 14액션 기능 재검토 + 핵심 심볼 전역 grep 교차검증(전 결과 파일 read 목록 내 확인). **수정 3건**: ①**F1·F2(Low)** `{api,frontend}/.dockerignore`가 `bin/obj/`·`node_modules/` 등만 → `COPY . .`로 로컬 `.env`(시크릿)가 이미지에 구워질 여지 → `.env`·`.env.*`·`.git/` 추가(Render는 git 빌드라 실위험 로컬 한정, 비용 0 위생) ②**F3(Low)** `datetime.ts calculateAge()`가 파일 "KST 고정" 원칙 유일 위반 — `new Date()`(호스트 로컬)로 "오늘" 계산, `[id].vue:37`이 SSR 프리로드된 `detail`로 이 함수를 템플릿에서 호출 → KST 00~09시·생일 당일 나이 ±1 하이드레이션 불일치 → 같은 파일 `getKstToday()`로 교체(Node 단위검증 ALL PASS). **Q1 해결(사용자 확인: 이 Dockerfile이 운영 빌드에 사용 중)**: `api/Dockerfile`을 멀티스테이지로 교체 — `sdk:10.0`로 `dotnet publish -c Release -o /app` → `aspnet:10.0` 런타임 이미지에 산출물만 `COPY --from=build` + `ENTRYPOINT ["dotnet","WonjinApi.dll"]`. `ASPNETCORE_URLS=http://+:8080`·`EXPOSE 8080` 그대로(라우팅 무변경), 로컬 compose는 `ASPNETCORE_ENVIRONMENT=Development` 주입 유지. `dotnet publish -c Release` 로컬 실측: `WonjinApi.dll`+`deps.json`+`runtimeconfig.json`+`appsettings*.json`(2개) 산출(28파일), `EFCore.Design`은 PrivateAssets로 미포함(부팅 `Database.Migrate()`는 런타임 EFCore라 무관), 0오류. `docker build` 자체는 이 환경에 데몬이 없어 미실행 — 빌드 스테이지(`restore`+`publish`)는 실측, 런타임 스테이지는 MS 표준 패턴. **결함 아님**: `procedures.ts` zh `concerns:[]`(렌더부 `v-if="?.length"`로 안전, TODO 125행에 이미 추적) · `sw.js`(웹푸시 전용, `waitUntil` 사용) · i18n 4로케일 키 477 동일 · 마이그레이션 `Up()` 파괴연산은 D25 스키마개편(`AddCategories`)뿐 · shadcn 프리미티브 스톡 · `ReservationSummaryDto`↔프론트 타입 일치. **범위 밖**: `docs/design.md` 라인별 설계↔구현 정합 감사(레퍼런스로 참조만). **검증**: 백엔드 `.cs` 무변경 · 프로젝트에 타입체커 미설치 확인 → `calculateAge` 신로직 Node 단위검증(KST 오늘 일치/만나이 경계 3종/`2000-01-01`→26). 커밋 예정(`.dockerignore`×2 + `datetime.ts`).
+- **2026-08-31 (79) — 시술 상세 페이지 폐지(D27), 사용자 지시**. `pages/procedures/[category]/[procedure].vue` 삭제, 카테고리 목록(`[category]/index.vue`)의 시술 항목·"그 외" 칩은 `NuxtLink`→`li`/`span`(클릭 이동 없는 정보 표시)로 전환, 미사용 `useLocalePath` 제거. 동반 정리: `data/procedures.ts`의 `findProcedure`(유일 호출부였음) 삭제, `nuxt.config.ts` sitemap이 시술별 URL을 더 이상 주입하지 않도록 축소, 4로케일 `procedures.comingSoon` 키 제거(키셋 여전히 4파일 동일). `design.md` 12-1절 라우트 표 갱신. TODO 2건(이미지 누락·중국어 요약형 문구)은 사용자 지시로 삭제. **검증**: `npm run build`.

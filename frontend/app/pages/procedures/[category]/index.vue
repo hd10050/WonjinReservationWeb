@@ -29,44 +29,43 @@
       </h2>
 
       <ul class="divide-y divide-border">
-        <li v-for="(item, i) in category.items" :key="item.slug">
-          <NuxtLink
-            :to="localePath({ name: 'procedures-category-procedure', params: { category: category.slug, procedure: item.slug } })"
-            class="flex flex-col gap-6 py-8 sm:flex-row sm:items-center"
-            :class="{ 'sm:flex-row-reverse': i % 2 === 1 }"
+        <li
+          v-for="(item, i) in category.items"
+          :key="item.slug"
+          class="flex flex-col gap-6 py-8 sm:flex-row sm:items-center"
+          :class="{ 'sm:flex-row-reverse': i % 2 === 1 }"
+        >
+          <img
+            :src="`/img/${item.imageCategory ?? category.slug}/${item.image}`"
+            :alt="item.name[locale as Locale]"
+            loading="lazy"
+            class="h-64 w-full rounded-xl object-cover sm:w-96 sm:shrink-0"
           >
-            <img
-              :src="`/img/${item.imageCategory ?? category.slug}/${item.image}`"
-              :alt="item.name[locale as Locale]"
-              loading="lazy"
-              class="h-64 w-full rounded-xl object-cover sm:w-96 sm:shrink-0"
-            >
-            <!-- 🔴 정렬 일관성 정정(2026-08-28 사용자 재지시 — 가운데 정렬이나 "이미지 옆에 붙임"이
-                 아니라, 이미지 반대편 "바깥쪽 끝"에 텍스트가 오도록 통일하라는 의미였음). 이미지가
-                 오른쪽(홀수, flex-row-reverse)일 때 텍스트가 왼쪽 끝에 오는 기존 상태가 이미 의도한
-                 모습 — 그대로 둔다(기본 좌측 정렬). 이미지가 왼쪽(짝수)일 때만 텍스트를 오른쪽 끝으로
-                 밀어 반대편과 대칭이 되게 한다. 즉 이전 수정(홀수에 우측정렬)은 조건이 반대였다. -->
-            <div class="flex flex-1 flex-col gap-2" :class="{ 'sm:items-end sm:text-right': i % 2 === 0 }">
-              <ul v-if="item.concerns[locale as Locale]?.length" class="space-y-1 text-sm text-muted-foreground">
-                <li v-for="(concern, ci) in item.concerns[locale as Locale]" :key="ci">{{ concern }}</li>
-              </ul>
-              <h3 class="text-xl font-semibold text-foreground sm:text-2xl">{{ item.name[locale as Locale] }}</h3>
-            </div>
-          </NuxtLink>
+          <!-- 🔴 정렬 일관성 정정(2026-08-28 사용자 재지시 — 가운데 정렬이나 "이미지 옆에 붙임"이
+               아니라, 이미지 반대편 "바깥쪽 끝"에 텍스트가 오도록 통일하라는 의미였음). 이미지가
+               오른쪽(홀수, flex-row-reverse)일 때 텍스트가 왼쪽 끝에 오는 기존 상태가 이미 의도한
+               모습 — 그대로 둔다(기본 좌측 정렬). 이미지가 왼쪽(짝수)일 때만 텍스트를 오른쪽 끝으로
+               밀어 반대편과 대칭이 되게 한다. 즉 이전 수정(홀수에 우측정렬)은 조건이 반대였다. -->
+          <div class="flex flex-1 flex-col gap-2" :class="{ 'sm:items-end sm:text-right': i % 2 === 0 }">
+            <ul v-if="item.concerns[locale as Locale]?.length" class="space-y-1 text-sm text-muted-foreground">
+              <li v-for="(concern, ci) in item.concerns[locale as Locale]" :key="ci">{{ concern }}</li>
+            </ul>
+            <h3 class="text-xl font-semibold text-foreground sm:text-2xl">{{ item.name[locale as Locale] }}</h3>
+          </div>
         </li>
       </ul>
 
+      <!-- 상세페이지 폐지(2026-08-31 사용자 지시) — 클릭 이동 없는 순수 텍스트 배지로 전환. -->
       <div v-if="category.otherItems.length" class="mt-10 rounded-lg border bg-muted/30 p-5">
         <h3 class="mb-3 text-sm font-semibold text-muted-foreground">{{ t('procedures.otherHeading') }}</h3>
         <div class="flex flex-wrap gap-2">
-          <NuxtLink
+          <span
             v-for="other in category.otherItems"
             :key="other.slug"
-            :to="localePath({ name: 'procedures-category-procedure', params: { category: category.slug, procedure: other.slug } })"
-            class="rounded-full border px-3 py-1.5 text-sm text-foreground hover:border-primary"
+            class="rounded-full border px-3 py-1.5 text-sm text-foreground"
           >
             {{ other.name[locale as Locale] }}
-          </NuxtLink>
+          </span>
         </div>
       </div>
     </section>
@@ -86,7 +85,6 @@ const { target: listTarget, revealed: listRevealed } = useScrollReveal()
 const route = useRoute()
 const config = useRuntimeConfig()
 const { t, locale } = useI18n()
-const localePath = useLocalePath()
 
 const category = computed(() => findCategory(route.params.category as string))
 

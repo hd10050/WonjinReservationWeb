@@ -1343,11 +1343,3 @@ export const CATEGORY_SLUGS = PROCEDURE_CATEGORIES.map(c => c.slug)
 export function findCategory(slug: string): ProcedureCategory | undefined {
   return PROCEDURE_CATEGORIES.find(c => c.slug === slug)
 }
-
-export function findProcedure(categorySlug: string, procedureSlug: string) {
-  const category = findCategory(categorySlug)
-  if (!category) return { category: undefined, item: undefined, other: undefined }
-  const item = category.items.find(i => i.slug === procedureSlug)
-  const other = category.otherItems.find(i => i.slug === procedureSlug)
-  return { category, item, other }
-}

@@ -350,8 +350,7 @@
     "concernHeading": "What concerns you about {category}?",
     "concernHeadingNoPrefix": "What concerns you?",
     "otherHeading": "Other Procedures",
-    "inquireCta": "Inquire Now",
-    "comingSoon": "Details coming soon."
+    "inquireCta": "Inquire Now"
   },
   "landing": {
     "nav": { "home": "Home", "procedures": "Procedures", "inquiry": "Inquiry", "inquiryFab": "Inquire" },

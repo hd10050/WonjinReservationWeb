@@ -350,8 +350,7 @@
     "concernHeading": "{category}有什麼困擾嗎？",
     "concernHeadingNoPrefix": "有什麼困擾嗎？",
     "otherHeading": "其他項目",
-    "inquireCta": "立即諮詢",
-    "comingSoon": "詳細內容準備中。"
+    "inquireCta": "立即諮詢"
   },
   "landing": {
     "nav": { "home": "首頁", "procedures": "項目介紹", "inquiry": "諮詢預約", "inquiryFab": "諮詢" },
