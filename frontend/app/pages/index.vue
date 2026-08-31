@@ -106,19 +106,20 @@
     </section>
 
     <!-- 시설 소개 6가지(2026-08-28, 사용자 지시로 추가) — 원문 "프리미엄 안티에이징 센터" 등
-         article.information 6개 카드(안티에이징·검진센터·마취과·안전시스템×2·편의시설). -->
+         article.information 6개 카드(안티에이징·검진센터·마취과·안전시스템×2·편의시설).
+         🔴 사진 원형 정정(2026-08-31) — 원본(k-wonjin.co.kr/hospitalinfo/about) 실측 결과 사진이
+         전부 원형인데 aspect-video 직사각형+rounded-xl로 잘못 구현돼 있었음. 카드 grid 구조는
+         유지하고 사진만 원형(aspect-square + rounded-full)으로 교체, 텍스트도 사진에 맞춰 중앙정렬. -->
     <section
       ref="centersTarget"
       class="mx-auto max-w-6xl px-4 py-16 transition-all duration-700 sm:px-6 sm:py-24"
       :class="centersRevealed ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'"
     >
       <div class="grid gap-8 sm:grid-cols-2">
-        <div v-for="center in HOSPITAL_CENTERS" :key="center.slug" class="overflow-hidden rounded-xl border bg-card">
-          <img :src="`/img/about/center/${center.image}`" :alt="center.title[locale as Locale]" loading="lazy" class="aspect-video w-full object-cover">
-          <div class="p-6">
-            <h3 class="mb-2 text-lg font-semibold text-foreground">{{ center.title[locale as Locale] }}</h3>
-            <p class="text-sm text-muted-foreground">{{ center.desc[locale as Locale] }}</p>
-          </div>
+        <div v-for="center in HOSPITAL_CENTERS" :key="center.slug" class="flex flex-col items-center rounded-xl border bg-card p-6 text-center">
+          <img :src="`/img/about/center/${center.image}`" :alt="center.title[locale as Locale]" loading="lazy" class="mb-4 aspect-square w-40 rounded-full object-cover sm:w-48">
+          <h3 class="mb-2 text-lg font-semibold text-foreground">{{ center.title[locale as Locale] }}</h3>
+          <p class="text-sm text-muted-foreground">{{ center.desc[locale as Locale] }}</p>
         </div>
       </div>
     </section>

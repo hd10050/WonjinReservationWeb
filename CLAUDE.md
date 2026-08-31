@@ -144,6 +144,6 @@ Phase 0~8(스캐폴딩·인증·랜딩+예약폼·예약대시보드/상세/상�
 ## 참고 문서
 `docs/design.md`(설계 SSOT) · `docs/session-log.md`(세션 아카이브) · `docs/reservation-desk_1.html`(참고 화면 원본) · `scripts/phase3-concurrency/`(동시성 재현 스크립트 3종) · 공유 가이드(`C:\Users\jinho\Desktop\WebProject\`): `auth-pattern-reference.md` · `admin-panel-pattern-reference.md` · `web-security-audit-guide.md` · `seo-pattern-reference.md` · `excel-bulk-upload-pattern-reference.md`
 
-## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (78)까지 이동 완료)
+## 세션 요약 (오래된 항목은 `docs/session-log.md` 참고, (79)까지 이동 완료)
 - **재사용 교훈(과거 세션)**: 🔴 `h-full`은 부모에 명시적 `height` 없이 `min-height`만 있으면 퍼센트 높이 해석 불가(→`absolute inset-0`). 🔴 이 Browser pane 비컴포지팅 → 스크린샷·`IntersectionObserver`·`<img loading=lazy>` 불가, **playwright-cli로 우회**. 🔴 랜딩 위챗 "탑재 금지"는 위젯·QR·공식계정 연동 한정 — 예약 흐름 설명 본문 문구는 허용(2026-08-28 사용자 지시).
-- **2026-08-31 (79) — 시술 상세 페이지 폐지(D27), 사용자 지시**. `pages/procedures/[category]/[procedure].vue` 삭제, 카테고리 목록(`[category]/index.vue`)의 시술 항목·"그 외" 칩은 `NuxtLink`→`li`/`span`(클릭 이동 없는 정보 표시)로 전환, 미사용 `useLocalePath` 제거. 동반 정리: `data/procedures.ts`의 `findProcedure`(유일 호출부였음) 삭제, `nuxt.config.ts` sitemap이 시술별 URL을 더 이상 주입하지 않도록 축소, 4로케일 `procedures.comingSoon` 키 제거(키셋 여전히 4파일 동일). `design.md` 12-1절 라우트 표 갱신. TODO 2건(이미지 누락·중국어 요약형 문구)은 사용자 지시로 삭제. **검증**: `npm run build`.
+- **2026-08-31 (80) — 홈 "시설 소개 6가지" 사진 원형 정정, 사용자 지시**. playwright-cli로 원본(k-wonjin.co.kr/hospitalinfo/about) 실측 — 사진 전부 원형인데, 우리 사이트는 `aspect-video`(16:9)+`rounded-xl`(14px)로 사각형 렌더링 중이었음(수정 전 컴퓨티드 스타일 534×300px 직접 확인). `index.vue` 시설 카드 6개: 이미지 클래스를 `aspect-square w-40 sm:w-48 rounded-full object-cover`로 교체(카드 grid 구조는 유지), 텍스트도 사진에 맞춰 중앙정렬. **검증**: 수정 후 컴퓨티드 스타일 192×192px+원형 확인, 데스크톱·모바일(375px) 스크린샷 둘 다 정상, `npm run build` 0신규에러.
