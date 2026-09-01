@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using WonjinApi.Data;
 using WonjinApi.Filters;
 using WonjinApi.Services;
+using WonjinApi.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -111,7 +112,7 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("auth", context =>
     {
         var email = context.Items["AuthEmail"] as string;
-        var partitionKey = $"{email?.Trim().ToLowerInvariant() ?? "-"}|{GetClientIp(context, internalSecret)}";
+        var partitionKey = $"{email?.Trim().ToLowerInvariant() ?? "-"}|{ClientIpResolver.Resolve(context, internalSecret)}";
         return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = 20,
@@ -127,7 +128,7 @@ builder.Services.AddRateLimiter(options =>
     {
         var raw = context.Request.Cookies["wj_rt"];
         var partitionKey = string.IsNullOrEmpty(raw)
-            ? GetClientIp(context, internalSecret)
+            ? ClientIpResolver.Resolve(context, internalSecret)
             : Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(raw)));
         return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
         {
@@ -140,7 +141,7 @@ builder.Services.AddRateLimiter(options =>
     // 공개 예약 폼(11-1·7-5절) — IP 파티션, 5분당 5회(2026-08-28 1분→5분 변경, 사용자 지시). 광고 랜딩發
     // 남용 방지가 목적이라 로그인처럼 이메일 조합이 필요 없다(계정이 없는 익명 제출이므로).
     options.AddPolicy("reservation-create", context =>
-        RateLimitPartition.GetFixedWindowLimiter(GetClientIp(context, internalSecret), _ => new FixedWindowRateLimiterOptions
+        RateLimitPartition.GetFixedWindowLimiter(ClientIpResolver.Resolve(context, internalSecret), _ => new FixedWindowRateLimiterOptions
         {
             PermitLimit = 5,
             Window = TimeSpan.FromMinutes(5),
@@ -351,25 +352,3 @@ app.MapGet("/api/admin/events", async (HttpContext http, AppDbContext db, IAdmin
 }).RequireAuthorization();
 
 app.Run();
-
-// 프론트(Workers)가 릴레이하는 X-Wj-Client-Ip는 내부시크릿이 유효할 때만 신뢰하고, 아니면 실제
-// TCP 연결 IP로 폴백한다(16장 + 보안감사 2026-08-26 H1 수정).
-// 🔴 2026-08-28 재수정 — 원래 이름은 CF-Connecting-IP였으나, Render(onrender.com)도 Cloudflare
-// 엣지 뒤에 있어서 이 이름의 헤더는 Render 앞단 엣지가 항상 실제 TCP 접속 값(Workers 아웃바운드
-// IP, PoP마다 달라짐)으로 재작성해버림을 `/api/internal/debug-ip` 임시 진단으로 실측 확인(요청마다
-// 다른 값 → 매 요청이 별도 rate-limit 버킷으로 흩어져 사실상 무제한이 됨). Cloudflare가 예약하지
-// 않은 커스텀 이름(X-Wj-Client-Ip)으로 바꿔 프론트 `server/api/[...].ts`와 함께 수정.
-static string GetClientIp(HttpContext context, string internalSecret)
-{
-    var provided = context.Request.Headers["X-Internal-Secret"].FirstOrDefault();
-    var trusted = !string.IsNullOrEmpty(internalSecret) && !string.IsNullOrEmpty(provided)
-        && System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
-            Encoding.UTF8.GetBytes(provided), Encoding.UTF8.GetBytes(internalSecret));
-
-    if (trusted)
-    {
-        var clientIp = context.Request.Headers["X-Wj-Client-Ip"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(clientIp)) return clientIp;
-    }
-    return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-}

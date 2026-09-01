@@ -98,6 +98,10 @@ export default defineNuxtConfig({
         'x-frame-options': 'DENY',
         'referrer-policy': 'strict-origin-when-cross-origin',
         'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+        // 🔴 감사(2026-09-01)로 발견 — 프로덕션 라이브 curl 실측 결과 이 헤더가 아예 없었다. 사이트
+        // 전체가 이미 HTTPS 전용(Cloudflare)이라 안전하게 추가 가능. preload는 별도 신청(브라우저
+        // 내장 리스트 등재)이 필요하고 되돌리기 어려워 여기 포함하지 않는다 — 필요해지면 별도 결정.
+        'strict-transport-security': 'max-age=31536000; includeSubDomains',
       },
     },
   },
