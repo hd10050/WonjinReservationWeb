@@ -219,7 +219,7 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
 
         var before = await db.Reservations.AsNoTracking()
             .Where(r => r.Id == id)
-            .Select(r => new { r.ConsultantId, r.Status, r.VisitDate, r.VisitTime, r.DepositAmount, r.DepositCurrency, r.DepositPaid })
+            .Select(r => new { r.ConsultantId, r.Status, r.VisitDate, r.VisitTime, r.DepositAmount, r.DepositCurrency, r.DepositPaid, r.RowVersion })
             .FirstOrDefaultAsync();
         if (before is null) return NotFound();
         if (before.ConsultantId is null) return BadRequest(new { code = "RESERVATION_NOT_ASSIGNED" });
@@ -238,8 +238,14 @@ public class AdminReservationsController(AppDbContext db, IAdminEventBroadcaster
         await using var tx = await db.Database.BeginTransactionAsync();
 
         // D17·잠금 상태 둘 다 같은 UPDATE의 WHERE에 다시 넣어 조회~쓰기 사이 변경된 경우를 닫는다(10-1절).
+        // 🔴 RowVersion(xmin) 낙관적 동시성 추가(2026-09-01 감사) — AssignConsultant와 동일한 문제였다:
+        // ConsultantId·Status만 재확인하고 실제로 쓰는 필드(방문일시·예약금·시술)는 가드하지 않아, 두
+        // 관리자가 동시에 수정하면 나중 커밋이 앞선 변경을 조용히 덮어쓰고(lost update) 위 로그의
+        // "이전값"도 실제 DB 값과 어긋날 수 있었다. RowVersion을 WHERE에 걸어 그 사이 다른 요청이
+        // 먼저 커밋되면 0행 매치→409로 막는다(AssignConsultant 367행과 동일 패턴).
         var affected = await db.Reservations
-            .Where(r => r.Id == id && r.ConsultantId != null && r.Status != "Cancelled" && r.Status != "Visited")
+            .Where(r => r.Id == id && r.RowVersion == before.RowVersion
+                     && r.ConsultantId != null && r.Status != "Cancelled" && r.Status != "Visited")
             .ExecuteUpdateAsync(s => s
                 .SetProperty(r => r.VisitDate, req.VisitDate)
                 .SetProperty(r => r.VisitTime, req.VisitTime)

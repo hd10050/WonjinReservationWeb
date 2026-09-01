@@ -475,6 +475,7 @@
     "CONSULTANT_NOT_FOUND": "Consultant not found.",
     "CONSULTANT_INACTIVE": "Cannot assign to an inactive consultant.",
     "VALIDATION_FAILED": "Invalid input. Please check and try again.",
+    "INVALID_DATE_RANGE": "Invalid date range. Please check the start and end dates.",
     "BULK_EMPTY": "There are no rows to register.",
     "BULK_TOO_MANY": "You can register up to 500 records at once.",
     "BULK_VALIDATION_FAILED": "The uploaded Excel file has errors, so registration was cancelled. Check the row errors below.",

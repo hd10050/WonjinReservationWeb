@@ -14,6 +14,7 @@
         </div>
         <Button :disabled="rangeTooLong" @click="applyFilters">{{ t('admin.stats.filterApply') }}</Button>
         <p v-if="rangeTooLong" class="w-full text-sm text-destructive">{{ t('admin.common.filterRangeError') }}</p>
+        <p v-else-if="dateRangeError" class="w-full text-sm text-destructive">{{ dateRangeError }}</p>
       </CardContent>
     </Card>
 
@@ -189,11 +190,16 @@ const query = computed(() => {
   return { from, to: clampDateRangeEnd(from, (route.query.to as string) || defaultTo) }
 })
 
-const { data } = await useApi<ReservationStats>('/api/admin/stats/reservations', { query })
+const { data, error } = await useApi<ReservationStats>('/api/admin/stats/reservations', { query })
 
 const formFrom = ref(query.value.from)
 const formTo = ref(query.value.to)
 const { toMinValue, rangeTooLong } = useDateRangeFilter(formFrom, formTo)
+// 🔴 2026-09-01 감사 — kpi.vue와 동일 이유(서버 거부 시 빈 표로만 보이던 문제)
+const dateRangeError = computed(() => {
+  const code = (error.value as any)?.data?.code
+  return code ? t(`errors.${code}`) : null
+})
 
 function applyFilters() {
   if (rangeTooLong.value) return

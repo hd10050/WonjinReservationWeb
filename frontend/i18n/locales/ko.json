@@ -500,6 +500,7 @@
     "CONSULTANT_NOT_FOUND": "존재하지 않는 실장입니다.",
     "CONSULTANT_INACTIVE": "비활성 상태의 실장에게는 배정할 수 없습니다.",
     "VALIDATION_FAILED": "입력값이 올바르지 않습니다. 확인 후 다시 시도해주세요.",
+    "INVALID_DATE_RANGE": "조회 기간이 올바르지 않습니다. 시작일과 종료일을 다시 확인해주세요.",
     "BULK_EMPTY": "등록할 행이 없습니다.",
     "BULK_TOO_MANY": "한 번에 최대 500건까지 등록할 수 있습니다.",
     "BULK_VALIDATION_FAILED": "입력한 엑셀에 오류가 있어 등록이 취소되었습니다. 행별 오류를 확인해주세요.",

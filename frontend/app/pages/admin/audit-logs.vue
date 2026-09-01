@@ -95,9 +95,12 @@ const route = useRoute()
 // layouts/admin.vue가 useOpsLocale()을 이미 호출해 locale이 계정 값으로 맞춰져 있다 — 여기선 재사용만.
 const inputLang = useInputLang()
 
-// 14-1절 RouteMap에 실제 등록된 entity_type·action 값만 노출(존재하지 않는 조합을 필터로 주면 항상 0건)
-const ENTITY_TYPES = ['reservation', 'reservation_note', 'consultant', 'procedure', 'user']
-const ACTIONS = ['create', 'update', 'soft_delete', 'note_add', 'note_update', 'status_change']
+// 14-1절 RouteMap(api/Filters/AuditLogFilter.cs)에 실제 등록된 entity_type·action 값만 노출
+// (존재하지 않는 조합을 필터로 주면 항상 0건). 🔴 2026-09-01 감사 — category·influencer_link
+// 엔티티(D25/2026-08-27 추가)와 assign·restore·bulk_create 액션이 여기 반영이 안 돼 있었고,
+// 이미 폐지된 soft_delete(D24)는 그대로 남아 골라도 항상 0건이었다. RouteMap과 다시 대조해 동기화.
+const ENTITY_TYPES = ['reservation', 'reservation_note', 'consultant', 'procedure', 'category', 'user', 'influencer_link']
+const ACTIONS = ['create', 'update', 'assign', 'restore', 'bulk_create', 'note_add', 'note_update', 'status_change']
 
 // 🔴 버그(2026-08-27) — 다른 날짜 필터 페이지(대시보드·유입경로·통계·KPI)는 전부 당월 1일~현재를
 // 기본값으로 두는데 이 페이지만 빠져 있어 날짜 필터가 빈 채로 시작했다 — 나머지와 동일하게 통일.

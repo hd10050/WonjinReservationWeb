@@ -137,6 +137,7 @@
         </div>
         <Button :disabled="rangeTooLong" @click="applyFilters">{{ t('admin.referrals.filterApply') }}</Button>
         <p v-if="rangeTooLong" class="w-full text-sm text-destructive">{{ t('admin.common.filterRangeError') }}</p>
+        <p v-else-if="dateRangeError" class="w-full text-sm text-destructive">{{ dateRangeError }}</p>
       </CardContent>
     </Card>
 
@@ -212,7 +213,7 @@ const query = computed(() => {
   }
 })
 
-const { data } = await useApi<PagedResult<ReferralStat>>('/api/admin/stats/referrals', { query })
+const { data, error } = await useApi<PagedResult<ReferralStat>>('/api/admin/stats/referrals', { query })
 
 const page = computed(() => query.value.page)
 const totalPages = computed(() => data.value ? Math.max(1, Math.ceil(data.value.total / data.value.pageSize)) : 1)
@@ -224,6 +225,12 @@ const formFrom = ref(query.value.from)
 const formTo = ref(query.value.to)
 const formSearch = ref(query.value.search ?? '')
 const { toMinValue, rangeTooLong } = useDateRangeFilter(formFrom, formTo)
+// 🔴 2026-09-01 감사 — kpi.vue와 동일 이유(서버 거부 시 빈 표로만 보이던 문제). 아래 formError(인플루언서
+// 링크 폼 전용)와는 별개 — 이건 위 유입경로 통계표(GET)의 기간 필터 거부 전용.
+const dateRangeError = computed(() => {
+  const code = (error.value as any)?.data?.code
+  return code ? t(`errors.${code}`) : null
+})
 
 function applyFilters() {
   if (rangeTooLong.value) return

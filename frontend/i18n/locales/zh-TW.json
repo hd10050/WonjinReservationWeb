@@ -475,6 +475,7 @@
     "CONSULTANT_NOT_FOUND": "找不到該顧問。",
     "CONSULTANT_INACTIVE": "無法分配給已停用的顧問。",
     "VALIDATION_FAILED": "輸入內容不正確，請檢查後再試一次。",
+    "INVALID_DATE_RANGE": "查詢日期範圍不正確，請重新確認起訖日期。",
     "BULK_EMPTY": "沒有可註冊的列。",
     "BULK_TOO_MANY": "單次最多可註冊500筆。",
     "BULK_VALIDATION_FAILED": "上傳的Excel存在錯誤，註冊已取消。請查看各列錯誤。",

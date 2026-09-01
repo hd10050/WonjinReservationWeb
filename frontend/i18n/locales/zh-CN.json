@@ -475,6 +475,7 @@
     "CONSULTANT_NOT_FOUND": "找不到该顾问。",
     "CONSULTANT_INACTIVE": "无法分配给已停用的顾问。",
     "VALIDATION_FAILED": "输入内容不正确，请检查后重试。",
+    "INVALID_DATE_RANGE": "查询日期范围不正确，请重新确认起止日期。",
     "BULK_EMPTY": "没有可注册的行。",
     "BULK_TOO_MANY": "单次最多可注册500条。",
     "BULK_VALIDATION_FAILED": "上传的Excel存在错误，注册已取消。请查看各行错误。",

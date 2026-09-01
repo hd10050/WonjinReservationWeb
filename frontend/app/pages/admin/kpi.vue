@@ -14,6 +14,7 @@
         </div>
         <Button :disabled="rangeTooLong" @click="applyFilters">{{ t('admin.kpi.filterApply') }}</Button>
         <p v-if="rangeTooLong" class="w-full text-sm text-destructive">{{ t('admin.common.filterRangeError') }}</p>
+        <p v-else-if="dateRangeError" class="w-full text-sm text-destructive">{{ dateRangeError }}</p>
       </CardContent>
     </Card>
 
@@ -82,11 +83,18 @@ const query = computed(() => {
   return { from, to: clampDateRangeEnd(from, (route.query.to as string) || defaultTo) }
 })
 
-const { data } = await useApi<ConsultantKpi[]>('/api/admin/stats/consultants', { query })
+const { data, error } = await useApi<ConsultantKpi[]>('/api/admin/stats/consultants', { query })
 
 const formFrom = ref(query.value.from)
 const formTo = ref(query.value.to)
 const { toMinValue, rangeTooLong } = useDateRangeFilter(formFrom, formTo)
+// 🔴 2026-09-01 감사 — 서버가 {code:"INVALID_DATE_RANGE"}로 거부해도(예: URL 직접 조작으로
+// to<from 전달) 화면엔 아무 안내 없이 그냥 빈 표로만 보였다. rangeTooLong(폼 단계 사전 차단)과
+// 별개로, 실제로 보낸 요청이 서버에서 거부된 경우를 위 errors.* i18n 네임스페이스로 표시한다.
+const dateRangeError = computed(() => {
+  const code = (error.value as any)?.data?.code
+  return code ? t(`errors.${code}`) : null
+})
 
 function applyFilters() {
   if (rangeTooLong.value) return
